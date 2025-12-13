@@ -71,7 +71,7 @@ export default function Login() {
 
     if (view === 'landing') {
         return (
-            <div className="relative flex size-full min-h-screen flex-col bg-dark-primary justify-between overflow-x-hidden">
+            <div className="relative flex w-full min-h-[100dvh] flex-col bg-dark-primary justify-between overflow-x-hidden">
                 <div>
                     <div className="@container">
                         <div className="@[480px]:px-4 @[480px]:py-3">
@@ -170,7 +170,7 @@ export default function Login() {
 
     // Login/Signup Form View
     return (
-        <div className="min-h-screen flex items-center justify-center text-white relative overflow-hidden">
+        <div className="min-h-[100dvh] flex items-center justify-center text-white relative overflow-hidden">
             {/* Full Screen Background */}
             <div className="absolute inset-0 z-0">
                 <div

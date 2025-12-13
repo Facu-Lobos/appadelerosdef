@@ -32,20 +32,20 @@ export default function PlayerHome() {
     return (
         <div className="space-y-6">
             {/* Hero / Search Section */}
-            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-surface to-background border border-white/5 p-8">
-                <div className="absolute top-0 right-0 p-4 opacity-10">
-                    <PadelRacket size={200} />
+            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-surface to-background border border-white/5 p-4 md:p-8">
+                <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                    <PadelRacket size={200} className="w-32 h-32 md:w-[200px] md:h-[200px]" />
                 </div>
 
                 <div className="relative z-10 max-w-2xl">
-                    <h1 className="text-3xl font-bold mb-4">
+                    <h1 className="text-2xl md:text-3xl font-bold mb-2 md:mb-4">
                         Encuentra tu próxima cancha
                     </h1>
-                    <p className="text-gray-400 mb-6">
+                    <p className="text-gray-400 mb-4 md:mb-6 text-sm md:text-base">
                         Busca clubes por nombre, ciudad o zona y reserva al instante.
                     </p>
 
-                    <div className="flex gap-2">
+                    <div className="flex flex-col md:flex-row gap-2">
                         <Input
                             icon={Search}
                             placeholder="Buscar club o ubicación..."
@@ -53,7 +53,7 @@ export default function PlayerHome() {
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="bg-background/50 backdrop-blur-sm"
                         />
-                        <Button variant="secondary" icon={Filter}>
+                        <Button variant="secondary" icon={Filter} className="w-full md:w-auto">
                             Filtros
                         </Button>
                     </div>

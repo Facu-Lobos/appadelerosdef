@@ -305,25 +305,26 @@ export default function ClubDetails() {
                                 </div>
                             </div>
 
-                            {/* Mobile List View */}
-                            <div className="md:hidden space-y-4">
+                            {/* Mobile List View - Compact */}
+                            <div className="md:hidden space-y-3">
                                 {timeSlots.map(time => {
                                     const availableCourts = courts.filter(c => !isSlotTaken(c.id, time));
                                     const hasAvailability = availableCourts.length > 0;
                                     const isExpanded = selectedTime === time;
 
                                     return (
-                                        <div key={time} className={`bg-surface border ${hasAvailability ? 'border-white/10' : 'border-white/5 opacity-50'} rounded-xl overflow-hidden`}>
-                                            <div className="p-4 flex items-center justify-between">
+                                        <div key={time} className={`bg-surface border ${hasAvailability ? 'border-white/10' : 'border-white/5 opacity-50'} rounded-lg overflow-hidden`}>
+                                            <div className="px-4 py-3 flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="font-bold text-lg text-white font-mono">{time}</div>
-                                                    <div className="text-sm text-gray-400">
-                                                        {hasAvailability ? `${availableCourts.length} canchas libres` : 'Completo'}
+                                                    <div className="font-bold text-base text-white font-mono">{time}</div>
+                                                    <div className="text-xs text-gray-400">
+                                                        {hasAvailability ? `${availableCourts.length} libres` : 'Completo'}
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            {/* List of courts for this time */}
+                                            {/* List of courts for this time - Accordion style if we wanted, but currently always shown if available? No, logically it was mapped below. */}
+                                            {/* Current logic shows court list ALWAYS if hasAvailability. Let's keep it but make it tighter. */}
                                             {hasAvailability && (
                                                 <div className="border-t border-white/5 divide-y divide-white/5">
                                                     {availableCourts.map(court => {
@@ -336,18 +337,18 @@ export default function ClubDetails() {
                                                                     setSelectedCourt(court.id);
                                                                     setSelectedTime(time);
                                                                 }}
-                                                                className={`w-full text-left p-4 transition-colors flex items-center justify-between ${isSelected ? 'bg-primary/20 hover:bg-primary/30' : 'hover:bg-white/5'}`}
+                                                                className={`w-full text-left px-4 py-2 transition-colors flex items-center justify-between ${isSelected ? 'bg-primary/20' : 'active:bg-white/5'}`}
                                                             >
                                                                 <div>
-                                                                    <div className={`font-bold ${isSelected ? 'text-primary' : 'text-white'}`}>{court.name}</div>
-                                                                    <div className="text-xs text-gray-400 capitalize">{court.surface} • {court.type}</div>
+                                                                    <div className={`font-bold text-sm ${isSelected ? 'text-primary' : 'text-white'}`}>{court.name}</div>
+                                                                    <div className="text-[10px] text-gray-400 capitalize">{court.surface} • {court.type}</div>
                                                                 </div>
                                                                 {isSelected ? (
-                                                                    <div className="bg-primary text-background text-xs font-bold px-3 py-1.5 rounded-full">
-                                                                        Seleccionada
+                                                                    <div className="bg-primary text-background text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                                                        OK
                                                                     </div>
                                                                 ) : (
-                                                                    <div className="text-primary text-sm font-medium">
+                                                                    <div className="text-primary text-xs font-medium">
                                                                         ${court.hourly_rate || 2000}
                                                                     </div>
                                                                 )}

@@ -88,7 +88,14 @@ export default function ChatWindow({ otherUserId, otherUserName, otherUserAvatar
                                 >
                                     <p>{msg.text}</p>
                                     <span className="text-[10px] opacity-50 block text-right mt-1">
-                                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        {(() => {
+                                            const dateVal = msg.created_at || msg.timestamp;
+                                            if (!dateVal) return '';
+                                            const date = new Date(dateVal);
+                                            return isNaN(date.getTime())
+                                                ? ''
+                                                : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                        })()}
                                     </span>
                                 </div>
                             </div>
