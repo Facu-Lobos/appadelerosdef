@@ -86,7 +86,7 @@ export default function AIAssistant() {
             </button>
 
             {/* Chat Window */}
-            <div className={`fixed bottom-20 right-4 md:bottom-8 md:right-8 w-full max-w-sm bg-surface rounded-2xl shadow-2xl border border-white/10 flex flex-col transition-all duration-300 z-50 overflow-hidden ${isOpen ? 'opacity-100 translate-y-0 h-[500px]' : 'opacity-0 translate-y-10 h-0 pointer-events-none'
+            <div className={`fixed bottom-20 right-4 md:bottom-8 md:right-8 w-full max-w-sm bg-dark-primary rounded-2xl shadow-2xl border border-white/10 flex flex-col transition-all duration-300 z-50 overflow-hidden ${isOpen ? 'opacity-100 translate-y-0 h-[500px]' : 'opacity-0 translate-y-10 h-0 pointer-events-none'
                 }`}>
                 {/* Header */}
                 <div className="bg-gradient-to-r from-primary to-secondary p-4 flex justify-between items-center">
@@ -100,12 +100,12 @@ export default function AIAssistant() {
                 </div>
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background/50">
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-dark-primary/95">
                     {messages.map(msg => (
                         <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                             <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${msg.role === 'user'
-                                ? 'bg-primary text-background font-medium rounded-tr-none'
-                                : 'bg-surface border border-white/10 rounded-tl-none'
+                                ? 'bg-primary text-dark-primary font-semibold rounded-tr-none'
+                                : 'bg-surface/50 border border-white/5 text-gray-200 rounded-tl-none'
                                 }`}>
                                 {msg.text}
                             </div>
@@ -124,13 +124,13 @@ export default function AIAssistant() {
                 </div>
 
                 {/* Input */}
-                <div className="p-3 border-t border-white/10 bg-surface flex gap-2">
+                <div className="p-3 border-t border-white/10 bg-dark-primary flex gap-2">
                     <Input
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                         placeholder="Escribe tu consulta..."
-                        className="bg-background"
+                        className="bg-surface/50 border-white/10 text-white placeholder:text-gray-500"
                     />
                     <Button size="sm" onClick={handleSend} disabled={!input.trim() || isTyping}>
                         <Send size={18} />

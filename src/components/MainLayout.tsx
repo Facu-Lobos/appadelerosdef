@@ -88,7 +88,7 @@ export default function MainLayout() {
                         </button>
 
                         {showDesktopNotifications && (
-                            <div className="absolute left-0 top-full mt-2 w-full bg-surface border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+                            <div className="absolute left-0 top-full mt-2 w-full bg-dark-primary border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
                                 <div className="p-3 border-b border-white/10 font-bold text-sm">Notificaciones</div>
                                 <div className="max-h-80 overflow-y-auto">
                                     {notifications.length === 0 ? (
@@ -153,9 +153,9 @@ export default function MainLayout() {
 
                     {/* Dropdown */}
                     {showMobileNotifications && (
-                        <div className="absolute right-0 mt-2 w-64 bg-surface border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+                        <div className="absolute left-0 top-full mt-2 w-full bg-dark-primary border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
                             <div className="p-3 border-b border-white/10 font-bold text-sm">Notificaciones</div>
-                            <div className="max-h-64 overflow-y-auto">
+                            <div className="max-h-80 overflow-y-auto">
                                 {notifications.length === 0 ? (
                                     <div className="p-4 text-center text-xs text-gray-500">No tienes notificaciones</div>
                                 ) : (
