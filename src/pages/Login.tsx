@@ -94,7 +94,7 @@ export default function Login() {
                         </div>
 
                         {/* Racket Icon, tucked behind P */}
-                        <div className="letter-container" style={{ marginLeft: '-19px' }}>
+                        <div className="letter-container" style={{ marginLeft: '-16px' }}>
                             <div className="animate-slide-in" style={{ animationDelay: '0.2s', position: 'relative', zIndex: 9 }}>
                                 <PadelRacketIcon className="h-16 w-12 translate-y-[-3px]" />
                             </div>
@@ -104,7 +104,7 @@ export default function Login() {
                         {/* "adeler", each letter tucked behind the previous element */}
                         {"adeler".split('').map((char, index) => {
                             // The first letter 'a' tucks behind the wide racket, the rest tuck behind the previous letter.
-                            const charMarginLeft = index === 0 ? '-20px' : '-8px';
+                            const charMarginLeft = index === 0 ? '-18px' : '-4px';
                             return (
                                 <div key={index} className="letter-container" style={{ marginLeft: charMarginLeft }}>
                                     <span className="animate-slide-in" style={{ ...textStyle, animationDelay: `${0.3 + index * 0.05}s`, position: 'relative', zIndex: 8 - index }}>

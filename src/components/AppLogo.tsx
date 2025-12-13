@@ -42,15 +42,15 @@ export const AppLogo: React.FC<AppLogoProps> = ({ className, variant = 'default'
                 </div>
 
                 {/* Racket Icon (replaces second P) */}
-                <div style={{ marginLeft: isSmall ? '-10px' : '-19px', position: 'relative', zIndex: 9 }}>
+                <div style={{ marginLeft: isSmall ? '-6px' : '-16px', position: 'relative', zIndex: 9 }}>
                     <PadelRacketIcon className={clsx(racketSize, translateRacket)} />
                 </div>
 
                 {/* adeler */}
                 {"adeler".split('').map((char, index) => {
                     const charMarginLeft = index === 0
-                        ? (isSmall ? '-12px' : '-25px')
-                        : (isSmall ? '-4px' : '-8px');
+                        ? (isSmall ? '-8px' : '-22px')
+                        : (isSmall ? '-2px' : '-4px');
 
                     return (
                         <div key={index} style={{ marginLeft: charMarginLeft, position: 'relative', zIndex: 8 - index }}>

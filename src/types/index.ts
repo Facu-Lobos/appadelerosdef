@@ -126,7 +126,13 @@ export interface Message {
     id: string;
     sender_id: string;
     receiver_id: string;
-    text: string;
-    timestamp: string;
+    content: string;
+    text?: string;
+    created_at: string;
+    timestamp?: string;
     read: boolean;
+    sender?: {
+        name: string;
+        avatar_url?: string;
+    };
 }
