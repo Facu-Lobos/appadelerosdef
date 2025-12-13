@@ -10,6 +10,7 @@ import ManualBookingModal from '../../components/ManualBookingModal';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
 import { ShareScheduleModal } from '../../components/club/ShareScheduleModal';
+import { MobileCalendar } from '../../components/club/MobileCalendar';
 
 export default function ClubCalendar() {
     const { user } = useAuth();
@@ -147,9 +148,10 @@ export default function ClubCalendar() {
                         <button onClick={prevDay} className="p-2 hover:bg-white/10 rounded-lg transition-colors text-primary">
                             <ChevronLeft size={24} />
                         </button>
-                        <div className="flex items-center gap-2 font-bold min-w-[200px] justify-center capitalize text-lg">
-                            <CalendarIcon size={20} className="text-gray-400" />
-                            {format(currentDate, 'EEEE d MMMM', { locale: es })}
+                        <div className="flex items-center gap-2 font-bold min-w-[140px] md:min-w-[200px] justify-center capitalize text-sm md:text-lg">
+                            <CalendarIcon size={20} className="text-gray-400 hidden sm:block" />
+                            <span className="md:hidden">{format(currentDate, 'EEE d MMM', { locale: es })}</span>
+                            <span className="hidden md:inline">{format(currentDate, 'EEEE d MMMM', { locale: es })}</span>
                         </div>
                         <button onClick={nextDay} className="p-2 hover:bg-white/10 rounded-lg transition-colors text-primary">
                             <ChevronRight size={24} />
@@ -166,12 +168,13 @@ export default function ClubCalendar() {
                 </div>
             </div>
 
-            <div className="card overflow-hidden overflow-x-auto border border-white/10 shadow-2xl bg-[#0F172A]">
+            {/* Desktop Grid View */}
+            <div className="hidden md:block card overflow-hidden overflow-x-auto border border-white/10 shadow-2xl bg-[#0F172A]">
                 <div className="min-w-[800px]">
                     {/* Header */}
-                    <div className="grid border-b border-white/10 bg-surface/50 backdrop-blur-sm sticky top-0 z-10"
+                    <div className="grid border-b border-white/10 bg-surface/95 backdrop-blur-sm sticky top-0 z-20"
                         style={{ gridTemplateColumns: `80px repeat(${courts.length}, 1fr)` }}>
-                        <div className="p-4 font-bold text-gray-400 text-center flex items-center justify-center border-r border-white/10">
+                        <div className="p-4 font-bold text-gray-400 text-center flex items-center justify-center border-r border-white/10 sticky left-0 z-30 bg-[#0F172A] shadow-[4px_0_24px_-2px_rgba(0,0,0,0.5)]">
                             <Clock size={20} />
                         </div>
                         {courts.map(court => (
@@ -289,6 +292,22 @@ export default function ClubCalendar() {
                     </div>
                 </div>
             </div>
+
+            {/* Mobile Calendar View (Agenda/List Style) */}
+            <MobileCalendar
+                date={currentDate}
+                timeSlots={timeSlots}
+                courts={courts}
+                bookings={bookings}
+                onSlotClick={(court, time) => setManualBooking({ court, time })}
+                onPaymentClick={(booking) => {
+                    setPaymentConfirmation({
+                        bookingId: booking.id,
+                        price: booking.price,
+                        playerName: booking.player_name || booking.guest_name || 'Sin nombre'
+                    });
+                }}
+            />
 
             {/* Manual Booking Modal */}
             {manualBooking && (

@@ -191,17 +191,17 @@ export default function ClubDashboard() {
 
     return (
         <div className="space-y-8">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+                    <h1 className="text-2xl md:text-3xl font-bold text-white">Dashboard</h1>
                     <p className="text-gray-400">Bienvenido de nuevo, {club.name}</p>
                 </div>
-                <div className="flex gap-2">
-                    <Button onClick={fetchData} variant="outline" className="gap-2">
+                <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                    <Button onClick={fetchData} variant="outline" className="gap-2 justify-center w-full sm:w-auto">
                         <RefreshCw size={16} />
                         Actualizar
                     </Button>
-                    <Button onClick={exportToExcel} variant="outline" className="gap-2">
+                    <Button onClick={exportToExcel} variant="outline" className="gap-2 justify-center w-full sm:w-auto">
                         <Download size={16} />
                         Exportar Mes
                     </Button>
@@ -209,9 +209,9 @@ export default function ClubDashboard() {
             </div>
 
             {/* Main Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 {statCards.map((stat, i) => (
-                    <div key={i} className="bg-surface rounded-xl p-6 border border-white/5 hover:border-white/10 transition-colors">
+                    <div key={i} className="bg-surface rounded-xl p-4 md:p-6 border border-white/5 hover:border-white/10 transition-colors">
                         <div className="flex items-center justify-between mb-4">
                             <div className={`p-3 rounded-xl ${stat.bg} ${stat.color}`}>
                                 <stat.icon size={24} />
@@ -223,10 +223,10 @@ export default function ClubDashboard() {
                 ))}
             </div>
 
-            {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Charts Section - Hidden on mobile */}
+            <div className="hidden md:grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
                 {/* Daily Income Chart */}
-                <div className="bg-surface rounded-xl p-6 border border-white/5">
+                <div className="bg-surface rounded-xl p-4 md:p-6 border border-white/5">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-lg font-bold text-white">Ingresos Semanales</h3>
                     </div>
@@ -250,7 +250,7 @@ export default function ClubDashboard() {
                 </div>
 
                 {/* Monthly Income Chart */}
-                <div className="bg-surface rounded-xl p-6 border border-white/5">
+                <div className="bg-surface rounded-xl p-4 md:p-6 border border-white/5">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-lg font-bold text-white">Ingresos Mensuales</h3>
                     </div>
@@ -274,9 +274,14 @@ export default function ClubDashboard() {
                 </div>
             </div>
 
+            {/* Mobile Chart Placeholder */}
+            <div className="md:hidden bg-surface rounded-xl p-4 border border-white/5 text-center">
+                <p className="text-gray-400 text-sm">Los gráficos detallados están disponibles en la versión de escritorio.</p>
+            </div>
+
             {/* Occupancy & Court Status */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 bg-surface rounded-xl p-6 border border-white/5">
+                <div className="lg:col-span-2 bg-surface rounded-xl p-6 border border-white/5 hidden md:block">
                     <h3 className="text-lg font-bold text-white mb-6">Ocupación por Hora (Promedio Mes)</h3>
                     <div className="space-y-4">
                         {hourlyOccupancy.map((item, i) => (

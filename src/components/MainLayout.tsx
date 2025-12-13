@@ -11,11 +11,14 @@ export default function MainLayout() {
     const { user, logout } = useAuth();
     const location = useLocation();
     const { notifications, unreadCount, markAsRead } = useNotifications();
-    const [showNotifications, setShowNotifications] = useState(false);
+    // State split to prevent collisions
+    const [showDesktopNotifications, setShowDesktopNotifications] = useState(false);
+    const [showMobileNotifications, setShowMobileNotifications] = useState(false);
 
     const handleNotificationClick = (notificationId: string) => {
         markAsRead(notificationId);
-        setShowNotifications(false);
+        setShowDesktopNotifications(false);
+        setShowMobileNotifications(false);
     };
 
     const playerLinks = [
@@ -69,10 +72,10 @@ export default function MainLayout() {
                     {/* Sidebar Notification Button */}
                     <div className="relative">
                         <button
-                            onClick={() => setShowNotifications(!showNotifications)}
+                            onClick={() => setShowDesktopNotifications(!showDesktopNotifications)}
                             className={clsx(
                                 'w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-gray-400 hover:bg-white/5 hover:text-white',
-                                showNotifications && 'bg-white/5 text-white'
+                                showDesktopNotifications && 'bg-white/5 text-white'
                             )}
                         >
                             <div className="relative">
@@ -84,7 +87,7 @@ export default function MainLayout() {
                             <span>Notificaciones</span>
                         </button>
 
-                        {showNotifications && (
+                        {showDesktopNotifications && (
                             <div className="absolute left-0 top-full mt-2 w-full bg-surface border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
                                 <div className="p-3 border-b border-white/10 font-bold text-sm">Notificaciones</div>
                                 <div className="max-h-80 overflow-y-auto">
@@ -136,12 +139,12 @@ export default function MainLayout() {
             </aside>
 
             {/* Mobile Header */}
-            <div className="md:hidden fixed top-0 left-0 right-0 bg-surface border-b border-white/5 p-4 z-20 flex justify-between items-center">
+            <div className="md:hidden fixed top-0 left-0 right-0 bg-surface border-b border-white/5 p-4 z-50 flex justify-between items-center">
                 <AppLogo variant="small" />
 
                 {/* Notification Bell (Mobile) */}
                 <div className="relative">
-                    <button onClick={() => setShowNotifications(!showNotifications)} className="p-2 text-gray-400 hover:text-white relative">
+                    <button onClick={() => setShowMobileNotifications(!showMobileNotifications)} className="p-2 text-gray-400 hover:text-white relative">
                         <Bell size={24} />
                         {unreadCount > 0 && (
                             <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-surface"></span>
@@ -149,7 +152,7 @@ export default function MainLayout() {
                     </button>
 
                     {/* Dropdown */}
-                    {showNotifications && (
+                    {showMobileNotifications && (
                         <div className="absolute right-0 mt-2 w-64 bg-surface border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
                             <div className="p-3 border-b border-white/10 font-bold text-sm">Notificaciones</div>
                             <div className="max-h-64 overflow-y-auto">
@@ -183,7 +186,7 @@ export default function MainLayout() {
 
 
             {/* Main Content */}
-            <main className="flex-1 md:ml-64 p-4 md:p-8 pt-20 md:pt-8">
+            <main className="flex-1 md:ml-64 p-4 md:p-8 pt-20 md:pt-8 pb-24 md:pb-8">
                 <Outlet />
             </main>
 
@@ -206,7 +209,7 @@ export default function MainLayout() {
                                     <div className="flex h-7 items-center justify-center">
                                         <Icon size={24} />
                                     </div>
-                                    <p className="text-xs font-medium tracking-tight">{link.label}</p>
+                                    <p className="text-[10px] truncate max-w-[64px] text-center font-medium tracking-tight">{link.label}</p>
                                 </Link>
                             );
                         })}
