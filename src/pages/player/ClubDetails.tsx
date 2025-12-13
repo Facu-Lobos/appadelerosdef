@@ -238,70 +238,129 @@ export default function ClubDetails() {
 
                     {/* Schedule Grid */}
                     {club.schedule?.open_days.includes(selectedDate.getDay()) ? (
-                        <div className="card overflow-hidden overflow-x-auto border border-white/10 shadow-2xl bg-[#0F172A]">
-                            <div className="min-w-[800px]">
-                                {/* Header */}
-                                <div className="grid border-b border-white/10 bg-surface/50 backdrop-blur-sm sticky top-0 z-10"
-                                    style={{ gridTemplateColumns: `80px repeat(${courts.length}, 1fr)` }}>
-                                    <div className="p-4 font-bold text-gray-400 text-center flex items-center justify-center border-r border-white/10">
-                                        <Clock size={20} />
-                                    </div>
-                                    {courts.map(court => (
-                                        <div key={court.id} className="p-4 font-bold text-center border-r border-white/10 last:border-r-0">
-                                            <div className="text-primary text-lg">{court.name}</div>
-                                            <div className="text-xs text-gray-400 uppercase tracking-wider mt-1">
-                                                {court.type === 'crystal' ? 'Cristal' : 'Muro'} • {court.surface === 'synthetic' ? 'Sintético' : 'Cemento'}
-                                            </div>
+                        <>
+                            {/* Desktop Grid */}
+                            <div className="hidden md:block card overflow-hidden overflow-x-auto border border-white/10 shadow-2xl bg-[#0F172A]">
+                                <div className="min-w-[800px]">
+                                    {/* Header */}
+                                    <div className="grid border-b border-white/10 bg-surface/50 backdrop-blur-sm sticky top-0 z-10"
+                                        style={{ gridTemplateColumns: `80px repeat(${courts.length}, 1fr)` }}>
+                                        <div className="p-4 font-bold text-gray-400 text-center flex items-center justify-center border-r border-white/10">
+                                            <Clock size={20} />
                                         </div>
-                                    ))}
-                                </div>
-                                {/* Grid */}
-                                <div className="divide-y divide-white/5">
-                                    {timeSlots.map(time => (
-                                        <div key={time} className="grid h-32 transition-colors hover:bg-white/[0.02]"
-                                            style={{ gridTemplateColumns: `80px repeat(${courts.length}, 1fr)` }}>
-                                            <div className="sticky left-0 z-20 p-2 text-center text-gray-400 font-medium border-r border-white/10 flex items-center justify-center text-sm bg-[#0F172A] shadow-[4px_0_24px_-2px_rgba(0,0,0,0.5)]">
-                                                {time}
+                                        {courts.map(court => (
+                                            <div key={court.id} className="p-4 font-bold text-center border-r border-white/10 last:border-r-0">
+                                                <div className="text-primary text-lg">{court.name}</div>
+                                                <div className="text-xs text-gray-400 uppercase tracking-wider mt-1">
+                                                    {court.type === 'crystal' ? 'Cristal' : 'Muro'} • {court.surface === 'synthetic' ? 'Sintético' : 'Cemento'}
+                                                </div>
                                             </div>
-                                            {courts.map((court) => {
-                                                const isTaken = isSlotTaken(court.id, time);
-                                                const isSelected = selectedCourt === court.id && selectedTime === time;
+                                        ))}
+                                    </div>
+                                    {/* Desktop Grid Content */}
+                                    <div className="divide-y divide-white/5">
+                                        {timeSlots.map(time => (
+                                            <div key={time} className="grid h-32 transition-colors hover:bg-white/[0.02]"
+                                                style={{ gridTemplateColumns: `80px repeat(${courts.length}, 1fr)` }}>
+                                                <div className="sticky left-0 z-20 p-2 text-center text-gray-400 font-medium border-r border-white/10 flex items-center justify-center text-sm bg-[#0F172A] shadow-[4px_0_24px_-2px_rgba(0,0,0,0.5)]">
+                                                    {time}
+                                                </div>
+                                                {courts.map((court) => {
+                                                    const isTaken = isSlotTaken(court.id, time);
+                                                    const isSelected = selectedCourt === court.id && selectedTime === time;
 
-                                                return (
-                                                    <div key={`${court.id}-${time}`} className="border-r border-white/10 last:border-r-0 p-2 relative group">
-                                                        {isTaken ? (
-                                                            <div className="w-full h-full bg-white/5 border border-white/5 rounded-lg flex items-center justify-center cursor-not-allowed">
-                                                                <span className="text-xs font-bold text-gray-500 uppercase">Ocupado</span>
-                                                            </div>
-                                                        ) : (
-                                                            <div
+                                                    return (
+                                                        <div key={`${court.id}-${time}`} className="border-r border-white/10 last:border-r-0 p-2 relative group">
+                                                            {isTaken ? (
+                                                                <div className="w-full h-full bg-white/5 border border-white/5 rounded-lg flex items-center justify-center cursor-not-allowed">
+                                                                    <span className="text-xs font-bold text-gray-500 uppercase">Ocupado</span>
+                                                                </div>
+                                                            ) : (
+                                                                <div
+                                                                    onClick={() => {
+                                                                        setSelectedCourt(court.id);
+                                                                        setSelectedTime(time);
+                                                                    }}
+                                                                    className={`w-full h-full relative cursor-pointer transition-all duration-300 p-1 ${isSelected ? 'scale-[0.98]' : 'hover:scale-[1.02]'}`}
+                                                                >
+                                                                    <CourtVisual className={isSelected ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}>
+                                                                        {/* Hover/Selection Overlay */}
+                                                                        <div className={`absolute inset-0 flex flex-col items-center justify-center z-30 transition-all duration-300 ${isSelected ? 'bg-black/40 backdrop-blur-[1px]' : 'bg-black/20 opacity-0 group-hover:opacity-100 hover:bg-black/40'
+                                                                            }`}>
+                                                                            <span className="text-white font-bold text-lg drop-shadow-md">{time}</span>
+                                                                            <span className={`text-xs font-medium px-2 py-0.5 rounded mt-1 transition-all ${isSelected ? 'bg-primary text-white' : 'text-white/80'
+                                                                                }`}>
+                                                                                {isSelected ? 'SELECCIONADO' : 'DISPONIBLE'}
+                                                                            </span>
+                                                                        </div>
+                                                                    </CourtVisual>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Mobile List View */}
+                            <div className="md:hidden space-y-4">
+                                {timeSlots.map(time => {
+                                    const availableCourts = courts.filter(c => !isSlotTaken(c.id, time));
+                                    const hasAvailability = availableCourts.length > 0;
+                                    const isExpanded = selectedTime === time;
+
+                                    return (
+                                        <div key={time} className={`bg-surface border ${hasAvailability ? 'border-white/10' : 'border-white/5 opacity-50'} rounded-xl overflow-hidden`}>
+                                            <div className="p-4 flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="font-bold text-lg text-white font-mono">{time}</div>
+                                                    <div className="text-sm text-gray-400">
+                                                        {hasAvailability ? `${availableCourts.length} canchas libres` : 'Completo'}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* List of courts for this time */}
+                                            {hasAvailability && (
+                                                <div className="border-t border-white/5 divide-y divide-white/5">
+                                                    {availableCourts.map(court => {
+                                                        const isSelected = selectedCourt === court.id && selectedTime === time;
+
+                                                        return (
+                                                            <button
+                                                                key={court.id}
                                                                 onClick={() => {
                                                                     setSelectedCourt(court.id);
                                                                     setSelectedTime(time);
                                                                 }}
-                                                                className={`w-full h-full relative cursor-pointer transition-all duration-300 p-1 ${isSelected ? 'scale-[0.98]' : 'hover:scale-[1.02]'}`}
+                                                                className={`w-full text-left p-4 transition-colors flex items-center justify-between ${isSelected ? 'bg-primary/20 hover:bg-primary/30' : 'hover:bg-white/5'}`}
                                                             >
-                                                                <CourtVisual className={isSelected ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}>
-                                                                    {/* Hover/Selection Overlay */}
-                                                                    <div className={`absolute inset-0 flex flex-col items-center justify-center z-30 transition-all duration-300 ${isSelected ? 'bg-black/40 backdrop-blur-[1px]' : 'bg-black/20 opacity-0 group-hover:opacity-100 hover:bg-black/40'
-                                                                        }`}>
-                                                                        <span className="text-white font-bold text-lg drop-shadow-md">{time}</span>
-                                                                        <span className={`text-xs font-medium px-2 py-0.5 rounded mt-1 transition-all ${isSelected ? 'bg-primary text-white' : 'text-white/80'
-                                                                            }`}>
-                                                                            {isSelected ? 'SELECCIONADO' : 'DISPONIBLE'}
-                                                                        </span>
+                                                                <div>
+                                                                    <div className={`font-bold ${isSelected ? 'text-primary' : 'text-white'}`}>{court.name}</div>
+                                                                    <div className="text-xs text-gray-400 capitalize">{court.surface} • {court.type}</div>
+                                                                </div>
+                                                                {isSelected ? (
+                                                                    <div className="bg-primary text-background text-xs font-bold px-3 py-1.5 rounded-full">
+                                                                        Seleccionada
                                                                     </div>
-                                                                </CourtVisual>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
+                                                                ) : (
+                                                                    <div className="text-primary text-sm font-medium">
+                                                                        ${court.hourly_rate || 2000}
+                                                                    </div>
+                                                                )}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
                                         </div>
-                                    ))}
-                                </div>
+                                    );
+                                })}
                             </div>
-                        </div>
+                        </>
                     ) : (
                         <div className="text-center py-12 bg-white/5 rounded-xl border border-white/10">
                             <div className="text-4xl mb-4">😴</div>

@@ -139,7 +139,7 @@ export default function MainLayout() {
             </aside>
 
             {/* Mobile Header */}
-            <div className="md:hidden fixed top-0 left-0 right-0 bg-surface border-b border-white/5 p-4 z-50 flex justify-between items-center">
+            <div className="md:hidden fixed top-0 left-0 right-0 bg-dark-primary border-b border-white/5 p-4 z-50 flex justify-between items-center shadow-lg">
                 <AppLogo variant="small" />
 
                 {/* Notification Bell (Mobile) */}
@@ -186,14 +186,14 @@ export default function MainLayout() {
 
 
             {/* Main Content */}
-            <main className="flex-1 md:ml-64 p-4 md:p-8 pt-20 md:pt-8 pb-24 md:pb-8">
+            <main className="flex-1 md:ml-64 p-4 md:p-8 pt-24 md:pt-8 pb-28 md:pb-8">
                 <Outlet />
             </main>
 
             {/* Mobile Bottom Nav */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 z-40">
+            <div className="md:hidden fixed bottom-0 left-0 right-0 z-[60]">
                 <div className="container mx-auto max-w-lg">
-                    <div className="flex gap-2 border-t border-dark-tertiary bg-dark-secondary px-4 pb-2 pt-2 rounded-t-2xl shadow-2xl justify-between">
+                    <div className="flex gap-2 border-t border-white/10 bg-dark-primary px-4 pb-4 pt-2 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.3)] justify-between">
                         {links.map((link) => {
                             const Icon = link.icon;
                             const isActive = location.pathname === link.to;

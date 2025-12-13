@@ -48,7 +48,7 @@ export default function ChatWindow({ otherUserId, otherUserName, otherUserAvatar
     };
 
     return (
-        <div className="fixed bottom-0 right-4 w-80 md:w-96 h-[500px] bg-surface border border-white/10 rounded-t-xl shadow-2xl flex flex-col z-50">
+        <div className="fixed bottom-20 right-4 md:bottom-0 md:right-4 w-80 md:w-96 h-[400px] md:h-[500px] bg-dark-secondary border border-white/20 rounded-xl md:rounded-b-none md:rounded-t-xl shadow-2xl flex flex-col z-50">
             {/* Header */}
             <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/5 rounded-t-xl">
                 <div className="flex items-center gap-3">
@@ -82,13 +82,13 @@ export default function ChatWindow({ otherUserId, otherUserName, otherUserAvatar
                             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                                 <div
                                     className={`max-w-[80%] p-3 rounded-2xl ${isMe
-                                            ? 'bg-primary text-white rounded-br-none'
-                                            : 'bg-white/10 text-gray-200 rounded-bl-none'
+                                        ? 'bg-primary text-white rounded-br-none'
+                                        : 'bg-white/10 text-gray-200 rounded-bl-none'
                                         }`}
                                 >
-                                    <p>{msg.content}</p>
+                                    <p>{msg.text}</p>
                                     <span className="text-[10px] opacity-50 block text-right mt-1">
-                                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                 </div>
                             </div>
