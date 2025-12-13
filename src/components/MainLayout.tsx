@@ -45,7 +45,7 @@ export default function MainLayout() {
             {/* Sidebar */}
             <aside className="w-64 bg-surface border-r border-white/5 flex flex-col fixed h-full z-10 hidden md:flex">
                 <div className="p-6">
-                    <AppLogo variant="small" />
+                    <AppLogo />
                 </div>
 
                 <nav className="flex-1 px-4 space-y-2">

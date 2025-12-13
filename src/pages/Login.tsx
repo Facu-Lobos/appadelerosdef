@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Mail, Lock, ArrowLeft } from 'lucide-react';
-import Logo from '../components/Logo';
+import { AppLogo } from '../components/AppLogo';
 import { PadelBallIcon, PadelRacketIcon } from '../components/icons';
 
 export default function Login() {
@@ -30,6 +30,7 @@ export default function Login() {
     }, [user, navigate]);
 
     const handleAuth = async (e: React.FormEvent) => {
+        // ... (existing implementation)
         e.preventDefault();
         setLoading(true);
         try {
@@ -63,8 +64,8 @@ export default function Login() {
         fontFamily: "'Poppins', sans-serif",
         color: '#000000',
         fontWeight: '900',
-        WebkitTextStroke: '0.75px #000000',
-        textStroke: '0.75px #000000'
+        WebkitTextStroke: '0.75px #ffffff',
+        textStroke: '0.75px #ffffff'
     };
 
     if (view === 'landing') {
@@ -155,7 +156,7 @@ export default function Login() {
                     </div>
                     <div className="px-4 pt-6 pb-4 text-center">
                         <div className="flex justify-center items-center gap-4">
-                            <Logo className="h-7 w-28" />
+                            <AppLogo className="h-7" variant="small" />
                         </div>
                     </div>
                 </div>
@@ -195,7 +196,9 @@ export default function Login() {
 
                 <div className="bg-surface/80 border border-white/10 rounded-2xl p-8 shadow-2xl backdrop-blur-md">
                     <div className="text-center mb-8">
-                        <Logo className="h-10 w-40 mx-auto mb-6" />
+                        <div className="flex justify-center mb-6">
+                            <AppLogo />
+                        </div>
                         <h2 className="text-3xl font-bold text-white mb-2">
                             {view === 'login' ? 'Bienvenido' : 'Crear Cuenta'}
                         </h2>
