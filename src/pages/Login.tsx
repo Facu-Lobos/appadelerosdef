@@ -81,7 +81,7 @@ export default function Login() {
                             ></div>
                         </div>
                     </div>
-                    <div className="flex items-center justify-center text-[35px] font-black tracking-wider leading-tight px-4 text-center pb-3 pt-5">
+                    <div className="flex items-center justify-center text-[35px] font-black tracking-wider leading-tight px-4 text-center pb-3 pt-5 scale-125 origin-center my-4">
                         {/* Static 'A', highest z-index */}
                         <span style={{ ...textStyle, position: 'relative', zIndex: 11, top: '0px' }}>A</span>
 
