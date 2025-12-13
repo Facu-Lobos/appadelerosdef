@@ -168,117 +168,89 @@ export default function Login() {
 
     // Login/Signup Form View
     return (
-        <div className="min-h-screen flex text-white relative">
-            {/* Split Screen Layout */}
-
-            {/* Left Side: Form Container */}
-            <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 lg:p-12 bg-dark-primary z-10 relative">
-                <div className="w-full max-w-md space-y-8">
-                    <button
-                        onClick={() => setView('landing')}
-                        className="text-gray-400 hover:text-white flex items-center gap-2 transition-colors -ml-2"
-                    >
-                        <ArrowLeft size={20} />
-                        Volver al inicio
-                    </button>
-
-                    <div className="text-center">
-                        <Logo className="h-10 w-40 mx-auto mb-6" />
-                        <h2 className="text-3xl lg:text-4xl font-bold text-white mb-3">
-                            {view === 'login' ? 'Bienvenido de nuevo' : 'Crear Cuenta'}
-                        </h2>
-                        <p className="text-gray-400 text-lg">
-                            {role === 'player' ? 'Portal de Jugadores' : 'Gestión de Clubes'}
-                        </p>
-                    </div>
-
-                    <div className="bg-surface/50 border border-white/5 rounded-2xl p-6 lg:p-8 shadow-xl backdrop-blur-sm">
-                        <form onSubmit={handleAuth} className="space-y-6">
-                            <Input
-                                label="Correo Electrónico"
-                                type="email"
-                                icon={Mail}
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                placeholder="tu@email.com"
-                                className="h-12 bg-black/20"
-                            />
-
-                            <Input
-                                label="Contraseña"
-                                type="password"
-                                icon={Lock}
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                placeholder="••••••••"
-                                className="h-12 bg-black/20"
-                            />
-
-                            <Button
-                                type="submit"
-                                isLoading={loading}
-                                className="w-full h-12 text-lg font-bold shadow-lg shadow-primary/20"
-                                variant="primary"
-                            >
-                                {view === 'login' ? 'Ingresar' : 'Registrarse'}
-                            </Button>
-                        </form>
-
-                        <div className="mt-6 text-center pt-6 border-t border-white/10">
-                            <button
-                                onClick={() => setView(view === 'login' ? 'signup' : 'login')}
-                                className="text-primary hover:text-primary-hover font-medium transition-colors hover:underline"
-                            >
-                                {view === 'login'
-                                    ? '¿No tienes cuenta? Regístrate gratis'
-                                    : '¿Ya tienes cuenta? Inicia sesión aquí'}
-                            </button>
-                        </div>
-                    </div>
-
-                    <p className="text-center text-gray-500 text-sm mt-8">
-                        &copy; {new Date().getFullYear()} APPadeleros. Todos los derechos reservados.
-                    </p>
-                </div>
-            </div>
-
-            {/* Right Side: Image Panel (Hidden on Mobile, Visible on Desktop) */}
-            <div className="hidden lg:block w-1/2 relative bg-black">
+        <div className="min-h-screen flex items-center justify-center text-white relative overflow-hidden">
+            {/* Full Screen Background */}
+            <div className="absolute inset-0 z-0">
                 <div
-                    className="absolute inset-0 bg-cover bg-center transition-all duration-1000 ease-in-out"
+                    className="absolute inset-0 bg-cover bg-center transition-all duration-1000 ease-in-out transform scale-105"
                     style={{
                         backgroundImage: `url("${role === 'club' ? '/admin-login-bg.png' : '/login-bg.png'}")`
                     }}
                 >
-                    <div className="absolute inset-0 bg-gradient-to-l from-transparent via-black/20 to-dark-primary/90"></div>
-                </div>
-
-                {/* Dynamic Quote/Text based on Role */}
-                <div className="absolute bottom-12 left-12 right-12 text-white z-20">
-                    <blockquote className="text-2xl font-medium border-l-4 border-primary pl-6 mb-4 leading-relaxed">
-                        {role === 'club'
-                            ? "Optimiza la gestión de tus canchas y aumenta tus reservas con la plataforma líder para clubes."
-                            : "Encuentra tu próximo partido, reserva cancha en segundos y nivela tu juego."
-                        }
-                    </blockquote>
-                    <p className="text-gray-300 pl-6 font-bold uppercase tracking-wider text-sm">
-                        {role === 'club' ? 'Panel Administrativo' : 'Experiencia de Jugador'}
-                    </p>
+                    {/* Gradient Overlay for legibility */}
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"></div>
                 </div>
             </div>
 
-            {/* Mobile Background (Absolute layer for mobile only) */}
-            <div className="lg:hidden absolute inset-0 z-0">
-                <div
-                    className="absolute inset-0 bg-cover bg-center"
-                    style={{
-                        backgroundImage: 'url("/login-bg.png")',
-                    }}
+            {/* Centered Form Container */}
+            <div className="w-full max-w-md p-4 relative z-10 animate-in fade-in zoom-in-95 duration-500">
+                <button
+                    onClick={() => setView('landing')}
+                    className="absolute -top-12 left-0 text-white/80 hover:text-white flex items-center gap-2 transition-colors"
                 >
-                    <div className="absolute inset-0 bg-dark-primary/90 backdrop-blur-sm"></div>
+                    <ArrowLeft size={20} />
+                    Volver al inicio
+                </button>
+
+                <div className="bg-surface/80 border border-white/10 rounded-2xl p-8 shadow-2xl backdrop-blur-md">
+                    <div className="text-center mb-8">
+                        <Logo className="h-10 w-40 mx-auto mb-6" />
+                        <h2 className="text-3xl font-bold text-white mb-2">
+                            {view === 'login' ? 'Bienvenido' : 'Crear Cuenta'}
+                        </h2>
+                        <p className="text-gray-300">
+                            {role === 'player' ? 'Portal de Jugadores' : 'Gestión de Clubes'}
+                        </p>
+                    </div>
+
+                    <form onSubmit={handleAuth} className="space-y-5">
+                        <Input
+                            label="Correo Electrónico"
+                            type="email"
+                            icon={Mail}
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            placeholder="tu@email.com"
+                            className="bg-black/30 border-white/10 focus:border-primary/50"
+                        />
+
+                        <Input
+                            label="Contraseña"
+                            type="password"
+                            icon={Lock}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            placeholder="••••••••"
+                            className="bg-black/30 border-white/10 focus:border-primary/50"
+                        />
+
+                        <Button
+                            type="submit"
+                            isLoading={loading}
+                            className="w-full h-12 text-lg font-bold shadow-lg shadow-primary/20 mt-2"
+                            variant="primary"
+                        >
+                            {view === 'login' ? 'Ingresar' : 'Registrarse'}
+                        </Button>
+                    </form>
+
+                    <div className="mt-8 text-center pt-6 border-t border-white/10">
+                        <button
+                            onClick={() => setView(view === 'login' ? 'signup' : 'login')}
+                            className="text-primary hover:text-primary-hover font-medium transition-colors hover:underline"
+                        >
+                            {view === 'login'
+                                ? '¿No tienes cuenta? Regístrate gratis'
+                                : '¿Ya tienes cuenta? Inicia sesión aquí'}
+                        </button>
+                    </div>
                 </div>
+
+                <p className="text-center text-white/60 text-sm mt-8 drop-shadow-md">
+                    &copy; {new Date().getFullYear()} APPadeleros. Todos los derechos reservados.
+                </p>
             </div>
         </div>
     );
