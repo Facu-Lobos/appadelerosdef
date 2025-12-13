@@ -15,7 +15,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({ className, variant = 'default'
         color: '#ffffff', // White for Navbar contrast
         fontWeight: '900',
         lineHeight: 1,
-        WebkitTextStroke: isSmall ? '0.5px #E2E8F0' : '0.75px #E2E8F0', // Adjusted stroke for small variant
+        WebkitTextStroke: isSmall ? '0.5px #000000' : '0.75px #000000', // Black stroke as requested
     };
 
     const fontSize = isSmall ? 'text-2xl' : 'text-[35px]';

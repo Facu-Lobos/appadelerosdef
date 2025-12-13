@@ -63,8 +63,8 @@ export default function Login() {
         fontFamily: "'Poppins', sans-serif",
         color: '#000000',
         fontWeight: '900',
-        WebkitTextStroke: '0.75px #E2E8F0',
-        textStroke: '0.75px #E2E8F0'
+        WebkitTextStroke: '0.75px #000000',
+        textStroke: '0.75px #000000'
     };
 
     if (view === 'landing') {
@@ -81,7 +81,8 @@ export default function Login() {
                     </div>
                     <div className="flex items-center justify-center text-[35px] font-black tracking-wider leading-tight px-4 text-center pb-3 pt-5">
                         {/* Static 'A', highest z-index */}
-                        <span style={{ ...textStyle, position: 'relative', zIndex: 11 }}>A</span>
+                        {/* Lowered 'A' slightly with top: 4px */}
+                        <span style={{ ...textStyle, position: 'relative', zIndex: 11, top: '4px' }}>A</span>
 
                         {/* Animated P, tucked behind A */}
                         <div className="letter-container" style={{ marginLeft: '-8px' }}>
