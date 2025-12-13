@@ -86,7 +86,7 @@ export default function ChatWindow({ otherUserId, otherUserName, otherUserAvatar
                                         : 'bg-white/10 text-gray-200 rounded-bl-none'
                                         }`}
                                 >
-                                    <p>{msg.text}</p>
+                                    <p>{msg.content || msg.text}</p>
                                     <span className="text-[10px] opacity-50 block text-right mt-1">
                                         {(() => {
                                             const dateVal = msg.created_at || msg.timestamp;

@@ -147,7 +147,7 @@ export default function ClubDetails() {
     if (!club) return <div>Club no encontrado</div>;
 
     return (
-        <div className="space-y-6 pb-20">
+        <div className="space-y-6 pb-20 w-full max-w-[100vw] overflow-x-hidden">
             {/* Header */}
             <div className="relative h-48 rounded-2xl overflow-hidden">
                 <img
