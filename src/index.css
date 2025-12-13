@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #00F5D4;
+  --color-primary-hover: #00E0C4;
+  --color-accent: #F5D900;
+  --color-dark-primary: #0F172A;
+  --color-dark-secondary: #1E293B;
+  --color-dark-tertiary: #334155;
+  --color-light-primary: #E2E8F0;
+  --color-light-secondary: #94A3B8;
+
+  --font-sans: "Plus Jakarta Sans", "Noto Sans", sans-serif;
+
+  --animate-slide-in: slideInFromLeft 0.4s ease-out forwards;
+  --animate-draw: draw 0.5s ease-out;
+  --animate-fade-in: fadeIn 0.5s ease-out forwards;
+
+  @keyframes slideInFromLeft {
+    from {
+      transform: translateX(-101%);
+      opacity: 0;
+    }
+
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Custom Utilities */
+.letter-container {
+  display: inline-block;
+  overflow: hidden;
+}
+
+body {
+  @apply bg-dark-primary text-light-primary font-sans;
+}
