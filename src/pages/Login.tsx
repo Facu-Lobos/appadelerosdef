@@ -5,7 +5,14 @@ import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Mail, Lock, ArrowLeft } from 'lucide-react';
-import { AppLogo } from '../components/AppLogo';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../services/supabaseClient';
+import { useAuth } from '../context/AuthContext';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { Mail, Lock, ArrowLeft } from 'lucide-react';
+import Logo from '../components/Logo';
 import { PadelBallIcon, PadelRacketIcon } from '../components/icons';
 
 export default function Login() {
@@ -82,8 +89,8 @@ export default function Login() {
                     </div>
                     <div className="flex items-center justify-center text-[35px] font-black tracking-wider leading-tight px-4 text-center pb-3 pt-5">
                         {/* Static 'A', highest z-index */}
-                        {/* Lowered 'A' slightly with top: 4px */}
-                        <span style={{ ...textStyle, position: 'relative', zIndex: 11, top: '4px' }}>A</span>
+                        {/* Raised 'A' slightly */}
+                        <span style={{ ...textStyle, position: 'relative', zIndex: 11, top: '-2px' }}>A</span>
 
                         {/* Animated P, tucked behind A */}
                         <div className="letter-container" style={{ marginLeft: '-8px' }}>
@@ -156,7 +163,7 @@ export default function Login() {
                     </div>
                     <div className="px-4 pt-6 pb-4 text-center">
                         <div className="flex justify-center items-center gap-4">
-                            <AppLogo className="h-7" variant="small" />
+                            <Logo className="h-7 w-28" />
                         </div>
                     </div>
                 </div>
@@ -196,9 +203,7 @@ export default function Login() {
 
                 <div className="bg-surface/80 border border-white/10 rounded-2xl p-8 shadow-2xl backdrop-blur-md">
                     <div className="text-center mb-8">
-                        <div className="flex justify-center mb-6">
-                            <AppLogo />
-                        </div>
+                        <Logo className="h-10 w-40 mx-auto mb-6" />
                         <h2 className="text-3xl font-bold text-white mb-2">
                             {view === 'login' ? 'Bienvenido' : 'Crear Cuenta'}
                         </h2>

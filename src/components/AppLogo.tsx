@@ -30,7 +30,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({ className, variant = 'default'
         <div className={clsx("flex items-center select-none", className)}>
             <div className={clsx("flex items-center font-black tracking-wider leading-tight text-center relative", fontSize, isSmall && "mt-1")}>
                 {/* A */}
-                <span style={{ ...textStyle, position: 'relative', zIndex: 11 }}>A</span>
+                <span style={{ ...textStyle, position: 'relative', zIndex: 11, top: '-2px' }}>A</span>
 
                 {/* P */}
                 <div style={{ marginLeft: isSmall ? '-4px' : '-8px' }}>
