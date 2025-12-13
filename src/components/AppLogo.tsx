@@ -12,10 +12,12 @@ export const AppLogo: React.FC<AppLogoProps> = ({ className, variant = 'default'
 
     const textStyle = {
         fontFamily: "'Poppins', sans-serif",
-        color: '#ffffff', // White letters
+        color: '#000000', // Black letters
         fontWeight: '900',
         lineHeight: 1,
-        // WebkitTextStroke removed to avoid internal lines
+        WebkitTextStroke: isSmall ? '3px #ffffff' : '4px #ffffff', // Thicker stroke because half is hidden
+        paintOrder: 'stroke fill',
+        WebkitPaintOrder: 'stroke fill', // Safari support
     };
 
     const fontSize = isSmall ? 'text-2xl' : 'text-[35px]';

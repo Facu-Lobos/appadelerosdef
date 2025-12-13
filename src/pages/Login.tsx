@@ -63,9 +63,11 @@ export default function Login() {
 
     const textStyle = {
         fontFamily: "'Poppins', sans-serif",
-        color: '#ffffff',
+        color: '#000000',
         fontWeight: '900',
-        // WebkitTextStroke removed for cleaner look
+        WebkitTextStroke: '4px #ffffff',
+        paintOrder: 'stroke fill',
+        WebkitPaintOrder: 'stroke fill',
     };
 
     if (view === 'landing') {
