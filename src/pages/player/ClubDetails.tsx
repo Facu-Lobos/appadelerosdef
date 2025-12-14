@@ -151,7 +151,7 @@ export default function ClubDetails() {
     return (
         <div className="space-y-6 pb-20 w-full max-w-[100vw] overflow-x-hidden">
             {/* Header */}
-            <div className="relative h-48 rounded-2xl overflow-hidden">
+            <div className="relative h-48 rounded-2xl overflow-hidden mx-4 md:mx-0">
                 <img
                     src={club.avatar_url || club.photos[0] || "https://via.placeholder.com/800x400"}
                     alt={club.name}

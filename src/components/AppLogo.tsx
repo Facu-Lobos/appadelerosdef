@@ -27,7 +27,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({ className, variant = 'default'
 
     // Custom A Icon Sizing
     const aIconSize = isSmall ? 'h-6 w-6' : 'h-[36px] w-[36px]';
-    const aIconMargin = isSmall ? '-2px' : '-4px';
+    const aIconMargin = isSmall ? '2px' : '4px'; // Increased spacing (was negative)
 
     // Letter spacing adjustments
     // Specific tweaks can be proportional
@@ -41,22 +41,22 @@ export const AppLogo: React.FC<AppLogoProps> = ({ className, variant = 'default'
                 </div>
 
                 {/* P */}
-                <div style={{ marginLeft: isSmall ? '-4px' : '-8px' }}>
+                <div style={{ marginLeft: isSmall ? '0px' : '0px' }}> {/* Removed negative margin */}
                     <span style={{ ...textStyle, display: 'inline-block', position: 'relative', zIndex: 10 }}>
                         P
                     </span>
                 </div>
 
                 {/* Racket Icon (replaces second P) */}
-                <div style={{ marginLeft: isSmall ? '-4px' : '-12px', position: 'relative', zIndex: 9 }}>
+                <div style={{ marginLeft: isSmall ? '-3px' : '-10px', position: 'relative', zIndex: 9 }}>
                     <PadelRacketIcon className={clsx(racketSize, translateRacket)} />
                 </div>
 
                 {/* adeler */}
                 {"adeler".split('').map((char, index) => {
                     const charMarginLeft = index === 0
-                        ? (isSmall ? '-8px' : '-22px')
-                        : (isSmall ? '-2px' : '-4px');
+                        ? (isSmall ? '-4px' : '-14px') // Relaxed from -8/-22
+                        : (isSmall ? '-1px' : '-2px'); // Relaxed from -2/-4
 
                     return (
                         <div key={index} style={{ marginLeft: charMarginLeft, position: 'relative', zIndex: 8 - index }}>
@@ -68,12 +68,12 @@ export const AppLogo: React.FC<AppLogoProps> = ({ className, variant = 'default'
                 })}
 
                 {/* Ball Icon (replaces O) */}
-                <div style={{ marginLeft: isSmall ? '-4px' : '-8px', position: 'relative', zIndex: 2 }}>
+                <div style={{ marginLeft: isSmall ? '-2px' : '-6px', position: 'relative', zIndex: 2 }}>
                     <PadelBallIcon className={clsx(ballSize, "animate-bounce-slow")} />
                 </div>
 
                 {/* s */}
-                <div style={{ marginLeft: isSmall ? '-4px' : '-8px', position: 'relative', zIndex: 1 }}>
+                <div style={{ marginLeft: isSmall ? '-2px' : '-6px', position: 'relative', zIndex: 1 }}>
                     <span style={textStyle}>s</span>
                 </div>
             </div>
