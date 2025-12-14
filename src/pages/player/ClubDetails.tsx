@@ -344,8 +344,8 @@ export default function ClubDetails() {
                                                                     <div className="text-[10px] text-gray-400 capitalize">{court.surface} • {court.type}</div>
                                                                 </div>
                                                                 {isSelected ? (
-                                                                    <div className="bg-primary text-background text-[10px] font-bold px-2 py-0.5 rounded-full">
-                                                                        OK
+                                                                    <div className="bg-primary text-background text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                                        <span className="h-2 w-2 bg-background rounded-full" /> Seleccionado
                                                                     </div>
                                                                 ) : (
                                                                     <div className="text-primary text-xs font-medium">
@@ -414,7 +414,7 @@ export default function ClubDetails() {
                     </div>
 
                     {/* Ranking Table */}
-                    <div className="bg-surface border border-white/10 rounded-xl overflow-hidden min-h-[400px]">
+                    <div className="bg-surface border border-white/10 rounded-xl overflow-x-auto min-h-[400px]">
                         {rankingLoading ? (
                             <div className="flex items-center justify-center h-64 text-gray-400">
                                 <div className="animate-spin mr-2 h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>

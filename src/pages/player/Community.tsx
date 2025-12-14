@@ -148,7 +148,7 @@ export default function PlayerCommunity() {
                     return (
                         <div key={player.id} className="card flex items-center justify-between p-4">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full bg-surface border-2 border-white/10 overflow-hidden">
+                                <div className="w-12 h-12 rounded-full bg-surface border-2 border-white/10 overflow-hidden shrink-0 aspect-square">
                                     <img
                                         src={player.avatar_url || "https://via.placeholder.com/150"}
                                         alt={player.name}

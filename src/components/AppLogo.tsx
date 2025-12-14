@@ -1,5 +1,5 @@
 import React from 'react';
-import { PadelBallIcon, PadelRacketIcon } from './icons';
+import { PadelBallIcon, PadelRacketIcon, LetterAIcon } from './icons';
 import clsx from 'clsx';
 
 interface AppLogoProps {
@@ -25,14 +25,20 @@ export const AppLogo: React.FC<AppLogoProps> = ({ className, variant = 'default'
     const ballSize = isSmall ? 'h-5 w-5' : 'h-6 w-6';
     const translateRacket = isSmall ? 'translate-y-[0px]' : 'translate-y-[0px]';
 
+    // Custom A Icon Sizing
+    const aIconSize = isSmall ? 'h-6 w-6' : 'h-[36px] w-[36px]';
+    const aIconMargin = isSmall ? '-2px' : '-4px';
+
     // Letter spacing adjustments
     // Specific tweaks can be proportional
 
     return (
         <div className={clsx("flex items-center select-none", className)}>
             <div className={clsx("flex items-center font-black tracking-wider leading-tight text-center relative", fontSize, isSmall && "mt-1")}>
-                {/* A */}
-                <span style={{ ...textStyle, position: 'relative', zIndex: 11, top: '0px' }}>A</span>
+                {/* A (Custom Icon) */}
+                <div style={{ marginRight: aIconMargin, position: 'relative', zIndex: 11, display: 'flex', alignItems: 'center' }}>
+                    <LetterAIcon className={aIconSize} />
+                </div>
 
                 {/* P */}
                 <div style={{ marginLeft: isSmall ? '-4px' : '-8px' }}>

@@ -106,14 +106,18 @@ export default function PlayerHome() {
                                     </Button>
                                     <Button variant="secondary" size="sm" icon={MessageCircle} onClick={(e) => {
                                         e.stopPropagation();
-                                        window.location.href = `/player/community?chatWith=${club.id}&name=${encodeURIComponent(club.name)}&avatar=${encodeURIComponent(club.avatar_url || '')}`;
+                                        navigate(`/player/community?chatWith=${club.id}&name=${encodeURIComponent(club.name)}&avatar=${encodeURIComponent(club.avatar_url || '')}`);
                                     }}>
                                         Chat
                                     </Button>
                                     <Button variant="outline" size="sm" icon={UserPlus} onClick={async (e) => {
                                         e.stopPropagation();
                                         const success = await supabaseService.sendFriendRequest(club.id);
-                                        if (success) alert('Solicitud enviada');
+                                        if (success) {
+                                            alert('Solicitud enviada');
+                                        } else {
+                                            alert('No se pudo enviar la solicitud. Verifique si ya existe o intente nuevamente.');
+                                        }
                                     }}>
                                         Conectar
                                     </Button>

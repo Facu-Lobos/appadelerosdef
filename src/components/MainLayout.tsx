@@ -153,9 +153,9 @@ export default function MainLayout() {
 
                     {/* Dropdown */}
                     {showMobileNotifications && (
-                        <div className="absolute left-0 top-full mt-2 w-full bg-dark-primary border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+                        <div className="fixed left-0 right-0 top-[73px] w-full bg-dark-primary border-y border-white/10 shadow-2xl overflow-hidden z-50 rounded-b-2xl">
                             <div className="p-3 border-b border-white/10 font-bold text-sm">Notificaciones</div>
-                            <div className="max-h-80 overflow-y-auto">
+                            <div className="max-h-[60vh] overflow-y-auto">
                                 {notifications.length === 0 ? (
                                     <div className="p-4 text-center text-xs text-gray-500">No tienes notificaciones</div>
                                 ) : (
@@ -186,7 +186,7 @@ export default function MainLayout() {
 
 
             {/* Main Content */}
-            <main className="flex-1 md:ml-64 p-4 md:p-8 pt-24 md:pt-8 pb-28 md:pb-8">
+            <main className="flex-1 md:ml-64 p-4 md:p-8 pt-28 md:pt-8 pb-28 md:pb-8">
                 <Outlet />
             </main>
 
