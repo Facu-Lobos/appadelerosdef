@@ -74,3 +74,19 @@ export const PadelRacketIcon = ({ className }: { className?: string }) => (
         </g>
     </svg>
 );
+
+export const LetterAIcon = ({ className }: { className?: string }) => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className={className || "h-8 w-8"}
+        viewBox="0 0 24 24"
+    >
+        <path
+            d="M12 2L2 22h5l2.5-5h9L21 22h5L16 2H12z M12 6.5L14.5 13h-5L12 6.5z"
+            fill="#00F5D4"
+            stroke="#ffffff"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+        />
+    </svg>
+);
