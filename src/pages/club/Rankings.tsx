@@ -85,7 +85,7 @@ export default function ClubRankings() {
                 </div>
             </div>
 
-            <div className="bg-surface border border-white/10 rounded-xl overflow-x-auto min-h-[400px]">
+            <div className="bg-surface border border-white/10 rounded-xl overflow-x-auto min-h-[400px] max-w-[96%] mx-auto">
                 {loading ? (
                     <div className="flex items-center justify-center h-64 text-gray-400">
                         <RefreshCw className="animate-spin mr-2" /> Cargando ranking...

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useToast } from '../../context/ToastContext';
 import { supabaseService } from '../../services/supabaseService';
 import type { ClubProfile, Court } from '../../types';
 import { Button } from '../../components/ui/Button';
@@ -11,6 +12,7 @@ import { CourtVisual } from '../../components/ui/CourtVisual';
 export default function ClubDetails() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const { showToast } = useToast();
     const [club, setClub] = useState<ClubProfile | null>(null);
     const [activeTab, setActiveTab] = useState<'booking' | 'ranking'>('booking');
     const [loading, setLoading] = useState(true);
@@ -306,7 +308,7 @@ export default function ClubDetails() {
                             </div>
 
                             {/* Mobile List View - Compact */}
-                            <div className="md:hidden space-y-3">
+                            <div className="md:hidden space-y-3 max-w-[96%] mx-auto">
                                 {timeSlots.map(time => {
                                     const availableCourts = courts.filter(c => !isSlotTaken(c.id, time));
                                     const hasAvailability = availableCourts.length > 0;
@@ -362,7 +364,7 @@ export default function ClubDetails() {
                                                                             });
 
                                                                             setBookingLoading(false);
-                                                                            alert('Reserva confirmada con éxito');
+                                                                            showToast('Reservado con éxito', 'success');
                                                                             navigate('/player/bookings');
                                                                         }}
                                                                     >
@@ -435,7 +437,7 @@ export default function ClubDetails() {
                     </div>
 
                     {/* Ranking Table */}
-                    <div className="bg-surface border border-white/10 rounded-xl overflow-x-auto min-h-[400px]">
+                    <div className="bg-surface border border-white/10 rounded-xl overflow-x-auto min-h-[400px] max-w-[96%] mx-auto">
                         {rankingLoading ? (
                             <div className="flex items-center justify-center h-64 text-gray-400">
                                 <div className="animate-spin mr-2 h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>

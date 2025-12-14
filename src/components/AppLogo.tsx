@@ -34,7 +34,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({ className, variant = 'default'
 
     return (
         <div className={clsx("flex items-center select-none", className)}>
-            <div className={clsx("flex items-center font-black tracking-wider leading-tight text-center relative", fontSize, isSmall && "mt-1")}>
+            <div className={clsx("flex items-center font-black tracking-wider leading-tight text-center relative pl-2", fontSize, isSmall && "mt-1")}>
                 {/* A (Custom Icon) */}
                 <div style={{ marginRight: aIconMargin, position: 'relative', zIndex: 11, display: 'flex', alignItems: 'center' }}>
                     <LetterAIcon className={aIconSize} />
