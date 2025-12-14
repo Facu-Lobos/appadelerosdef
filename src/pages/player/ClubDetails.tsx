@@ -6,7 +6,7 @@ import type { ClubProfile, Court } from '../../types';
 import { Button } from '../../components/ui/Button';
 import { format, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Calendar, Trophy, MapPin, ArrowLeft, Medal, Clock } from 'lucide-react';
+import { Calendar, Trophy, MapPin, ArrowLeft, Medal, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { CourtVisual } from '../../components/ui/CourtVisual';
 
 export default function ClubDetails() {
@@ -208,33 +208,37 @@ export default function ClubDetails() {
             {activeTab === 'booking' ? (
                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     {/* Date Selection */}
+                    {/* Date Selection - Compact Arrow Navigation */}
                     <div>
                         <h3 className="text-lg font-bold mb-4">Selecciona una fecha</h3>
-                        <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-                            {Array.from({ length: 3 }).map((_, i) => {
-                                const date = addDays(new Date(), i);
-                                const dayIndex = date.getDay();
-                                const isOpenDay = club.schedule?.open_days.includes(dayIndex) ?? true;
-                                const isSelected = format(date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
+                        <div className="flex items-center justify-between bg-surface/50 p-2 rounded-xl border border-white/5 mx-4 md:mx-0">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setSelectedDate(prev => addDays(prev, -1))}
+                                disabled={selectedDate <= new Date()} // Disable past dates
+                                className="h-10 w-10 p-0 rounded-full hover:bg-white/10"
+                            >
+                                <ChevronLeft size={24} />
+                            </Button>
 
-                                return (
-                                    <button
-                                        key={i}
-                                        onClick={() => isOpenDay && setSelectedDate(date)}
-                                        disabled={!isOpenDay}
-                                        className={`flex-shrink-0 p-4 rounded-xl border transition-all min-w-[80px] ${isSelected
-                                            ? 'bg-primary text-background border-primary font-bold scale-105'
-                                            : isOpenDay
-                                                ? 'bg-surface border-white/10 hover:border-white/30 hover:bg-white/5'
-                                                : 'bg-white/5 border-white/5 opacity-50 cursor-not-allowed'
-                                            }`}
-                                    >
-                                        <div className="text-xs uppercase mb-1">{format(date, 'EEE', { locale: es })}</div>
-                                        <div className="text-2xl">{format(date, 'd')}</div>
-                                        {!isOpenDay && <div className="text-[10px] text-red-400 mt-1">Cerrado</div>}
-                                    </button>
-                                );
-                            })}
+                            <div className="flex flex-col items-center">
+                                <span className="text-xs text-primary font-bold uppercase tracking-wider">
+                                    {format(selectedDate, 'EEEE', { locale: es })}
+                                </span>
+                                <span className="text-2xl font-bold text-white">
+                                    {format(selectedDate, 'd MMM', { locale: es })}
+                                </span>
+                            </div>
+
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setSelectedDate(prev => addDays(prev, 1))}
+                                className="h-10 w-10 p-0 rounded-full hover:bg-white/10"
+                            >
+                                <ChevronRight size={24} />
+                            </Button>
                         </div>
                     </div>
 
@@ -312,7 +316,7 @@ export default function ClubDetails() {
                                 {timeSlots.map(time => {
                                     const availableCourts = courts.filter(c => !isSlotTaken(c.id, time));
                                     const hasAvailability = availableCourts.length > 0;
-                                    const isExpanded = selectedTime === time;
+                                    // const isExpanded = selectedTime === time; // Removed
 
                                     return (
                                         <div key={time} className={`bg-surface border ${hasAvailability ? 'border-white/10' : 'border-white/5 opacity-50'} rounded-lg overflow-hidden`}>

@@ -49,34 +49,38 @@ export default function ClubRankings() {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h1 className="text-2xl font-bold">Ranking del Club</h1>
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={handleResetRanking}
-                        className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                        title="Reiniciar Ranking"
-                    >
-                        <Trash2 size={20} />
-                    </button>
-                    <div className="flex gap-2">
-                        {['Masculino', 'Femenino', 'Mixto'].map(g => (
-                            <button
-                                key={g}
-                                onClick={() => setGender(g)}
-                                className={`px-3 py-1 rounded-lg text-sm transition-colors ${gender === g ? 'bg-blue-500 text-white font-bold' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
-                            >
-                                {g}
-                            </button>
-                        ))}
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full md:w-auto">
+                    <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-start">
+                        <button
+                            onClick={handleResetRanking}
+                            className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                            title="Reiniciar Ranking"
+                        >
+                            <Trash2 size={20} />
+                        </button>
+                        <div className="flex gap-2 bg-surface/50 p-1 rounded-lg border border-white/5">
+                            {['Masculino', 'Femenino', 'Mixto'].map(g => (
+                                <button
+                                    key={g}
+                                    onClick={() => setGender(g)}
+                                    className={`px-3 py-1 rounded-lg text-xs md:text-sm transition-colors ${gender === g ? 'bg-blue-500 text-white font-bold' : 'text-gray-400 hover:bg-white/10'}`}
+                                >
+                                    {g}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                    <div className="h-6 w-px bg-white/10 mx-2"></div>
-                    <div className="flex gap-2">
+
+                    <div className="w-full h-px bg-white/10 md:w-px md:h-6 md:bg-white/10 mx-2 hidden md:block"></div>
+
+                    <div className="flex gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 custom-scrollbar">
                         {['8va', '7ma', '6ta', '5ta', '4ta', '3ra', '2da', '1ra'].map(cat => (
                             <button
                                 key={cat}
                                 onClick={() => setCategory(cat)}
-                                className={`px-3 py-1 rounded-lg text-sm transition-colors ${category === cat ? 'bg-primary text-background font-bold' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                                className={`px-3 py-1 rounded-lg text-sm transition-colors whitespace-nowrap ${category === cat ? 'bg-primary text-background font-bold' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                             >
                                 {cat}
                             </button>
