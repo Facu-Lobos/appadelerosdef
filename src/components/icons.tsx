@@ -2,8 +2,8 @@ import React from 'react';
 
 export const PadelBallIcon = ({ className }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className || "h-6 w-6"} viewBox="0 0 24 24">
-        {/* Ball Circle: Filled with primary color */}
-        <circle cx="12" cy="12" r="11" fill="#00F5D4" />
+        {/* Ball Circle: Filled with primary color, Black Stroke */}
+        <circle cx="12" cy="12" r="11" fill="#00F5D4" stroke="#000000" strokeWidth="1.5" />
 
         {/* 'U' shape rotated 45 degrees, larger and touching the edges */}
         <path
@@ -26,10 +26,10 @@ export const PadelRacketIcon = ({ className }: { className?: string }) => (
         viewBox="1 0 64 64"
     >
         <g transform="scale(0.8) translate(6.4, 6.4)">
-            {/* Group for stroked elements */}
+            {/* Group for stroked elements - Black Stroke for Outline */}
             <g
-                stroke="#00F5D4" /* primary color */
-                strokeWidth="3"
+                stroke="#000000"
+                strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
             >
@@ -81,12 +81,14 @@ export const LetterAIcon = ({ className }: { className?: string }) => (
         className={className || "h-8 w-8"}
         viewBox="0 0 24 24"
     >
+        {/* Futuristic 'A' Shape - Cyan fill, BLACK stroke */}
         <path
             d="M12 2L2 22h5l2.5-5h9L21 22h5L16 2H12z M12 6.5L14.5 13h-5L12 6.5z"
             fill="#00F5D4"
-            stroke="#ffffff"
+            stroke="#000000"
             strokeWidth="1.5"
             strokeLinejoin="round"
         />
     </svg>
 );
+

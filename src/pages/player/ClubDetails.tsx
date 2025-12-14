@@ -344,9 +344,30 @@ export default function ClubDetails() {
                                                                     <div className="text-[10px] text-gray-400 capitalize">{court.surface} • {court.type}</div>
                                                                 </div>
                                                                 {isSelected ? (
-                                                                    <div className="bg-primary text-background text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                                                                        <span className="h-2 w-2 bg-background rounded-full" /> Seleccionado
-                                                                    </div>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        className="px-4 py-1 h-8 animate-pulse text-xs font-bold shadow-lg shadow-primary/25"
+                                                                        onClick={async (e) => {
+                                                                            e.stopPropagation();
+                                                                            if (!club) return;
+                                                                            setBookingLoading(true);
+                                                                            const user = await supabaseService.getCurrentUser();
+                                                                            if (!user) { setBookingLoading(false); return; }
+
+                                                                            await supabaseService.createBooking({
+                                                                                court_id: court.id,
+                                                                                user_id: user.id,
+                                                                                date: format(selectedDate, 'yyyy-MM-dd'),
+                                                                                time: time
+                                                                            });
+
+                                                                            setBookingLoading(false);
+                                                                            alert('Reserva confirmada con éxito');
+                                                                            navigate('/player/bookings');
+                                                                        }}
+                                                                    >
+                                                                        Reservar
+                                                                    </Button>
                                                                 ) : (
                                                                     <div className="text-primary text-xs font-medium">
                                                                         ${court.hourly_rate || 2000}

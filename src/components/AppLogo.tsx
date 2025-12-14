@@ -48,7 +48,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({ className, variant = 'default'
                 </div>
 
                 {/* Racket Icon (replaces second P) */}
-                <div style={{ marginLeft: isSmall ? '-6px' : '-16px', position: 'relative', zIndex: 9 }}>
+                <div style={{ marginLeft: isSmall ? '-4px' : '-12px', position: 'relative', zIndex: 9 }}>
                     <PadelRacketIcon className={clsx(racketSize, translateRacket)} />
                 </div>
 
