@@ -75,7 +75,7 @@ export default function Login() {
             <div className="relative flex w-full min-h-[100dvh] flex-col bg-dark-primary justify-between overflow-x-hidden">
                 <div>
                     <div className="@container">
-                        <div className="@[480px]:px-4 @[480px]:py-3">
+                        <div className="px-0 py-0 sm:px-4 sm:py-3">
                             <div
                                 className="w-full bg-center bg-no-repeat bg-cover flex flex-col justify-end overflow-hidden @[480px]:rounded-lg min-h-80"
                                 style={{ backgroundImage: 'url("/login-bg.png")' }}

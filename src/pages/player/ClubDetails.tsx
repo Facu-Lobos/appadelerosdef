@@ -211,7 +211,7 @@ export default function ClubDetails() {
                     <div>
                         <h3 className="text-lg font-bold mb-4">Selecciona una fecha</h3>
                         <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-                            {Array.from({ length: 14 }).map((_, i) => {
+                            {Array.from({ length: 3 }).map((_, i) => {
                                 const date = addDays(new Date(), i);
                                 const dayIndex = date.getDay();
                                 const isOpenDay = club.schedule?.open_days.includes(dayIndex) ?? true;
@@ -242,7 +242,7 @@ export default function ClubDetails() {
                     {club.schedule?.open_days.includes(selectedDate.getDay()) ? (
                         <>
                             {/* Desktop Grid */}
-                            <div className="hidden md:block card overflow-hidden overflow-x-auto border border-white/10 shadow-2xl bg-[#0F172A]">
+                            <div className="hidden md:block card overflow-hidden overflow-x-auto border border-white/10 shadow-2xl bg-background">
                                 <div className="min-w-[800px]">
                                     {/* Header */}
                                     <div className="grid border-b border-white/10 bg-surface/50 backdrop-blur-sm sticky top-0 z-10"
@@ -264,7 +264,7 @@ export default function ClubDetails() {
                                         {timeSlots.map(time => (
                                             <div key={time} className="grid h-32 transition-colors hover:bg-white/[0.02]"
                                                 style={{ gridTemplateColumns: `80px repeat(${courts.length}, 1fr)` }}>
-                                                <div className="sticky left-0 z-20 p-2 text-center text-gray-400 font-medium border-r border-white/10 flex items-center justify-center text-sm bg-[#0F172A] shadow-[4px_0_24px_-2px_rgba(0,0,0,0.5)]">
+                                                <div className="sticky left-0 z-20 p-2 text-center text-gray-400 font-medium border-r border-white/10 flex items-center justify-center text-sm bg-background shadow-[4px_0_24px_-2px_rgba(0,0,0,0.5)]">
                                                     {time}
                                                 </div>
                                                 {courts.map((court) => {
@@ -308,7 +308,7 @@ export default function ClubDetails() {
                             </div>
 
                             {/* Mobile List View - Compact */}
-                            <div className="md:hidden space-y-3 max-w-[96%] mx-auto">
+                            <div className="md:hidden space-y-3 mx-4">
                                 {timeSlots.map(time => {
                                     const availableCourts = courts.filter(c => !isSlotTaken(c.id, time));
                                     const hasAvailability = availableCourts.length > 0;
@@ -437,7 +437,7 @@ export default function ClubDetails() {
                     </div>
 
                     {/* Ranking Table */}
-                    <div className="bg-surface border border-white/10 rounded-xl overflow-x-auto min-h-[400px] max-w-[96%] mx-auto">
+                    <div className="bg-surface border border-white/10 rounded-xl overflow-x-auto min-h-[400px] mx-4">
                         {rankingLoading ? (
                             <div className="flex items-center justify-center h-64 text-gray-400">
                                 <div className="animate-spin mr-2 h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>

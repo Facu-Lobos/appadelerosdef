@@ -54,5 +54,5 @@
 }
 
 body {
-  @apply bg-dark-primary text-light-primary font-sans;
+  @apply bg-dark-primary text-light-primary font-sans overflow-x-hidden w-full max-w-[100vw];
 }
