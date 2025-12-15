@@ -48,24 +48,24 @@ export default function ClubRankings() {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="space-y-6 w-full max-w-[100vw] overflow-x-hidden pb-10">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-4 md:px-0">
                 <h1 className="text-2xl font-bold">Ranking del Club</h1>
-                <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full md:w-auto">
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full md:w-auto overflow-hidden">
                     <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-start">
                         <button
                             onClick={handleResetRanking}
-                            className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                            className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors flex-shrink-0"
                             title="Reiniciar Ranking"
                         >
                             <Trash2 size={20} />
                         </button>
-                        <div className="flex gap-2 bg-surface/50 p-1 rounded-lg border border-white/5">
+                        <div className="flex gap-2 bg-surface/50 p-1 rounded-lg border border-white/5 overflow-x-auto max-w-full custom-scrollbar">
                             {['Masculino', 'Femenino', 'Mixto'].map(g => (
                                 <button
                                     key={g}
                                     onClick={() => setGender(g)}
-                                    className={`px-3 py-1 rounded-lg text-xs md:text-sm transition-colors ${gender === g ? 'bg-blue-500 text-white font-bold' : 'text-gray-400 hover:bg-white/10'}`}
+                                    className={`px-3 py-1 rounded-lg text-xs md:text-sm transition-colors whitespace-nowrap ${gender === g ? 'bg-blue-500 text-white font-bold' : 'text-gray-400 hover:bg-white/10'}`}
                                 >
                                     {g}
                                 </button>
@@ -75,7 +75,7 @@ export default function ClubRankings() {
 
                     <div className="w-full h-px bg-white/10 md:w-px md:h-6 md:bg-white/10 mx-2 hidden md:block"></div>
 
-                    <div className="flex gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 custom-scrollbar">
+                    <div className="flex gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 custom-scrollbar max-w-full">
                         {['8va', '7ma', '6ta', '5ta', '4ta', '3ra', '2da', '1ra'].map(cat => (
                             <button
                                 key={cat}
@@ -89,7 +89,7 @@ export default function ClubRankings() {
                 </div>
             </div>
 
-            <div className="bg-surface border border-white/10 rounded-xl overflow-x-auto min-h-[400px] mx-4">
+            <div className="bg-surface border border-white/10 rounded-xl overflow-x-auto min-h-[400px] mx-4 md:mx-0">
                 {loading ? (
                     <div className="flex items-center justify-center h-64 text-gray-400">
                         <RefreshCw className="animate-spin mr-2" /> Cargando ranking...

@@ -414,13 +414,13 @@ export default function ClubDetails() {
             ) : (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     {/* Ranking Filters */}
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-surface p-4 rounded-xl border border-white/10">
-                        <div className="flex gap-2">
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-surface p-4 rounded-xl border border-white/10 mx-4 md:mx-0 overflow-hidden">
+                        <div className="flex gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 custom-scrollbar">
                             {['Masculino', 'Femenino', 'Mixto'].map(g => (
                                 <button
                                     key={g}
                                     onClick={() => setGender(g)}
-                                    className={`px-3 py-1 rounded-lg text-sm transition-colors ${gender === g ? 'bg-blue-500 text-white font-bold' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                                    className={`px-3 py-1 rounded-lg text-sm transition-colors whitespace-nowrap ${gender === g ? 'bg-blue-500 text-white font-bold' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                                 >
                                     {g}
                                 </button>
@@ -441,7 +441,7 @@ export default function ClubDetails() {
                     </div>
 
                     {/* Ranking Table */}
-                    <div className="bg-surface border border-white/10 rounded-xl overflow-x-auto min-h-[400px] mx-4">
+                    <div className="bg-surface border border-white/10 rounded-xl overflow-x-auto min-h-[400px] mx-4 md:mx-0">
                         {rankingLoading ? (
                             <div className="flex items-center justify-center h-64 text-gray-400">
                                 <div className="animate-spin mr-2 h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>
