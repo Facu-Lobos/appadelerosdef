@@ -140,7 +140,7 @@ export default function MainLayout() {
 
             {/* Mobile Header */}
             <div className="md:hidden fixed top-0 left-0 right-0 bg-dark-primary border-b border-white/5 p-4 z-50 flex justify-between items-center shadow-lg">
-                <AppLogo />
+                <AppLogo variant="small" />
 
                 {/* Notification Bell (Mobile) */}
                 <div className="relative">

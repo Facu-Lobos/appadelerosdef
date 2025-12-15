@@ -440,8 +440,8 @@ export default function ClubDetails() {
                         </div>
                     </div>
 
-                    {/* Ranking Table */}
-                    <div className="bg-surface border border-white/10 rounded-xl overflow-x-auto min-h-[400px]">
+                    {/* Ranking Table - Desktop */}
+                    <div className="hidden md:block bg-surface border border-white/10 rounded-xl overflow-x-auto min-h-[400px]">
                         {rankingLoading ? (
                             <div className="flex items-center justify-center h-64 text-gray-400">
                                 <div className="animate-spin mr-2 h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>
@@ -495,6 +495,60 @@ export default function ClubDetails() {
                                     ))}
                                 </tbody>
                             </table>
+                        )}
+                    </div>
+
+                    {/* Ranking List - Mobile */}
+                    <div className="md:hidden space-y-3">
+                        {rankingLoading ? (
+                            <div className="flex items-center justify-center h-32 text-gray-400 bg-surface/50 rounded-lg border border-white/5">
+                                <div className="animate-spin mr-2 h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
+                                <span className="text-sm">Cargando...</span>
+                            </div>
+                        ) : rankings.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center h-32 text-gray-400 bg-surface/50 rounded-lg border border-white/5">
+                                <p className="text-sm">Sin datos</p>
+                            </div>
+                        ) : (
+                            rankings.map((player, index) => (
+                                <div key={player.id} className="bg-surface border border-white/10 rounded-lg p-3 flex items-center gap-3">
+                                    {/* Position */}
+                                    <div className="flex flex-col items-center justify-center w-8">
+                                        <span className={`text-lg font-bold ${index < 3 ? 'text-white' : 'text-gray-500'}`}>
+                                            {index + 1}
+                                        </span>
+                                        {index === 0 && <Trophy className="text-yellow-400" size={12} />}
+                                        {index === 1 && <Medal className="text-gray-300" size={12} />}
+                                        {index === 2 && <Medal className="text-orange-400" size={12} />}
+                                    </div>
+
+                                    {/* Avatar */}
+                                    <div className="flex-shrink-0">
+                                        {player.avatar_url ? (
+                                            <img
+                                                src={player.avatar_url}
+                                                alt={player.name}
+                                                className="w-10 h-10 rounded-full object-cover border border-white/10"
+                                            />
+                                        ) : (
+                                            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">
+                                                {player.name.substring(0, 2).toUpperCase()}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="font-bold text-sm text-white truncate">{player.name}</div>
+                                        <div className="text-xs text-gray-400">{player.category}</div>
+                                    </div>
+
+                                    {/* Points */}
+                                    <div className="text-primary font-bold text-lg">
+                                        {player.points} <span className="text-[10px] text-gray-500 font-normal">pts</span>
+                                    </div>
+                                </div>
+                            ))
                         )}
                     </div>
                 </div>

@@ -27,7 +27,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({ className, variant = 'default'
 
     // Custom A Icon Sizing
     const aIconSize = isSmall ? 'h-6 w-6' : 'h-[36px] w-[36px]';
-    const aIconMargin = isSmall ? '-2px' : '4px'; // Tightened for mobile (overlap)
+    const aIconMargin = isSmall ? '3px' : '4px'; // Proportional scaling
 
     // Letter spacing adjustments
     // Specific tweaks can be proportional
@@ -48,15 +48,15 @@ export const AppLogo: React.FC<AppLogoProps> = ({ className, variant = 'default'
                 </div>
 
                 {/* Racket Icon (replaces second P) */}
-                <div style={{ marginLeft: isSmall ? '-4px' : '-10px', position: 'relative', zIndex: 9 }}>
+                <div style={{ marginLeft: isSmall ? '-7px' : '-10px', position: 'relative', zIndex: 9 }}>
                     <PadelRacketIcon className={clsx(racketSize, translateRacket)} />
                 </div>
 
                 {/* adeler */}
                 {"adeler".split('').map((char, index) => {
                     const charMarginLeft = index === 0
-                        ? (isSmall ? '-5px' : '-14px') // Tighter overlap
-                        : (isSmall ? '-2px' : '-2px'); // Consistent tight spacing
+                        ? (isSmall ? '-10px' : '-14px') // Proportional overlap
+                        : (isSmall ? '-1.5px' : '-2px'); // Proportional spacing
 
                     return (
                         <div key={index} style={{ marginLeft: charMarginLeft, position: 'relative', zIndex: 8 - index }}>
@@ -68,15 +68,17 @@ export const AppLogo: React.FC<AppLogoProps> = ({ className, variant = 'default'
                 })}
 
                 {/* Ball Icon (replaces O) */}
-                <div style={{ marginLeft: isSmall ? '-2px' : '-6px', position: 'relative', zIndex: 2 }}>
+                <div style={{ marginLeft: isSmall ? '-4px' : '-6px', position: 'relative', zIndex: 2 }}>
                     <PadelBallIcon className={clsx(ballSize, "animate-bounce-slow")} />
                 </div>
 
                 {/* s */}
-                <div style={{ marginLeft: isSmall ? '-2px' : '-6px', position: 'relative', zIndex: 1 }}>
+                <div style={{ marginLeft: isSmall ? '-4px' : '-6px', position: 'relative', zIndex: 1 }}>
                     <span style={textStyle}>s</span>
                 </div>
             </div>
         </div>
     );
+
+
 };
