@@ -149,9 +149,9 @@ export default function ClubDetails() {
     if (!club) return <div>Club no encontrado</div>;
 
     return (
-        <div className="space-y-6 pb-20 w-full max-w-[100vw] overflow-x-hidden">
+        <div className="space-y-6 pb-20 w-full max-w-[100vw] overflow-x-hidden px-4 md:px-0">
             {/* Header */}
-            <div className="relative h-48 rounded-2xl overflow-hidden mx-4 md:mx-0">
+            <div className="relative h-48 rounded-2xl overflow-hidden shadow-2xl">
                 <img
                     src={club.avatar_url || club.photos[0] || "https://via.placeholder.com/800x400"}
                     alt={club.name}
@@ -175,7 +175,7 @@ export default function ClubDetails() {
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-white/10">
+            <div className="flex border-b border-white/10 -mx-4 md:mx-0 px-4 md:px-0">
                 <button
                     onClick={() => setActiveTab('booking')}
                     className={`px-6 py-3 font-medium transition-colors relative ${activeTab === 'booking' ? 'text-primary' : 'text-gray-400 hover:text-white'
@@ -211,7 +211,7 @@ export default function ClubDetails() {
                     {/* Date Selection - Compact Arrow Navigation */}
                     <div>
                         <h3 className="text-lg font-bold mb-4">Selecciona una fecha</h3>
-                        <div className="flex items-center justify-between bg-surface/50 p-2 rounded-xl border border-white/5 mx-4 md:mx-0">
+                        <div className="flex items-center justify-between bg-surface/50 p-2 rounded-xl border border-white/5">
                             <Button
                                 variant="ghost"
                                 size="sm"
@@ -312,7 +312,7 @@ export default function ClubDetails() {
                             </div>
 
                             {/* Mobile List View - Compact */}
-                            <div className="md:hidden space-y-3 mx-4">
+                            <div className="md:hidden space-y-3">
                                 {timeSlots.map(time => {
                                     const availableCourts = courts.filter(c => !isSlotTaken(c.id, time));
                                     const hasAvailability = availableCourts.length > 0;
@@ -414,7 +414,7 @@ export default function ClubDetails() {
             ) : (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     {/* Ranking Filters */}
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-surface p-4 rounded-xl border border-white/10 mx-4 md:mx-0 overflow-hidden">
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-surface p-4 rounded-xl border border-white/10 overflow-hidden">
                         <div className="flex gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 custom-scrollbar">
                             {['Masculino', 'Femenino', 'Mixto'].map(g => (
                                 <button
@@ -441,7 +441,7 @@ export default function ClubDetails() {
                     </div>
 
                     {/* Ranking Table */}
-                    <div className="bg-surface border border-white/10 rounded-xl overflow-x-auto min-h-[400px] mx-4 md:mx-0">
+                    <div className="bg-surface border border-white/10 rounded-xl overflow-x-auto min-h-[400px]">
                         {rankingLoading ? (
                             <div className="flex items-center justify-center h-64 text-gray-400">
                                 <div className="animate-spin mr-2 h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>

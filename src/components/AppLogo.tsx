@@ -27,7 +27,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({ className, variant = 'default'
 
     // Custom A Icon Sizing
     const aIconSize = isSmall ? 'h-6 w-6' : 'h-[36px] w-[36px]';
-    const aIconMargin = isSmall ? '2px' : '4px'; // Increased spacing (was negative)
+    const aIconMargin = isSmall ? '-2px' : '4px'; // Tightened for mobile (overlap)
 
     // Letter spacing adjustments
     // Specific tweaks can be proportional
@@ -48,15 +48,15 @@ export const AppLogo: React.FC<AppLogoProps> = ({ className, variant = 'default'
                 </div>
 
                 {/* Racket Icon (replaces second P) */}
-                <div style={{ marginLeft: isSmall ? '-3px' : '-10px', position: 'relative', zIndex: 9 }}>
+                <div style={{ marginLeft: isSmall ? '-4px' : '-10px', position: 'relative', zIndex: 9 }}>
                     <PadelRacketIcon className={clsx(racketSize, translateRacket)} />
                 </div>
 
                 {/* adeler */}
                 {"adeler".split('').map((char, index) => {
                     const charMarginLeft = index === 0
-                        ? (isSmall ? '-4px' : '-14px') // Relaxed from -8/-22
-                        : (isSmall ? '-1px' : '-2px'); // Relaxed from -2/-4
+                        ? (isSmall ? '-5px' : '-14px') // Tighter overlap
+                        : (isSmall ? '-2px' : '-2px'); // Consistent tight spacing
 
                     return (
                         <div key={index} style={{ marginLeft: charMarginLeft, position: 'relative', zIndex: 8 - index }}>
