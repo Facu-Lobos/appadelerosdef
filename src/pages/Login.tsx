@@ -6,7 +6,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Mail, Lock, ArrowLeft } from 'lucide-react';
 
-import Logo from '../components/Logo';
+import { AppLogo } from '../components/AppLogo';
 import { PadelBallIcon, PadelRacketIcon } from '../components/icons';
 
 export default function Login() {
@@ -157,7 +157,7 @@ export default function Login() {
                     </div>
                     <div className="px-4 pt-6 pb-4 text-center">
                         <div className="flex justify-center items-center gap-4">
-                            <Logo className="h-7 w-28" />
+                            <AppLogo className="h-7 w-28 justify-center" variant="small" />
                         </div>
                     </div>
                 </div>
@@ -197,7 +197,7 @@ export default function Login() {
 
                 <div className="bg-surface/80 border border-white/10 rounded-2xl p-8 shadow-2xl backdrop-blur-md">
                     <div className="text-center mb-8">
-                        <Logo className="h-10 w-40 mx-auto mb-6" />
+                        <AppLogo className="mx-auto mb-6 justify-center" />
                         <h2 className="text-3xl font-bold text-white mb-2">
                             {view === 'login' ? 'Bienvenido' : 'Crear Cuenta'}
                         </h2>

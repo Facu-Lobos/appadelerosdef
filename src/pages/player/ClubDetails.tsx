@@ -414,7 +414,7 @@ export default function ClubDetails() {
             ) : (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     {/* Ranking Filters */}
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-surface p-4 rounded-xl border border-white/10 overflow-hidden">
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-surface p-4 rounded-xl border border-white/10 overflow-hidden max-w-md mx-auto w-full">
                         <div className="flex gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 custom-scrollbar">
                             {['Masculino', 'Femenino', 'Mixto'].map(g => (
                                 <button
@@ -499,7 +499,7 @@ export default function ClubDetails() {
                     </div>
 
                     {/* Ranking List - Mobile */}
-                    <div className="md:hidden space-y-3">
+                    <div className="md:hidden space-y-3 max-w-md mx-auto w-full">
                         {rankingLoading ? (
                             <div className="flex items-center justify-center h-32 text-gray-400 bg-surface/50 rounded-lg border border-white/5">
                                 <div className="animate-spin mr-2 h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
