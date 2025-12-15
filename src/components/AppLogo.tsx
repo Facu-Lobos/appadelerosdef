@@ -32,13 +32,13 @@ export const AppLogo: React.FC<AppLogoProps> = ({ className, variant = 'default'
                 <span style={{ ...textStyle, position: 'relative', zIndex: 11, top: '0px' }}>A</span>
 
                 {/* P */}
-                <div style={{ marginLeft: '-8px', position: 'relative', zIndex: 10, transform: 'translateY(-7px)' }}>
+                <div style={{ marginLeft: '-8px', position: 'relative', zIndex: 10, transform: 'translateY(2px)' }}>
                     <span style={textStyle}>P</span>
                 </div>
 
                 {/* Racket Icon */}
                 <div style={{ marginLeft: '-16px', position: 'relative', zIndex: 9 }}>
-                    <PadelRacketIcon className="h-16 w-12 translate-y-[-3px]" />
+                    <PadelRacketIcon className="h-16 w-12 translate-y-[6px]" />
                 </div>
 
                 {/* adeler */}
@@ -54,7 +54,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({ className, variant = 'default'
                 })}
 
                 {/* Ball Icon */}
-                <div style={{ marginLeft: '-8px', position: 'relative', zIndex: 2 }}>
+                <div style={{ marginLeft: '-8px', position: 'relative', zIndex: 2, transform: 'translateY(8px)' }}>
                     <PadelBallIcon className="h-6 w-6" />
                 </div>
 
