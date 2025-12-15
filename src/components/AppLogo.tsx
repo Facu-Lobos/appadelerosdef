@@ -1,5 +1,5 @@
 import React from 'react';
-import { PadelBallIcon, PadelRacketIcon, LetterAIcon } from './icons';
+import { PadelBallIcon, PadelRacketIcon } from './icons';
 import clsx from 'clsx';
 
 interface AppLogoProps {
@@ -12,52 +12,38 @@ export const AppLogo: React.FC<AppLogoProps> = ({ className, variant = 'default'
 
     const textStyle = {
         fontFamily: "'Poppins', sans-serif",
-        color: '#000000', // Black letters
+        color: '#000000',
         fontWeight: '900',
-        lineHeight: 1,
-        WebkitTextStroke: isSmall ? '3px #ffffff' : '4px #ffffff', // Thicker stroke because half is hidden
+        WebkitTextStroke: '4px #ffffff',
         paintOrder: 'stroke fill',
-        WebkitPaintOrder: 'stroke fill', // Safari support
+        WebkitPaintOrder: 'stroke fill',
     };
 
-    const fontSize = isSmall ? 'text-2xl' : 'text-[35px]';
-    const racketSize = isSmall ? 'h-10 w-8' : 'h-16 w-12';
-    const ballSize = isSmall ? 'h-5 w-5' : 'h-6 w-6';
-    const translateRacket = isSmall ? 'translate-y-[0px]' : 'translate-y-[0px]';
-
-    // Custom A Icon Sizing
-    const aIconSize = isSmall ? 'h-6 w-6' : 'h-[36px] w-[36px]';
-    const aIconMargin = isSmall ? '3px' : '4px'; // Proportional scaling
-
-    // Letter spacing adjustments
-    // Specific tweaks can be proportional
-
+    // Base styling from Login.tsx (using exact pixels)
+    // We wrap it in a container that handles scaling
     return (
-        <div className={clsx("flex items-center select-none", className)}>
-            <div className={clsx("flex items-center font-black tracking-wider leading-tight text-center relative pl-2", fontSize, isSmall && "mt-1")}>
-                {/* A (Custom Icon) */}
-                <div style={{ marginRight: aIconMargin, position: 'relative', zIndex: 11, display: 'flex', alignItems: 'center' }}>
-                    <LetterAIcon className={aIconSize} />
-                </div>
+        <div className={clsx("flex items-center justify-center select-none", className)}>
+            <div className={clsx(
+                "flex items-center font-black tracking-wider leading-tight text-center relative",
+                "text-[35px]", // Base size from Login
+                isSmall ? "scale-[0.6] origin-left" : "scale-100" // Scale down for mobile
+            )}>
+                {/* Static 'A', highest z-index */}
+                <span style={{ ...textStyle, position: 'relative', zIndex: 11, top: '0px' }}>A</span>
 
                 {/* P */}
-                <div style={{ marginLeft: isSmall ? '0px' : '0px' }}> {/* Removed negative margin */}
-                    <span style={{ ...textStyle, display: 'inline-block', position: 'relative', zIndex: 10 }}>
-                        P
-                    </span>
+                <div style={{ marginLeft: '-8px', position: 'relative', zIndex: 10, transform: 'translateY(-7px)' }}>
+                    <span style={textStyle}>P</span>
                 </div>
 
-                {/* Racket Icon (replaces second P) */}
-                <div style={{ marginLeft: isSmall ? '-7px' : '-10px', position: 'relative', zIndex: 9 }}>
-                    <PadelRacketIcon className={clsx(racketSize, translateRacket)} />
+                {/* Racket Icon */}
+                <div style={{ marginLeft: '-16px', position: 'relative', zIndex: 9 }}>
+                    <PadelRacketIcon className="h-16 w-12 translate-y-[-3px]" />
                 </div>
 
                 {/* adeler */}
                 {"adeler".split('').map((char, index) => {
-                    const charMarginLeft = index === 0
-                        ? (isSmall ? '-10px' : '-14px') // Proportional overlap
-                        : (isSmall ? '-1.5px' : '-2px'); // Proportional spacing
-
+                    const charMarginLeft = index === 0 ? '-18px' : '-4px';
                     return (
                         <div key={index} style={{ marginLeft: charMarginLeft, position: 'relative', zIndex: 8 - index }}>
                             <span style={textStyle}>
@@ -67,18 +53,16 @@ export const AppLogo: React.FC<AppLogoProps> = ({ className, variant = 'default'
                     );
                 })}
 
-                {/* Ball Icon (replaces O) */}
-                <div style={{ marginLeft: isSmall ? '-4px' : '-6px', position: 'relative', zIndex: 2 }}>
-                    <PadelBallIcon className={clsx(ballSize, "animate-bounce-slow")} />
+                {/* Ball Icon */}
+                <div style={{ marginLeft: '-8px', position: 'relative', zIndex: 2 }}>
+                    <PadelBallIcon className="h-6 w-6" />
                 </div>
 
                 {/* s */}
-                <div style={{ marginLeft: isSmall ? '-4px' : '-6px', position: 'relative', zIndex: 1 }}>
+                <div style={{ marginLeft: '-8px', position: 'relative', zIndex: 1 }}>
                     <span style={textStyle}>s</span>
                 </div>
             </div>
         </div>
     );
-
-
 };
