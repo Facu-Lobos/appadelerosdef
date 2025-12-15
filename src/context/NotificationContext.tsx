@@ -23,6 +23,7 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
     const { user } = useAuth();
+    const [notifications, setNotifications] = useState<AppNotification[]>([]);
     const [initLoad, setInitLoad] = useState(true);
     const prevUnreadIdsRef = useRef<Set<string>>(new Set());
 
