@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabaseService } from '../services/supabaseService';
 import { useAuth } from './AuthContext';
 
@@ -23,7 +23,19 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
     const { user } = useAuth();
-    const [notifications, setNotifications] = useState<AppNotification[]>([]);
+    const [initLoad, setInitLoad] = useState(true);
+    const prevUnreadIdsRef = useRef<Set<string>>(new Set());
+
+    const playNotificationSound = () => {
+        try {
+            // Simple "Crystal" notification sound
+            const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
+            audio.volume = 0.5;
+            audio.play().catch(e => console.log('Audio play failed (user interaction needed first):', e));
+        } catch (error) {
+            console.error('Error playing sound:', error);
+        }
+    };
 
     const refreshNotifications = async () => {
         if (!user) return;
@@ -61,6 +73,23 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                 });
             }
         });
+
+        // Sound Logic
+        const currentUnreadIds = new Set(newNotifications.filter(n => !n.read).map(n => n.id));
+
+        // Find if there are ANY new ids that were not in prevUnreadIds
+        const hasNew = [...currentUnreadIds].some(id => !prevUnreadIdsRef.current.has(id));
+
+        if (hasNew && !initLoad) {
+            playNotificationSound();
+        }
+
+        if (initLoad) {
+            setInitLoad(false);
+        }
+
+        // Update ref
+        prevUnreadIdsRef.current = currentUnreadIds;
 
         setNotifications(newNotifications);
     };
