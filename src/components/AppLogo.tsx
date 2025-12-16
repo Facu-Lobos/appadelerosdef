@@ -56,7 +56,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
         >
           <PadelRacketIcon
             className={clsx(
-              isSmall ? 'h-6 w-4' : 'h-16 w-12',
+              isSmall ? 'h-8 w-6' : 'h-16 w-12',
               'align-middle'
             )}
           />
