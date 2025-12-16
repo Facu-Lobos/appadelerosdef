@@ -28,6 +28,20 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png'
           }
+        ],
+        screenshots: [
+          {
+            src: 'mobile_dashboard_final.png',
+            sizes: '1080x1920',
+            type: 'image/png',
+            form_factor: 'narrow'
+          },
+          {
+            src: 'login-bg.png',
+            sizes: '1920x1080',
+            type: 'image/png',
+            form_factor: 'wide'
+          }
         ]
       }
     })
