@@ -49,14 +49,14 @@ export const AppLogo: React.FC<AppLogoProps> = ({
         {/* Racket */}
         <div
           style={{
-            marginLeft: '-9px',
+            marginLeft: '-11px',
             position: 'relative',
             zIndex: 9,
           }}
         >
           <PadelRacketIcon
             className={clsx(
-              isSmall ? 'h-12 w-10' : 'h-16 w-12',
+              isSmall ? 'h-11 w-9' : 'h-16 w-12',
               'align-middle'
             )}
           />
@@ -67,7 +67,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
           <div
             key={index}
             style={{
-              marginLeft: index === 0 ? '-10px' : '-4px',
+              marginLeft: index === 0 ? '-4px' : '-2px',
               position: 'relative',
               zIndex: 8 - index,
             }}
