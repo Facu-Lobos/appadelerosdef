@@ -3,66 +3,106 @@ import { PadelBallIcon, PadelRacketIcon } from './icons';
 import clsx from 'clsx';
 
 interface AppLogoProps {
-    className?: string;
-    variant?: 'default' | 'small';
+  className?: string;
+  variant?: 'default' | 'small';
 }
 
-export const AppLogo: React.FC<AppLogoProps> = ({ className, variant = 'default' }) => {
-    const isSmall = variant === 'small';
+export const AppLogo: React.FC<AppLogoProps> = ({
+  className,
+  variant = 'default',
+}) => {
+  const isSmall = variant === 'small';
 
-    const textStyle = {
-        fontFamily: "'Poppins', sans-serif",
-        color: '#000000',
-        fontWeight: '900',
-        WebkitTextStroke: '4px #ffffff',
-        paintOrder: 'stroke fill',
-        WebkitPaintOrder: 'stroke fill',
-    };
+  const textStyle: React.CSSProperties = {
+    fontFamily: "'Poppins', sans-serif",
+    color: '#000000',
+    fontWeight: 900,
+    WebkitTextStroke: '4px #ffffff',
+    paintOrder: 'stroke fill',
+    
+  };
 
-    // Base styling from Login.tsx (using exact pixels)
-    // We wrap it in a container that handles scaling
-    return (
-        <div className={clsx("flex items-center justify-center select-none", className)}>
-            <div className={clsx(
-                "flex items-center font-black tracking-wider leading-tight text-center relative",
-                "text-[35px]", // Base size from Login
-                isSmall ? "scale-[0.6] origin-left" : "scale-100" // Scale down for mobile
-            )}>
-                {/* Static 'A', highest z-index */}
-                <span style={{ ...textStyle, position: 'relative', zIndex: 11, top: '0px' }}>A</span>
+  return (
+    <div className={clsx('flex items-center select-none', className)}>
+      <div
+        className={clsx(
+          'flex items-center font-black tracking-wider leading-none relative',
+          isSmall ? 'text-[22px]' : 'text-[35px]'
+        )}
+      >
+        {/* A */}
+        <span style={{ ...textStyle, position: 'relative', zIndex: 11 }}>
+          A
+        </span>
 
-                {/* P */}
-                <div style={{ marginLeft: '-8px', position: 'relative', zIndex: 10, transform: 'translateY(2px)' }}>
-                    <span style={textStyle}>P</span>
-                </div>
-
-                {/* Racket Icon */}
-                <div style={{ marginLeft: '-16px', position: 'relative', zIndex: 9 }}>
-                    <PadelRacketIcon className="h-16 w-12 translate-y-[6px]" />
-                </div>
-
-                {/* adeler */}
-                {"adeler".split('').map((char, index) => {
-                    const charMarginLeft = index === 0 ? '-18px' : '-4px';
-                    return (
-                        <div key={index} style={{ marginLeft: charMarginLeft, position: 'relative', zIndex: 8 - index }}>
-                            <span style={textStyle}>
-                                {char}
-                            </span>
-                        </div>
-                    );
-                })}
-
-                {/* Ball Icon */}
-                <div style={{ marginLeft: '-8px', position: 'relative', zIndex: 2, transform: 'translateY(8px)' }}>
-                    <PadelBallIcon className="h-6 w-6" />
-                </div>
-
-                {/* s */}
-                <div style={{ marginLeft: '-8px', position: 'relative', zIndex: 1 }}>
-                    <span style={textStyle}>s</span>
-                </div>
-            </div>
+        {/* P */}
+        <div
+          style={{
+            marginLeft: '-8px',
+            position: 'relative',
+            zIndex: 10,
+          }}
+        >
+          <span style={textStyle}>P</span>
         </div>
-    );
+
+        {/* Racket */}
+        <div
+          style={{
+            marginLeft: '-14px',
+            position: 'relative',
+            zIndex: 9,
+          }}
+        >
+          <PadelRacketIcon
+            className={clsx(
+              isSmall ? 'h-6 w-4' : 'h-16 w-12',
+              'align-middle'
+            )}
+          />
+        </div>
+
+        {/* adeler */}
+        {'adeler'.split('').map((char, index) => (
+          <div
+            key={index}
+            style={{
+              marginLeft: index === 0 ? '-16px' : '-4px',
+              position: 'relative',
+              zIndex: 8 - index,
+            }}
+          >
+            <span style={textStyle}>{char}</span>
+          </div>
+        ))}
+
+        {/* Ball */}
+        <div
+          style={{
+            marginLeft: '-6px',
+            position: 'relative',
+            zIndex: 2,
+          }}
+        >
+          <PadelBallIcon
+            className={clsx(
+              isSmall ? 'h-4 w-4' : 'h-6 w-6',
+              'align-middle'
+            )}
+          />
+        </div>
+
+        {/* s */}
+        <div
+          style={{
+            marginLeft: '-6px',
+            position: 'relative',
+            zIndex: 1,
+          }}
+        >
+          <span style={textStyle}>s</span>
+        </div>
+      </div>
+    </div>
+  );
 };
