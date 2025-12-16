@@ -38,7 +38,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
         {/* P */}
         <div
           style={{
-            marginLeft: '-8px',
+            marginLeft: '-4px',
             position: 'relative',
             zIndex: 10,
           }}
@@ -49,7 +49,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
         {/* Racket */}
         <div
           style={{
-            marginLeft: '-14px',
+            marginLeft: '-8px',
             position: 'relative',
             zIndex: 9,
           }}
@@ -67,7 +67,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
           <div
             key={index}
             style={{
-              marginLeft: index === 0 ? '-16px' : '-4px',
+              marginLeft: index === 0 ? '-8px' : '-2px',
               position: 'relative',
               zIndex: 8 - index,
             }}
@@ -79,7 +79,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
         {/* Ball */}
         <div
           style={{
-            marginLeft: '-6px',
+            marginLeft: '-3px',
             position: 'relative',
             zIndex: 2,
           }}
@@ -95,7 +95,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
         {/* s */}
         <div
           style={{
-            marginLeft: '-6px',
+            marginLeft: '-3px',
             position: 'relative',
             zIndex: 1,
           }}
