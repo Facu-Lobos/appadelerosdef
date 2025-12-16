@@ -49,7 +49,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
         {/* Racket */}
         <div
           style={{
-            marginLeft: '-11px',
+            marginLeft: '-12px',
             position: 'relative',
             zIndex: 9,
           }}
@@ -67,7 +67,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
           <div
             key={index}
             style={{
-              marginLeft: index === 0 ? '-4px' : '-2px',
+              marginLeft: index === 0 ? '-12px' : '-4px',
               position: 'relative',
               zIndex: 8 - index,
             }}
