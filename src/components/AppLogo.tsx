@@ -67,7 +67,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
           <div
             key={index}
             style={{
-              marginLeft: index === 0 ? '-12px' : '-4px',
+              marginLeft: index === 0 ? '-12px' : '-2px',
               position: 'relative',
               zIndex: 8 - index,
             }}
