@@ -30,6 +30,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     const [notifications, setNotifications] = useState<AppNotification[]>([]);
     const [initLoad, setInitLoad] = useState(true);
     const prevUnreadIdsRef = useRef<Set<string>>(new Set());
+    const lastDismissedRef = useRef<Map<string, string>>(new Map());
 
     // Sound Settings
     const [isSoundEnabled, setIsSoundEnabled] = useState(() => {
@@ -98,19 +99,33 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         const messages = await supabaseService.getUnreadMessages();
         const senders = new Set();
         messages.forEach(msg => {
-            if (!senders.has(msg.sender_id)) {
-                senders.add(msg.sender_id);
-                newNotifications.push({
-                    id: `msg-${msg.id}`,
-                    type: 'message',
-                    title: 'Nuevo Mensaje',
-                    description: `Mensaje de ${msg.sender?.name || 'Usuario'}`,
-                    link: `/player/community?chatWith=${msg.sender_id}&name=${encodeURIComponent(msg.sender?.name || 'Usuario')}&avatar=${encodeURIComponent(msg.sender?.avatar_url || '')}`,
-                    read: false,
-                    created_at: msg.created_at,
-                    metadata: { senderId: msg.sender_id }
-                });
+            // Skip if sender already processed
+            if (senders.has(msg.sender_id)) return;
+
+            // Check if dismissed locally (temporal persistence)
+            const dismissedTimeStr = lastDismissedRef.current.get(msg.sender_id);
+            if (dismissedTimeStr) {
+                const dismissedTime = new Date(dismissedTimeStr);
+                const msgTime = new Date(msg.created_at);
+                // If message is older or equal to dismissal time, ignore it
+                if (msgTime.getTime() <= dismissedTime.getTime()) {
+                    senders.add(msg.sender_id); // Mark sender as processed to skip older messages too
+                    return;
+                }
             }
+
+            // It's new!
+            senders.add(msg.sender_id);
+            newNotifications.push({
+                id: `msg-${msg.id}`,
+                type: 'message',
+                title: 'Nuevo Mensaje',
+                description: `Mensaje de ${msg.sender?.name || 'Usuario'}`,
+                link: `/player/community?chatWith=${msg.sender_id}&name=${encodeURIComponent(msg.sender?.name || 'Usuario')}&avatar=${encodeURIComponent(msg.sender?.avatar_url || '')}`,
+                read: false,
+                created_at: msg.created_at,
+                metadata: { senderId: msg.sender_id }
+            });
         });
 
         // Sound Logic
@@ -133,7 +148,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
     useEffect(() => {
         refreshNotifications();
-        const interval = setInterval(refreshNotifications, 10000);
+        const interval = setInterval(refreshNotifications, 10000); // Poll every 10s
         return () => clearInterval(interval);
     }, [user, dismissedRequests]); // Re-run if dismissed list changes
 
@@ -145,6 +160,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
 
         if (notification.type === 'message' && notification.metadata?.senderId) {
+            // Track dismissal time to prevent reappearance during race conditions
+            lastDismissedRef.current.set(notification.metadata.senderId, notification.created_at);
+
             // Mark in DB
             await supabaseService.markMessagesAsRead(notification.metadata.senderId);
         } else if (notification.type === 'friend_request') {
