@@ -207,6 +207,22 @@ export const supabaseService = {
         return data;
     },
 
+    async markMessagesAsRead(senderId: string) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { error } = await supabase
+            .from('messages')
+            .update({ read: true })
+            .eq('receiver_id', user.id)
+            .eq('sender_id', senderId)
+            .eq('read', false);
+
+        if (error) {
+            console.error('Error marking messages as read:', error);
+        }
+    },
+
     async getSentFriendRequests() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return [];

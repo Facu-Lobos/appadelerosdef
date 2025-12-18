@@ -19,45 +19,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         let mounted = true;
-        console.log('AuthProvider: mounting');
 
-        // Check active session
-        const checkSession = async () => {
-            console.log('AuthProvider: checking session...');
+        const initializeAuth = async () => {
             try {
-                const profile = await supabaseService.getCurrentUser();
-                console.log('AuthProvider: session result', profile);
-                if (mounted) setUser(profile);
+                // 1. Check local session specifically first (to avoid waiting for event)
+                const { data: { session } } = await supabase.auth.getSession();
+
+                if (session?.user) {
+                    // 2. If user exists, fetch profile immediately
+                    if (mounted) {
+                        const profile = await supabaseService.getProfile(session.user.id);
+                        if (profile) setUser(profile);
+                    }
+                }
             } catch (error) {
-                console.error('Error checking session:', error);
+                console.error('Error initializing auth:', error);
             } finally {
-                console.log('AuthProvider: loading finished');
+                // 3. Only now allow the app to render content
                 if (mounted) setIsLoading(false);
             }
         };
 
-        // Listen for auth changes
+        initializeAuth();
+
+        // 4. Set up listener for subsequent changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             console.log('AuthProvider: auth change event', event);
 
-            try {
-                if (session?.user) {
-                    console.log('AuthProvider: user found in session, fetching profile...');
-                    // Only fetch profile if user ID changed or we don't have a user yet
-                    if (!user || user.id !== session.user.id) {
-                        const profile = await supabaseService.getProfile(session.user.id);
-                        console.log('AuthProvider: profile fetched', profile);
-                        if (mounted) setUser(profile);
-                    }
-                } else {
-                    console.log('AuthProvider: no user in session');
-                    if (mounted) setUser(null);
+            if (event === 'SIGNED_OUT') {
+                if (mounted) {
+                    setUser(null);
+                    setIsLoading(false);
                 }
-            } catch (error) {
-                console.error('Auth state change error:', error);
-                if (mounted) setUser(null); // Fallback to signed out state on error
-            } finally {
-                if (mounted) setIsLoading(false);
+                return;
+            }
+
+            if (session?.user) {
+                // Only update if user changed or we don't have one
+                if (mounted && (!user || user.id !== session.user.id)) {
+                    const profile = await supabaseService.getProfile(session.user.id);
+                    if (profile) setUser(profile);
+                }
+            } else if (!session && mounted) {
+                setUser(null);
             }
         });
 

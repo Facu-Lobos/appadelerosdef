@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabaseService } from '../../services/supabaseService';
 import { useAuth } from '../../context/AuthContext';
+import { useNotifications } from '../../context/NotificationContext';
 import type { PlayerProfile } from '../../types';
 import { Trophy, Activity, MapPin, Edit } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
@@ -17,7 +18,8 @@ export default function PlayerProfilePage() {
         availability: ''
     });
 
-    const { refreshProfile } = useAuth();
+    const { refreshProfile, logout } = useAuth();
+    const { isSoundEnabled, toggleSound } = useNotifications();
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -211,6 +213,44 @@ export default function PlayerProfilePage() {
                     ))}
                 </div>
             </div >
+
+            {/* Settings Section */}
+            <div className="card p-6 space-y-4">
+                <h3 className="font-bold">Configuración</h3>
+
+                <div className="flex items-center justify-between py-2">
+                    <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${isSoundEnabled ? 'bg-primary/20 text-primary' : 'bg-white/5 text-gray-400'}`}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                        </div>
+                        <div>
+                            <div className="font-medium">Sonidos de la App</div>
+                            <div className="text-xs text-gray-400">Efectos para mensajes y alertas</div>
+                        </div>
+                    </div>
+                    <button
+                        onClick={toggleSound}
+                        className={`w-12 h-6 rounded-full transition-colors relative ${isSoundEnabled ? 'bg-primary' : 'bg-gray-700'}`}
+                    >
+                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${isSoundEnabled ? 'left-7' : 'left-1'}`} />
+                    </button>
+                </div>
+
+                <div className="pt-4 border-t border-white/5">
+                    <button
+                        onClick={() => {
+                            if (window.confirm('¿Seguro que quieres cerrar sesión?')) {
+                                logout();
+                            }
+                        }}
+                        className="w-full py-3 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 font-medium transition-colors flex items-center justify-center gap-2"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        Cerrar Sesión
+                    </button>
+                    <p className="text-center text-xs text-gray-500 mt-2">Versión 1.2.0 (PWA)</p>
+                </div>
+            </div>
         </div >
     );
 }
