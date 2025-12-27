@@ -49,7 +49,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
               isSmall ? 'h-11 w-9' : 'h-16 w-12',
               'translate-y-[-3px]'
             )}
-            style={{ position: 'relative', zIndex: 9 }}
+            style={{ position: 'relative', zIndex: 8.5 }}
           />
         </div>
 
@@ -77,7 +77,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
             className={clsx(
               isSmall ? 'h-4 w-4' : 'h-6 w-6'
             )}
-            style={{ position: 'relative', zIndex: 2 }}
+            style={{ position: 'relative', zIndex: 5 }}
           />
         </div>
 
