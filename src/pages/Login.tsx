@@ -93,7 +93,7 @@ export default function Login() {
                         </div>
 
                         {/* Racket Icon, tucked behind P */}
-                        <div className="letter-container" style={{ marginLeft: '-16px' }}>
+                        <div className="letter-container" style={{ marginLeft: '-19px' }}>
                             <div className="animate-slide-in" style={{ animationDelay: '0.2s', position: 'relative', zIndex: 9 }}>
                                 <PadelRacketIcon className="h-16 w-12 translate-y-[-3px]" />
                             </div>
