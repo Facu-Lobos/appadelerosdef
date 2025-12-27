@@ -36,14 +36,14 @@ export const AppLogo: React.FC<AppLogoProps> = ({
         </span>
 
         {/* P */}
-        <div style={{ marginLeft: '-7px' }}>
+        <div style={{ marginLeft: '-5px' }}>
           <span style={{ ...textStyle, position: 'relative', zIndex: 10 }}>
             P
           </span>
         </div>
 
         {/* Racket (atrás de P, adelante de a) */}
-        <div style={{ marginLeft: '-12px' }}>
+        <div style={{ marginLeft: '-15px' }}>
           <PadelRacketIcon
             className={clsx(
               isSmall ? 'h-11 w-9' : 'h-16 w-12',
