@@ -103,7 +103,7 @@ export default function Login() {
                         {/* "adeler", each letter tucked behind the previous element */}
                         {"adeler".split('').map((char, index) => {
                             // The first letter 'a' tucks behind the wide racket, the rest tuck behind the previous letter.
-                            const charMarginLeft = index === 0 ? '-20px' : '-4px';
+                            const charMarginLeft = index === 0 ? '-22px' : '-4px';
                             return (
                                 <div key={index} className="letter-container" style={{ marginLeft: charMarginLeft }}>
                                     <span className="animate-slide-in" style={{ ...textStyle, animationDelay: `${0.3 + index * 0.05}s`, position: 'relative', zIndex: 8 - index }}>
