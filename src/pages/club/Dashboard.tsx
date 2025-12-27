@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabaseService } from '../../services/supabaseService';
 import type { ClubProfile, Court } from '../../types';
-import { Users, Calendar, DollarSign, TrendingUp, Download, RefreshCw } from 'lucide-react';
+import { Users, Calendar, DollarSign, TrendingUp, Download, RefreshCw, Wallet } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, format, subMonths, getHours } from 'date-fns';
 import { utils, writeFile } from 'xlsx';
+
+const COMMISSION_RATE = 0.05; // 5% commission
 
 export default function ClubDashboard() {
     const [club, setClub] = useState<ClubProfile | null>(null);
@@ -14,7 +16,8 @@ export default function ClubDashboard() {
         totalCourts: 0,
         reservationsToday: 0,
         incomeToday: 0,
-        occupancy: 0
+        occupancy: 0,
+        commissionMonth: 0
     });
     const [dailyIncomeData, setDailyIncomeData] = useState<number[]>([]);
     const [monthlyIncomeData, setMonthlyIncomeData] = useState<number[]>([]);
@@ -58,13 +61,6 @@ export default function ClubDashboard() {
             const totalSlotsToday = totalCourtsCount * 14;
             const occupancy = Math.round((todayBookings.length / totalSlotsToday) * 100) || 0;
 
-            setStats({
-                totalCourts: totalCourtsCount,
-                reservationsToday: todayBookings.length,
-                incomeToday,
-                occupancy
-            });
-
             // 3. Daily Income (This Week)
             const weekStart = startOfWeek(now, { weekStartsOn: 1 });
             const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
@@ -91,6 +87,19 @@ export default function ClubDashboard() {
                     .reduce((sum: number, b: any) => sum + b.price, 0);
             });
             setMonthlyIncomeData(monthlyData);
+
+            // Calculate Commission (Current Month)
+            // monthlyData[5] corresponds to the current month (last in the array)
+            const currentMonthIncome = monthlyData[5] || 0;
+            const commissionMonth = Math.round(currentMonthIncome * COMMISSION_RATE);
+
+            setStats({
+                totalCourts: totalCourtsCount,
+                reservationsToday: todayBookings.length,
+                incomeToday,
+                occupancy,
+                commissionMonth
+            });
 
             // 5. Hourly Occupancy (Average for current month)
             const hoursMap: { [key: number]: number } = {};
@@ -255,7 +264,7 @@ export default function ClubDashboard() {
         { label: 'Canchas Totales', value: stats.totalCourts, icon: Calendar, color: 'text-primary', bg: 'bg-primary/10' },
         { label: 'Reservas Hoy', value: stats.reservationsToday, icon: Users, color: 'text-blue-400', bg: 'bg-blue-400/10' },
         { label: 'Ingresos Hoy', value: `$${stats.incomeToday}`, icon: DollarSign, color: 'text-green-400', bg: 'bg-green-400/10' },
-        { label: 'Ocupación', value: `${stats.occupancy}%`, icon: TrendingUp, color: 'text-secondary', bg: 'bg-secondary/10' },
+        { label: 'Comisión App (Mes)', value: `$${stats.commissionMonth}`, icon: Wallet, color: 'text-purple-400', bg: 'bg-purple-400/10' },
     ];
 
     return (
