@@ -162,6 +162,18 @@ export default function ClubDashboard() {
                 };
             });
 
+            // Add Total Row to Details
+            const totalDetailsIncome = bookings.reduce((sum: number, b: any) => sum + (b.payment_status === 'paid' ? b.price : 0), 0);
+            detailsData.push({
+                'Fecha': '',
+                'Hora': '',
+                'Cancha': '',
+                'Jugador': 'TOTAL COBRADO',
+                'Precio': totalDetailsIncome,
+                'Estado Pago': '',
+                'Estado Reserva': ''
+            });
+
             // 2. Prepare Daily Summary Sheet
             const summaryMap: Record<string, { count: number, income: number }> = {};
 
