@@ -36,7 +36,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
         </span>
 
         {/* P */}
-        <div style={{ marginLeft: '-10px' }}>
+        <div style={{ marginLeft: '-7px' }}>
           <span style={{ ...textStyle, position: 'relative', zIndex: 10 }}>
             P
           </span>
@@ -49,7 +49,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
               isSmall ? 'h-11 w-9' : 'h-16 w-12',
               'translate-y-[-3px]'
             )}
-            style={{ position: 'relative', zIndex: 9 }}
+            style={{ position: 'relative', zIndex: 9.5 }}
           />
         </div>
 
@@ -77,7 +77,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
             className={clsx(
               isSmall ? 'h-4 w-4' : 'h-6 w-6'
             )}
-            style={{ position: 'relative', zIndex: 4 }}
+            style={{ position: 'relative', zIndex: 1.5 }}
           />
         </div>
 
