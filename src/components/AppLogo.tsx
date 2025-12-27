@@ -13,6 +13,8 @@ export const AppLogo: React.FC<AppLogoProps> = ({
 }) => {
   const isSmall = variant === 'small';
 
+  const overlap = isSmall ? '-ml-[2px]' : '-ml-[3px]';
+
   const textStyle: React.CSSProperties = {
     fontFamily: "'Poppins', sans-serif",
     color: '#000000',
@@ -26,23 +28,24 @@ export const AppLogo: React.FC<AppLogoProps> = ({
       <div
         className={clsx(
           'flex items-center font-black leading-none relative',
-          // 👇 tracking más compacto en mobile, normal en desktop
-          'tracking-tight md:tracking-normal',
           isSmall ? 'text-[22px]' : 'text-[35px]'
         )}
       >
         {/* A */}
-        <span style={{ ...textStyle, position: 'relative', zIndex: 11 }}>
+        <span style={{ ...textStyle, position: 'relative', zIndex: 20 }}>
           A
         </span>
 
         {/* P */}
-        <div className="relative -ml-1 md:ml-0" style={{ zIndex: 10 }}>
-          <span style={textStyle}>P</span>
-        </div>
+        <span
+          className={clsx(overlap)}
+          style={{ ...textStyle, position: 'relative', zIndex: 19 }}
+        >
+          P
+        </span>
 
         {/* Racket */}
-        <div className="relative -ml-3 md:-ml-1" style={{ zIndex: 9 }}>
+        <div className={clsx(overlap, 'relative')} style={{ zIndex: 18 }}>
           <PadelRacketIcon
             className={clsx(
               isSmall ? 'h-11 w-9' : 'h-16 w-12',
@@ -53,22 +56,17 @@ export const AppLogo: React.FC<AppLogoProps> = ({
 
         {/* adeler */}
         {'adeler'.split('').map((char, index) => (
-          <div
+          <span
             key={index}
-            className={clsx(
-              'relative',
-              index === 0
-                ? '-ml-3 md:-ml-1'
-                : '-ml-0.5 md:ml-0'
-            )}
-            style={{ zIndex: 8 - index }}
+            className={clsx(overlap)}
+            style={{ ...textStyle, position: 'relative', zIndex: 17 - index }}
           >
-            <span style={textStyle}>{char}</span>
-          </div>
+            {char}
+          </span>
         ))}
 
         {/* Ball */}
-        <div className="relative -ml-1 md:ml-0" style={{ zIndex: 2 }}>
+        <div className={clsx(overlap, 'relative')} style={{ zIndex: 5 }}>
           <PadelBallIcon
             className={clsx(
               isSmall ? 'h-4 w-4' : 'h-6 w-6',
@@ -78,9 +76,12 @@ export const AppLogo: React.FC<AppLogoProps> = ({
         </div>
 
         {/* s */}
-        <div className="relative -ml-1 md:ml-0" style={{ zIndex: 1 }}>
-          <span style={textStyle}>s</span>
-        </div>
+        <span
+          className={clsx(overlap)}
+          style={{ ...textStyle, position: 'relative', zIndex: 4 }}
+        >
+          s
+        </span>
       </div>
     </div>
   );
