@@ -1,7 +1,7 @@
 import React from 'react';
 
 export const PadelBallIcon = ({ className }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className || "h-6 w-6"} viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" className={className || "h-6 w-6"} viewBox="0 0 24 24"  style={{ transform: 'translateY(2px)' }}  >
         {/* Ball Circle: Filled with primary color, Black Stroke */}
         <circle cx="12" cy="12" r="11" fill="#00F5D4" stroke="#000000" strokeWidth="1.5" />
 
