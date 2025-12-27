@@ -46,6 +46,15 @@ export function ShareScheduleModal({ isOpen, onClose, clubName, clubLogoUrl, dat
     // Filter only available slots
     const availableSlots = schedule.filter(s => s.available);
 
+    // Group slots by court
+    const slotsByCourt = availableSlots.reduce((acc, slot) => {
+        if (!acc[slot.courtName]) acc[slot.courtName] = [];
+        acc[slot.courtName].push(slot.time);
+        return acc;
+    }, {} as Record<string, string[]>);
+
+    const courtNames = Object.keys(slotsByCourt).sort();
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
             <div className="bg-surface border border-white/10 rounded-2xl w-full max-w-md overflow-hidden relative shadow-2xl max-h-[90vh] flex flex-col">
@@ -79,40 +88,48 @@ export function ShareScheduleModal({ isOpen, onClose, clubName, clubLogoUrl, dat
                             <div className="absolute bottom-0 left-0 w-48 h-48 bg-secondary/20 rounded-full blur-[60px] translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
 
                             {/* Card Content */}
-                            <div className="relative z-10 flex flex-col h-full items-center text-center">
-                                {/* Club Logo & Name */}
-                                <div className="mb-4 flex flex-col items-center gap-3">
+                            <div className="relative z-10 flex flex-col h-full w-full">
+                                {/* Header: Logo + Name + Date */}
+                                <div className="flex items-center gap-4 w-full mb-6 px-1">
                                     {clubLogoUrl && (
                                         <img
                                             src={clubLogoUrl}
                                             alt={clubName}
-                                            className="w-24 h-24 rounded-full object-cover border-4 border-white/10 shadow-lg bg-white/5"
+                                            className="w-16 h-16 rounded-full object-cover border-2 border-white/10 shadow-md bg-white/5 shrink-0"
                                             crossOrigin="anonymous"
                                         />
                                     )}
-                                    <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary uppercase tracking-wider leading-tight">
-                                        {clubName}
-                                    </h2>
+                                    <div className="flex flex-col items-start">
+                                        <h2 className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary uppercase tracking-wider leading-tight text-left">
+                                            {clubName}
+                                        </h2>
+                                        <div className="bg-white/5 px-3 py-0.5 rounded-full border border-white/10 mt-1">
+                                            <p className="text-xs font-medium text-white/90 capitalize">
+                                                {format(date, 'EEEE d MMMM', { locale: es })}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                {/* Date */}
-                                <div className="mb-6 bg-white/5 px-4 py-1 rounded-full border border-white/10">
-                                    <p className="text-sm font-medium text-white/90 capitalize">
-                                        {format(date, 'EEEE d MMMM', { locale: es })}
-                                    </p>
-                                </div>
-
-                                <div className="w-full flex-1 flex flex-col items-center justify-center">
-                                    <h3 className="text-lg font-bold text-white mb-4 uppercase tracking-wide border-b border-white/10 pb-2 w-full">
+                                <div className="w-full flex-1">
+                                    <h3 className="text-sm font-bold text-white/90 mb-3 uppercase tracking-wide border-b border-white/10 pb-1 text-left">
                                         Turnos Disponibles
                                     </h3>
 
-                                    {availableSlots.length > 0 ? (
-                                        <div className="grid grid-cols-2 gap-3 w-full">
-                                            {availableSlots.map((slot, index) => (
-                                                <div key={index} className="bg-white/10 border border-white/5 rounded-lg p-2 text-center">
-                                                    <span className="text-xl font-bold text-primary block">{slot.time}</span>
-                                                    <span className="text-[10px] text-white/60 uppercase tracking-wider">{slot.courtName}</span>
+                                    {courtNames.length > 0 ? (
+                                        <div className="flex gap-2 w-full items-start">
+                                            {courtNames.map((courtName) => (
+                                                <div key={courtName} className="flex-1 min-w-0 bg-white/5 rounded-lg border border-white/5 p-2 flex flex-col gap-2">
+                                                    <div className="text-[10px] font-bold text-white/70 uppercase tracking-wider text-center border-b border-white/5 pb-1 truncate w-full" title={courtName}>
+                                                        {courtName}
+                                                    </div>
+                                                    <div className="flex flex-col gap-1.5 w-full">
+                                                        {slotsByCourt[courtName].map((time, idx) => (
+                                                            <div key={idx} className="bg-primary/10 border border-primary/20 rounded text-center py-0.5 w-full">
+                                                                <span className="text-sm font-bold text-primary block">{time}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
@@ -125,7 +142,7 @@ export function ShareScheduleModal({ isOpen, onClose, clubName, clubLogoUrl, dat
 
                                 {/* Footer CTA */}
                                 <div className="mt-8 w-full pt-4 border-t border-white/10">
-                                    <div className="bg-primary/20 border border-primary/30 rounded-lg p-3">
+                                    <div className="bg-primary/20 border border-primary/30 rounded-lg p-3 text-center">
                                         <p className="text-[10px] uppercase tracking-widest text-primary font-bold mb-1">Reservá ahora en</p>
                                         <p className="text-white font-bold text-sm">appadelerosdef.vercel.app</p>
                                     </div>
