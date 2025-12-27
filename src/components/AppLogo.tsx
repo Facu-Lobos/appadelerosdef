@@ -19,14 +19,15 @@ export const AppLogo: React.FC<AppLogoProps> = ({
     fontWeight: 900,
     WebkitTextStroke: '4px #ffffff',
     paintOrder: 'stroke fill',
-    
   };
 
   return (
     <div className={clsx('flex items-center select-none', className)}>
       <div
         className={clsx(
-          'flex items-center font-black tracking-wider leading-none relative',
+          'flex items-center font-black leading-none relative',
+          // 👇 tracking más compacto en mobile, normal en desktop
+          'tracking-tight md:tracking-normal',
           isSmall ? 'text-[22px]' : 'text-[35px]'
         )}
       >
@@ -36,24 +37,12 @@ export const AppLogo: React.FC<AppLogoProps> = ({
         </span>
 
         {/* P */}
-        <div
-          style={{
-            marginLeft: '-4px',
-            position: 'relative',
-            zIndex: 10,
-          }}
-        >
+        <div className="relative -ml-1 md:ml-0" style={{ zIndex: 10 }}>
           <span style={textStyle}>P</span>
         </div>
 
         {/* Racket */}
-        <div
-          style={{
-            marginLeft: '-12px',
-            position: 'relative',
-            zIndex: 9,
-          }}
-        >
+        <div className="relative -ml-3 md:-ml-1" style={{ zIndex: 9 }}>
           <PadelRacketIcon
             className={clsx(
               isSmall ? 'h-11 w-9' : 'h-16 w-12',
@@ -66,24 +55,20 @@ export const AppLogo: React.FC<AppLogoProps> = ({
         {'adeler'.split('').map((char, index) => (
           <div
             key={index}
-            style={{
-              marginLeft: index === 0 ? '-12px' : '-2px',
-              position: 'relative',
-              zIndex: 8 - index,
-            }}
+            className={clsx(
+              'relative',
+              index === 0
+                ? '-ml-3 md:-ml-1'
+                : '-ml-0.5 md:ml-0'
+            )}
+            style={{ zIndex: 8 - index }}
           >
             <span style={textStyle}>{char}</span>
           </div>
         ))}
 
         {/* Ball */}
-        <div
-          style={{
-            marginLeft: '-3px',
-            position: 'relative',
-            zIndex: 2,
-          }}
-        >
+        <div className="relative -ml-1 md:ml-0" style={{ zIndex: 2 }}>
           <PadelBallIcon
             className={clsx(
               isSmall ? 'h-4 w-4' : 'h-6 w-6',
@@ -93,13 +78,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
         </div>
 
         {/* s */}
-        <div
-          style={{
-            marginLeft: '-3px',
-            position: 'relative',
-            zIndex: 1,
-          }}
-        >
+        <div className="relative -ml-1 md:ml-0" style={{ zIndex: 1 }}>
           <span style={textStyle}>s</span>
         </div>
       </div>
