@@ -404,7 +404,8 @@ export const supabaseService = {
                 status: b.status,
                 price: b.price,
                 payment_status: b.payment_status,
-                club_name: b.courts?.clubs?.name
+                club_name: b.courts?.clubs?.name,
+                court_name: b.courts?.name
             };
         }) as Booking[];
     },

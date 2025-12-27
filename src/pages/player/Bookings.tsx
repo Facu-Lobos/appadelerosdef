@@ -52,6 +52,11 @@ export default function PlayerBookings() {
                                     <div className="flex items-center text-gray-400 text-sm mt-1">
                                         <MapPin size={16} className="mr-1" />
                                         {booking.club_name || 'Club desconocido'}
+                                        {booking.court_name && (
+                                            <span className="ml-2 text-xs bg-white/10 px-2 py-0.5 rounded text-gray-300">
+                                                {booking.court_name}
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </div>

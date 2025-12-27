@@ -60,6 +60,7 @@ export interface Booking {
     payment_status?: 'paid' | 'unpaid';
     guest_name?: string;
     club_name?: string;
+    court_name?: string;
 }
 
 export interface Tournament {

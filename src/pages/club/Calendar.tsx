@@ -36,10 +36,13 @@ export default function ClubCalendar() {
 
             // Realtime subscription
             const channel = supabase
-                .channel('public:bookings')
+                .channel('bookings-realtime')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, (payload) => {
                     console.log('Booking change received!', payload);
-                    loadBookings();
+                    // Add a small delay to ensure data is propagated
+                    setTimeout(() => {
+                        loadBookings();
+                    }, 500);
                 })
                 .subscribe();
 
