@@ -13,76 +13,82 @@ export const AppLogo: React.FC<AppLogoProps> = ({
 }) => {
   const isSmall = variant === 'small';
 
-  const overlap = isSmall ? '-ml-[2px]' : '-ml-[3px]';
-
   const textStyle: React.CSSProperties = {
     fontFamily: "'Poppins', sans-serif",
     color: '#000000',
     fontWeight: 900,
     WebkitTextStroke: '4px #ffffff',
     paintOrder: 'stroke fill',
+    WebkitPaintOrder: 'stroke fill',
   };
 
   return (
     <div className={clsx('flex items-center select-none', className)}>
       <div
         className={clsx(
-          'flex items-center font-black leading-none relative',
+          'flex items-center font-black leading-tight relative',
           isSmall ? 'text-[22px]' : 'text-[35px]'
         )}
       >
         {/* A */}
-        <span style={{ ...textStyle, position: 'relative', zIndex: 20 }}>
+        <span style={{ ...textStyle, position: 'relative', zIndex: 11 }}>
           A
         </span>
 
         {/* P */}
-        <span
-          className={clsx(overlap)}
-          style={{ ...textStyle, position: 'relative', zIndex: 19 }}
-        >
-          P
-        </span>
+        <div style={{ marginLeft: '-8px' }}>
+          <span style={{ ...textStyle, position: 'relative', zIndex: 10 }}>
+            P
+          </span>
+        </div>
 
         {/* Racket */}
-        <div className={clsx(overlap, 'relative')} style={{ zIndex: 18 }}>
+        <div style={{ marginLeft: '-16px' }}>
           <PadelRacketIcon
             className={clsx(
               isSmall ? 'h-11 w-9' : 'h-16 w-12',
-              'align-middle'
+              'translate-y-[-3px]'
             )}
+            style={{ position: 'relative', zIndex: 9 }}
           />
         </div>
 
         {/* adeler */}
-        {'adeler'.split('').map((char, index) => (
-          <span
-            key={index}
-            className={clsx(overlap)}
-            style={{ ...textStyle, position: 'relative', zIndex: 17 - index }}
-          >
-            {char}
-          </span>
-        ))}
+        {'adeler'.split('').map((char, index) => {
+          const marginLeft = index === 0 ? '-18px' : '-4px';
+          return (
+            <div key={index} style={{ marginLeft }}>
+              <span
+                style={{
+                  ...textStyle,
+                  position: 'relative',
+                  zIndex: 8 - index,
+                }}
+              >
+                {char}
+              </span>
+            </div>
+          );
+        })}
 
         {/* Ball */}
-        <div className={clsx(overlap, 'relative')} style={{ zIndex: 5 }}>
+        <div style={{ marginLeft: '-8px' }}>
           <PadelBallIcon
             className={clsx(
-              isSmall ? 'h-4 w-4' : 'h-6 w-6',
-              'align-middle'
+              isSmall ? 'h-4 w-4' : 'h-6 w-6'
             )}
+            style={{ position: 'relative', zIndex: 2 }}
           />
         </div>
 
         {/* s */}
-        <span
-          className={clsx(overlap)}
-          style={{ ...textStyle, position: 'relative', zIndex: 4 }}
-        >
-          s
-        </span>
+        <div style={{ marginLeft: '-8px' }}>
+          <span style={{ ...textStyle, position: 'relative', zIndex: 1 }}>
+            s
+          </span>
+        </div>
       </div>
     </div>
   );
 };
+
