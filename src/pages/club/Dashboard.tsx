@@ -4,6 +4,7 @@ import type { ClubProfile, Court } from '../../types';
 import { Users, Calendar, DollarSign, TrendingUp, Download, RefreshCw } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, format, subMonths, getHours } from 'date-fns';
+import { utils, writeFile } from 'xlsx';
 
 export default function ClubDashboard() {
     const [club, setClub] = useState<ClubProfile | null>(null);
@@ -131,49 +132,105 @@ export default function ClubDashboard() {
         fetchData();
     }, []);
 
-    const exportToExcel = () => {
+    const exportToExcel = async () => {
         if (!club) return;
-
-        const headers = ['Fecha', 'Hora', 'Cancha', 'Jugador', 'Precio', 'Estado Pago'];
 
         const now = new Date();
         const monthStart = startOfMonth(now);
         const monthEnd = endOfMonth(now);
+        const monthName = format(now, 'yyyy-MM');
 
-        supabaseService.getClubBookingsRange(club.id, monthStart.toISOString(), monthEnd.toISOString())
-            .then(bookings => {
-                // Sort by date and time
-                bookings.sort((a: any, b: any) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+        try {
+            const bookings = await supabaseService.getClubBookingsRange(club.id, monthStart.toISOString(), monthEnd.toISOString());
 
-                const csvContent = [
-                    headers.join(','),
-                    ...bookings.map((b: any) => {
-                        const court = courts.find(c => c.id === b.court_id);
-                        const courtName = court ? `${court.name} (${court.type === 'crystal' ? 'Cristal' : 'Pared'})` : `Cancha ${b.court_id}`;
-                        const playerName = b.player_name || b.guest_name || 'Sin nombre';
+            // Sort by date
+            bookings.sort((a: any, b: any) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
 
-                        return [
-                            b.start_time.split('T')[0],
-                            b.start_time.split('T')[1].slice(0, 5),
-                            `"${courtName}"`, // Quote to handle commas
-                            `"${playerName}"`,
-                            b.price,
-                            b.payment_status === 'paid' ? 'Pagado' : 'Pendiente'
-                        ].join(',');
-                    }),
-                    // Add Summary Row
-                    `,,,,Total,${bookings.reduce((sum: number, b: any) => sum + (b.payment_status === 'paid' ? b.price : 0), 0)}`
-                ].join('\n');
+            // 1. Prepare Details Sheet
+            const detailsData = bookings.map((b: any) => {
+                const court = courts.find(c => c.id === b.court_id);
+                const courtName = court ? `${court.name} (${court.type === 'crystal' ? 'Cristal' : 'Pared'})` : `Cancha ${b.court_id}`;
 
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.setAttribute('href', url);
-                link.setAttribute('download', `ingresos_${format(now, 'yyyy-MM')}.csv`);
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                return {
+                    'Fecha': format(new Date(b.start_time), 'dd/MM/yyyy'),
+                    'Hora': format(new Date(b.start_time), 'HH:mm'),
+                    'Cancha': courtName,
+                    'Jugador': b.player_name || b.guest_name || 'Sin nombre',
+                    'Precio': b.price,
+                    'Estado Pago': b.payment_status === 'paid' ? 'Pagado' : 'Pendiente',
+                    'Estado Reserva': b.status === 'confirmed' ? 'Confirmada' : 'Cancelada'
+                };
             });
+
+            // 2. Prepare Daily Summary Sheet
+            const summaryMap: Record<string, { count: number, income: number }> = {};
+
+            // Initialize all days of month
+            const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+            daysInMonth.forEach(day => {
+                summaryMap[format(day, 'dd/MM/yyyy')] = { count: 0, income: 0 };
+            });
+
+            bookings.forEach((b: any) => {
+                if (b.payment_status === 'paid') {
+                    const dayKey = format(new Date(b.start_time), 'dd/MM/yyyy');
+                    if (summaryMap[dayKey]) {
+                        summaryMap[dayKey].count += 1;
+                        summaryMap[dayKey].income += b.price;
+                    }
+                }
+            });
+
+            const summaryData = Object.entries(summaryMap).map(([date, data]) => ({
+                'Fecha': date,
+                'Reservas Pagadas': data.count,
+                'Ingresos': data.income
+            }));
+
+            // Add Total Row to Summary
+            const totalIncome = summaryData.reduce((sum, item) => sum + item.Ingresos, 0);
+            const totalBookings = summaryData.reduce((sum, item) => sum + item['Reservas Pagadas'], 0);
+            summaryData.push({
+                'Fecha': 'TOTAL MENSUAL',
+                'Reservas Pagadas': totalBookings,
+                'Ingresos': totalIncome
+            });
+
+            // Create Workbook
+            const wb = utils.book_new();
+
+            // Add Details Sheet
+            const wsDetails = utils.json_to_sheet(detailsData);
+            // Auto-width columns (approximate)
+            const wscols = [
+                { wch: 12 }, // Fecha
+                { wch: 8 },  // Hora
+                { wch: 25 }, // Cancha
+                { wch: 25 }, // Jugador
+                { wch: 10 }, // Precio
+                { wch: 15 }, // Estado Pago
+                { wch: 15 }  // Estado Reserva
+            ];
+            wsDetails['!cols'] = wscols;
+            utils.book_append_sheet(wb, wsDetails, "Detalle Reservas");
+
+            // Add Summary Sheet
+            const wsSummary = utils.json_to_sheet(summaryData);
+            const wscolsSummary = [
+                { wch: 15 }, // Fecha
+                { wch: 15 }, // Reservas
+                { wch: 15 }  // Ingresos
+            ];
+            wsSummary['!cols'] = wscolsSummary;
+            utils.book_append_sheet(wb, wsSummary, "Resumen Diario");
+
+            // Download
+            writeFile(wb, `Reporte_Mensual_${club.name.replace(/\s+/g, '_')}_${monthName}.xlsx`);
+
+        } catch (error) {
+            console.error('Error exporting excel:', error);
+            alert('Error al generar el reporte. Intenta nuevamente.');
+        }
     };
 
     if (loading) return <div className="flex justify-center p-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>;
