@@ -36,26 +36,26 @@ export const AppLogo: React.FC<AppLogoProps> = ({
         </span>
 
         {/* P */}
-        <div style={{ marginLeft: '-8px' }}>
+        <div style={{ marginLeft: '-16px' }}>
           <span style={{ ...textStyle, position: 'relative', zIndex: 10 }}>
             P
           </span>
         </div>
 
         {/* Racket (atrás de P, adelante de a) */}
-        <div style={{ marginLeft: '-8px' }}>
+        <div style={{ marginLeft: '-16px' }}>
           <PadelRacketIcon
             className={clsx(
               isSmall ? 'h-11 w-9' : 'h-16 w-12',
               'translate-y-[-3px]'
             )}
-            style={{ position: 'relative', zIndex: 8.5 }}
+            style={{ position: 'relative', zIndex: 9 }}
           />
         </div>
 
         {/* adeler */}
         {'adeler'.split('').map((char, index) => {
-          const marginLeft = index === 0 ? '-12px' : '-4px';
+          const marginLeft = index === 0 ? '-18px' : '-4px';
           return (
             <div key={index} style={{ marginLeft }}>
               <span
@@ -77,7 +77,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
             className={clsx(
               isSmall ? 'h-4 w-4' : 'h-6 w-6'
             )}
-            style={{ position: 'relative', zIndex: 5 }}
+            style={{ position: 'relative', zIndex: 2 }}
           />
         </div>
 
