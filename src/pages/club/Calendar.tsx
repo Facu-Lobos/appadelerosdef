@@ -371,6 +371,7 @@ export default function ClubCalendar() {
                 isOpen={isShareModalOpen}
                 onClose={() => setIsShareModalOpen(false)}
                 clubName={profile?.name || 'Mi Club'}
+                clubLogoUrl={profile?.avatar_url}
                 date={currentDate}
                 schedule={availableSlotsForSharing}
             />
