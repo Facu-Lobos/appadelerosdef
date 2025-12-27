@@ -42,7 +42,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
           </span>
         </div>
 
-        {/* Racket */}
+        {/* Racket (atrás de P, adelante de a) */}
         <div style={{ marginLeft: '-8px' }}>
           <PadelRacketIcon
             className={clsx(
@@ -71,7 +71,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
           );
         })}
 
-        {/* Ball */}
+        {/* Ball (atrás de r, adelante de s) */}
         <div style={{ marginLeft: '-8px' }}>
           <PadelBallIcon
             className={clsx(
