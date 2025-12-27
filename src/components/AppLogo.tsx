@@ -36,7 +36,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
         </span>
 
         {/* P */}
-        <div style={{ marginLeft: '-12px' }}>
+        <div style={{ marginLeft: '-10px' }}>
           <span style={{ ...textStyle, position: 'relative', zIndex: 10 }}>
             P
           </span>
@@ -55,7 +55,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
 
         {/* adeler */}
         {'adeler'.split('').map((char, index) => {
-          const marginLeft = index === 0 ? '-18px' : '-4px';
+          const marginLeft = index === 0 ? '-20px' : '-4px';
           return (
             <div key={index} style={{ marginLeft }}>
               <span
