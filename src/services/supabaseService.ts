@@ -309,13 +309,14 @@ export const supabaseService = {
     async getClubs() {
         const { data, error } = await supabase
             .from('clubs')
-            .select('*, profiles(avatar_url, schedule)');
+            .select('*, profiles(avatar_url, schedule, location)');
 
         if (error) throw error;
 
         return data.map((club: any) => ({
             ...club,
             role: 'club',
+            location: club.location || club.profiles?.location || 'Ubicación pendiente',
             avatar_url: club.profiles?.avatar_url,
             schedule: club.profiles?.schedule || club.schedule,
             photos: club.photos || ['https://images.unsplash.com/photo-1554068865-24cecd4e34b8?q=80&w=2940&auto=format&fit=crop'], // Default photo

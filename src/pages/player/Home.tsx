@@ -61,7 +61,7 @@ export default function PlayerHome() {
             </div>
 
             {/* Results Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-8">
                 {loading ? (
                     <p className="text-gray-400">Cargando clubes...</p>
                 ) : filteredClubs.length > 0 ? (

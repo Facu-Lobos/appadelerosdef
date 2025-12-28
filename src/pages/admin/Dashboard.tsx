@@ -15,6 +15,7 @@ export default function AdminDashboard() {
     const { user } = useAuth();
     const navigate = useNavigate();
     const [clubs, setClubs] = useState<ClubProfile[]>([]);
+    const [clubStats, setClubStats] = useState<Record<string, any>>({});
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'list' | 'create'>('list');
 
@@ -38,6 +39,37 @@ export default function AdminDashboard() {
         try {
             const data = await supabaseService.getClubs();
             setClubs(data);
+
+            // Fetch stats for each club
+            const statsMap: Record<string, any> = {};
+            for (const club of data) {
+                // 1. Get Courts for pricing
+                const courts = await supabaseService.getClubCourts(club.id);
+                const prices = courts.map(c => c.hourly_rate || 0).filter(p => p > 0);
+                const minPrice = prices.length ? Math.min(...prices) : 0;
+                const maxPrice = prices.length ? Math.max(...prices) : 0;
+                const priceDisplay = minPrice === maxPrice ? `$${minPrice}` : `$${minPrice} - $${maxPrice}`;
+
+                // 2. Get Bookings for commission (All time paid)
+                // We'll fetch all paid bookings. This might be heavy in production but fine for MVP.
+                const { data: bookings } = await supabase
+                    .from('bookings')
+                    .select('price, payment_status, courts!inner(club_id)')
+                    .eq('courts.club_id', club.id)
+                    .eq('payment_status', 'paid');
+
+                const totalIncome = bookings?.reduce((sum, b) => sum + (b.price || 0), 0) || 0;
+                const commissionRate = club.commission_rate || 0.05;
+                const totalCommission = Math.round(totalIncome * commissionRate);
+
+                statsMap[club.id] = {
+                    priceDisplay,
+                    totalCommission,
+                    totalIncome
+                };
+            }
+            setClubStats(statsMap);
+
         } catch (error) {
             console.error('Error fetching clubs:', error);
         } finally {
@@ -166,8 +198,9 @@ export default function AdminDashboard() {
                             <tr>
                                 <th className="p-4">Club</th>
                                 <th className="p-4">Ubicación</th>
-                                <th className="p-4">Email</th>
-                                <th className="p-4">Comisión App</th>
+                                <th className="p-4">Precio Cancha</th>
+                                <th className="p-4">Comisión Acumulada</th>
+                                <th className="p-4">Comisión %</th>
                                 <th className="p-4">Acciones</th>
                             </tr>
                         </thead>
@@ -176,7 +209,12 @@ export default function AdminDashboard() {
                                 <tr key={club.id} className="hover:bg-white/5 transition-colors">
                                     <td className="p-4 font-bold">{club.name}</td>
                                     <td className="p-4 text-gray-400">{club.location}</td>
-                                    <td className="p-4 text-gray-400 text-sm">{club.email}</td>
+                                    <td className="p-4 text-gray-300">
+                                        {clubStats[club.id]?.priceDisplay || '-'}
+                                    </td>
+                                    <td className="p-4 text-green-400 font-bold">
+                                        ${clubStats[club.id]?.totalCommission || 0}
+                                    </td>
                                     <td className="p-4">
                                         <div className="flex items-center gap-2">
                                             <span className="text-gray-400">%</span>
