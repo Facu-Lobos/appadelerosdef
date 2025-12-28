@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, Calendar, Trophy, Users, User, LogOut, Search, Bell, Medal } from 'lucide-react';
+import { LayoutDashboard, Calendar, Trophy, Users, User, LogOut, Search, Bell, Medal, Shield } from 'lucide-react';
 import clsx from 'clsx';
 import AIAssistant from './AIAssistant';
 import { useNotifications } from '../context/NotificationContext';
@@ -38,7 +38,12 @@ export default function MainLayout() {
         { to: '/club/profile', icon: User, label: 'Perfil Club' },
     ];
 
-    const links = user?.role === 'club' ? clubLinks : playerLinks;
+    const baseLinks = user?.role === 'club' ? clubLinks : playerLinks;
+    const links = [...baseLinks];
+
+    if (user?.email === 'facundo.lobos90@gmail.com') {
+        links.push({ to: '/admin', icon: Shield, label: 'Admin' });
+    }
 
     return (
         <div className="min-h-screen bg-background text-white flex">
