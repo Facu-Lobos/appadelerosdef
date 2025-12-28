@@ -104,7 +104,7 @@ export default function PlayerHome() {
                                     }}>
                                         Ver Disponibilidad
                                     </Button>
-                                    <Button variant="secondary" size="sm" icon={MessageCircle} onClick={(e) => {
+                                    <Button size="sm" icon={MessageCircle} className="bg-white text-black hover:bg-gray-200" onClick={(e) => {
                                         e.stopPropagation();
                                         navigate(`/player/community?chatWith=${club.id}&name=${encodeURIComponent(club.name)}&avatar=${encodeURIComponent(club.avatar_url || '')}`);
                                     }}>

@@ -48,7 +48,7 @@ export default function MainLayout() {
     return (
         <div className="min-h-screen bg-background text-white flex">
             {/* Sidebar */}
-            <aside className="w-64 bg-surface border-r border-white/5 flex flex-col fixed h-full z-10 hidden md:flex">
+            <aside className="w-64 bg-dark-primary border-r border-white/5 flex flex-col fixed h-full z-10 hidden md:flex">
                 <div className="p-6">
                     <AppLogo />
                 </div>

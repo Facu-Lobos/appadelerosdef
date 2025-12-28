@@ -8,6 +8,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Users, Plus, Save } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { Modal } from '../../components/ui/Modal';
 
 const ADMIN_EMAIL = 'facundo.lobos90@gmail.com';
 
@@ -25,6 +26,9 @@ export default function AdminDashboard() {
     const [newClubName, setNewClubName] = useState('');
     const [newClubLocation, setNewClubLocation] = useState('');
     const [createLoading, setCreateLoading] = useState(false);
+
+    // Confirmation Modal State
+    const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; clubId: string; clubName: string } | null>(null);
 
     useEffect(() => {
         if (user?.email !== ADMIN_EMAIL) {
@@ -84,15 +88,6 @@ export default function AdminDashboard() {
 
     const handleUpdateCommission = async (clubId: string, rate: number) => {
         try {
-            // Update profile in DB
-            // We need a method in supabaseService to update ANY profile, currently updateProfile updates current user.
-            // But since we are admin (conceptually), we might need RLS bypass or just rely on RLS allowing update if we are the user?
-            // Wait, RLS usually prevents updating other users.
-            // If RLS is strict, we can't update other users' profiles from the client unless we are that user.
-            // However, for this MVP, maybe RLS is open or we can use a workaround?
-            // If RLS blocks it, we can't do it without a backend function.
-            // Let's try updating via supabase directly.
-
             const { error } = await supabase
                 .from('profiles')
                 .update({ commission_rate: rate })
@@ -104,6 +99,37 @@ export default function AdminDashboard() {
             fetchClubs();
         } catch (error: any) {
             alert('Error al actualizar: ' + error.message);
+        }
+    };
+
+    const handleResetCommission = async () => {
+        if (!confirmModal) return;
+
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({ last_payment_date: new Date().toISOString() })
+                .eq('id', confirmModal.clubId);
+
+            if (error) throw error;
+
+            // Update local stats immediately
+            setClubStats(prev => ({
+                ...prev,
+                [confirmModal.clubId]: {
+                    ...prev[confirmModal.clubId],
+                    totalCommission: 0
+                }
+            }));
+
+            // Also update the club list to reflect the new last_payment_date if needed, 
+            // but for commission display, updating stats is enough.
+            // We can re-fetch to be sure.
+            fetchClubs();
+
+            setConfirmModal(null);
+        } catch (e: any) {
+            alert('Error: ' + e.message);
         }
     };
 
@@ -141,10 +167,6 @@ export default function AdminDashboard() {
             if (error) throw error;
 
             if (data.user) {
-                // We also need to ensure the profile is created with the correct data
-                // The trigger on auth.users usually handles profile creation.
-                // But we passed metadata, so it should be fine if the trigger uses raw_user_meta_data.
-
                 alert('Club creado exitosamente');
                 setNewClubEmail('');
                 setNewClubPassword('');
@@ -178,7 +200,7 @@ export default function AdminDashboard() {
             <div className="flex gap-4 border-b border-white/10 pb-4">
                 <button
                     onClick={() => setActiveTab('list')}
-                    className={`px-4 py-2 rounded-lg transition-colors ${activeTab === 'list' ? 'bg-primary text-black font-bold' : 'bg-white/5 hover:bg-white/10'}`}
+                    className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${activeTab === 'list' ? 'bg-primary text-black font-bold' : 'bg-white/5 hover:bg-white/10'}`}
                 >
                     <div className="flex items-center gap-2">
                         <Users size={18} />
@@ -187,7 +209,7 @@ export default function AdminDashboard() {
                 </button>
                 <button
                     onClick={() => setActiveTab('create')}
-                    className={`px-4 py-2 rounded-lg transition-colors ${activeTab === 'create' ? 'bg-primary text-black font-bold' : 'bg-white/5 hover:bg-white/10'}`}
+                    className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${activeTab === 'create' ? 'bg-primary text-black font-bold' : 'bg-white/5 hover:bg-white/10'}`}
                 >
                     <div className="flex items-center gap-2">
                         <Plus size={18} />
@@ -249,21 +271,7 @@ export default function AdminDashboard() {
                                             <Button
                                                 size="sm"
                                                 variant="secondary"
-                                                onClick={async () => {
-                                                    if (confirm(`¿Confirmas que ${club.name} ha pagado su comisión? Esto reiniciará el contador.`)) {
-                                                        try {
-                                                            const { error } = await supabase
-                                                                .from('profiles')
-                                                                .update({ last_payment_date: new Date().toISOString() })
-                                                                .eq('id', club.id);
-                                                            if (error) throw error;
-                                                            alert('Comisión reiniciada');
-                                                            fetchClubs();
-                                                        } catch (e: any) {
-                                                            alert('Error: ' + e.message);
-                                                        }
-                                                    }
-                                                }}
+                                                onClick={() => setConfirmModal({ isOpen: true, clubId: club.id, clubName: club.name })}
                                             >
                                                 Reiniciar
                                             </Button>
@@ -314,6 +322,29 @@ export default function AdminDashboard() {
                     </form>
                 </div>
             )}
+
+            <Modal
+                isOpen={!!confirmModal}
+                onClose={() => setConfirmModal(null)}
+                title="Confirmar Reinicio"
+            >
+                <div className="space-y-4">
+                    <p>
+                        ¿Estás seguro que deseas reiniciar la comisión de <strong>{confirmModal?.clubName}</strong>?
+                    </p>
+                    <p className="text-sm text-gray-400">
+                        Esto marcará todas las reservas actuales como "pagadas" a efectos de comisión y reiniciará el contador a $0.
+                    </p>
+                    <div className="flex justify-end gap-2 mt-4">
+                        <Button variant="ghost" onClick={() => setConfirmModal(null)}>
+                            Cancelar
+                        </Button>
+                        <Button onClick={handleResetCommission}>
+                            Confirmar Reinicio
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }
