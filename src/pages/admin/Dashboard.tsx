@@ -219,7 +219,7 @@ export default function AdminDashboard() {
             </div>
 
             {activeTab === 'list' ? (
-                <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+                <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden overflow-x-auto">
                     <table className="w-full text-left">
                         <thead className="bg-black/20 text-gray-400 uppercase text-xs">
                             <tr>

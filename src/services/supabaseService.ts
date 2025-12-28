@@ -390,7 +390,8 @@ export const supabaseService = {
             .from('bookings')
             .select('*, courts(name, club_id, clubs(name, location))')
             .eq('player_id', userId)
-            .order('start_time', { ascending: true });
+            .eq('player_id', userId)
+            .order('created_at', { ascending: false });
 
         if (error) throw error;
 

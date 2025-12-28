@@ -157,7 +157,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         if (!notification) return;
 
         // Optimistic update
-        setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+        // Optimistic update - Remove from list immediately
+        setNotifications(prev => prev.filter(n => n.id !== id));
 
         if (notification.type === 'message' && notification.metadata?.senderId) {
             // Track dismissal time to prevent reappearance during race conditions

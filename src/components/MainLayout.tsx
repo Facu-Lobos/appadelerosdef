@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LayoutDashboard, Calendar, Trophy, Users, User, LogOut, Search, Bell, Medal, Shield } from 'lucide-react';
 import clsx from 'clsx';
@@ -10,6 +10,7 @@ import { AppLogo } from './AppLogo';
 export default function MainLayout() {
     const { user, logout } = useAuth();
     const location = useLocation();
+    const navigate = useNavigate();
     const { notifications, unreadCount, markAsRead } = useNotifications();
     // State split to prevent collisions
     const [showDesktopNotifications, setShowDesktopNotifications] = useState(false);
@@ -100,11 +101,13 @@ export default function MainLayout() {
                                         <div className="p-4 text-center text-xs text-gray-500">No tienes notificaciones</div>
                                     ) : (
                                         notifications.map(n => (
-                                            <Link
+                                            <div
                                                 key={n.id}
-                                                to={n.link}
-                                                className={`block p-3 hover:bg-white/5 border-b border-white/5 last:border-0 ${n.read ? 'opacity-50' : ''}`}
-                                                onClick={() => handleNotificationClick(n.id)}
+                                                className={`block p-3 hover:bg-white/5 border-b border-white/5 last:border-0 cursor-pointer ${n.read ? 'opacity-50' : ''}`}
+                                                onClick={() => {
+                                                    handleNotificationClick(n.id);
+                                                    navigate(n.link);
+                                                }}
                                             >
                                                 <div className="flex justify-between items-start">
                                                     <p className="text-sm font-medium text-white">{n.title}</p>
@@ -114,7 +117,7 @@ export default function MainLayout() {
                                                 <p className="text-[10px] text-gray-600 mt-1">
                                                     {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 </p>
-                                            </Link>
+                                            </div>
                                         ))
                                     )}
                                 </div>
@@ -165,11 +168,13 @@ export default function MainLayout() {
                                     <div className="p-4 text-center text-xs text-gray-500">No tienes notificaciones</div>
                                 ) : (
                                     notifications.map(n => (
-                                        <Link
+                                        <div
                                             key={n.id}
-                                            to={n.link}
-                                            className={`block p-3 hover:bg-white/5 border-b border-white/5 last:border-0 ${n.read ? 'opacity-50' : ''}`}
-                                            onClick={() => handleNotificationClick(n.id)}
+                                            className={`block p-3 hover:bg-white/5 border-b border-white/5 last:border-0 cursor-pointer ${n.read ? 'opacity-50' : ''}`}
+                                            onClick={() => {
+                                                handleNotificationClick(n.id);
+                                                navigate(n.link);
+                                            }}
                                         >
                                             <div className="flex justify-between items-start">
                                                 <p className="text-sm font-medium text-white">{n.title}</p>
@@ -179,7 +184,7 @@ export default function MainLayout() {
                                             <p className="text-[10px] text-gray-600 mt-1">
                                                 {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </p>
-                                        </Link>
+                                        </div>
                                     ))
                                 )}
                             </div>

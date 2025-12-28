@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, Trophy, Calendar, Users, ChevronLeft, Check, X, RefreshCw, Trash2, Clock, MapPin, Loader2 } from 'lucide-react';
+import { Plus, Trophy, Calendar, Users, ChevronLeft, Check, X, RefreshCw, Trash2, Clock, MapPin, Loader2, Share2 } from 'lucide-react';
 import { supabaseService } from '../../services/supabaseService';
-import type { Tournament, ClubProfile } from '../../types';
+import type { Tournament } from '../../types';
 import { Button } from '../../components/ui/Button';
 import { MatchScoreModal } from '../../components/MatchScoreModal';
 import { MatchScheduleModal } from '../../components/MatchScheduleModal';
@@ -214,15 +214,28 @@ const TournamentDetail = () => {
                     </div>
                 </div>
 
-                {tournament.status === 'ongoing' && (
+                <div className="flex gap-2">
                     <Button
-                        className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold"
-                        onClick={handleFinishTournament}
+                        variant="secondary"
+                        onClick={() => {
+                            const url = `${window.location.origin}/player/tournaments/${tournament.id}`;
+                            navigator.clipboard.writeText(url);
+                            showToast('Enlace copiado al portapapeles', 'success');
+                        }}
                     >
-                        <Trophy size={18} className="mr-2" />
-                        Finalizar Torneo
+                        <Share2 size={18} className="mr-2" />
+                        Compartir
                     </Button>
-                )}
+                    {tournament.status === 'ongoing' && (
+                        <Button
+                            className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold"
+                            onClick={handleFinishTournament}
+                        >
+                            <Trophy size={18} className="mr-2" />
+                            Finalizar Torneo
+                        </Button>
+                    )}
+                </div>
             </div>
 
             {/* Tabs */}
@@ -639,7 +652,7 @@ const TournamentDetail = () => {
 
                                 {/* World Cup Style Bracket - Compact Version */}
                                 <div className="flex flex-row gap-4 overflow-x-auto pb-4 pt-4 min-h-[500px] px-2">
-                                    {['round_16', 'quarter', 'semi', 'final'].map((roundName, roundIndex) => {
+                                    {['round_16', 'quarter', 'semi', 'final'].map((roundName, _) => {
                                         const roundMatches = matches.filter(m => m.round === roundName).sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
                                         if (roundMatches.length === 0) return null;
 

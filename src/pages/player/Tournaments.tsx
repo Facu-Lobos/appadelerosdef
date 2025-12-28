@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { Trophy, Calendar, Users, Search, Plus, MapPin } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Trophy, Calendar, Users, Search, MapPin } from 'lucide-react';
 import { supabaseService } from '../../services/supabaseService';
 import type { Tournament, PlayerProfile } from '../../types';
 import { Button } from '../../components/ui/Button';
@@ -12,6 +13,7 @@ import { useToast } from '../../context/ToastContext';
 export default function PlayerTournaments() {
     const { user } = useAuth();
     const { showToast } = useToast();
+    const navigate = useNavigate();
     const [tournaments, setTournaments] = useState<Tournament[]>([]);
     const [loading, setLoading] = useState(true);
     const [showRegisterModal, setShowRegisterModal] = useState(false);
@@ -134,6 +136,13 @@ export default function PlayerTournaments() {
                                     disabled={registrationStatus[tournament.id] === 'sent'}
                                 >
                                     {registrationStatus[tournament.id] === 'sent' ? 'Enviado' : 'Inscribirse'}
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    onClick={() => navigate(`/player/tournaments/${tournament.id}`)}
+                                >
+                                    Ver Resultados
                                 </Button>
                             </div>
                         </div>
