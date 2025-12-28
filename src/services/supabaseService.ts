@@ -490,10 +490,20 @@ export const supabaseService = {
         const endDate = new Date(date);
         endDate.setDate(endDate.getDate() + 1);
 
+        // First get court IDs to avoid inner join RLS issues
+        const { data: courts } = await supabase
+            .from('courts')
+            .select('id')
+            .eq('club_id', clubId);
+
+        const courtIds = courts?.map(c => c.id) || [];
+
+        if (courtIds.length === 0) return [];
+
         const { data, error } = await supabase
             .from('bookings')
-            .select('court_id, start_time, courts!inner(club_id)')
-            .eq('courts.club_id', clubId)
+            .select('court_id, start_time')
+            .in('court_id', courtIds)
             .gte('start_time', startDate.toISOString())
             .lte('start_time', endDate.toISOString());
 
