@@ -9,7 +9,7 @@ import { Users, Plus, Save, LogOut, DollarSign } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-const ADMIN_EMAIL = 'facundo.loboso90@gmail.com';
+const ADMIN_EMAIL = 'facundo.lobos90@gmail.com';
 
 export default function AdminDashboard() {
     const { user, logout } = useAuth();
