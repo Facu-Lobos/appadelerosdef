@@ -49,7 +49,7 @@ export default function MainLayout() {
     return (
         <div className="min-h-screen bg-background text-white flex">
             {/* Sidebar */}
-            <aside className="w-64 bg-dark-primary border-r border-white/5 flex flex-col fixed h-full z-10 hidden md:flex">
+            <aside className="w-64 bg-dark-primary border-r border-white/5 flex flex-col fixed h-full z-10 hidden xl:flex">
                 <div className="p-6">
                     <AppLogo />
                 </div>
@@ -147,7 +147,7 @@ export default function MainLayout() {
             </aside>
 
             {/* Mobile Header */}
-            <div className="md:hidden fixed top-0 left-0 right-0 bg-dark-primary border-b border-white/5 px-3 py-3 z-50 flex justify-between items-center shadow-lg">
+            <div className="xl:hidden fixed top-0 left-0 right-0 bg-dark-primary border-b border-white/5 px-3 py-3 z-50 flex justify-between items-center shadow-lg">
                 <AppLogo variant="small" />
 
                 {/* Notification Bell (Mobile) */}
@@ -196,12 +196,12 @@ export default function MainLayout() {
 
 
             {/* Main Content */}
-            <main className="flex-1 md:ml-64 p-4 md:p-8 pt-28 md:pt-8 pb-28 md:pb-8">
+            <main className="flex-1 xl:ml-64 p-4 lg:p-8 pt-28 lg:pt-8 pb-28 lg:pb-8">
                 <Outlet />
             </main>
 
             {/* Mobile Bottom Nav */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 z-[60]">
+            <div className="xl:hidden fixed bottom-0 left-0 right-0 z-[60]">
                 <div className="container mx-auto max-w-lg">
                     <div className="flex gap-2 border-t border-white/10 bg-dark-primary px-4 pb-4 pt-2 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.3)] justify-between">
                         {links.map((link) => {

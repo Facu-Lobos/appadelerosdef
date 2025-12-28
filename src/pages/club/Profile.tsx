@@ -175,12 +175,33 @@ export default function ClubProfilePage() {
 
     return (
         <div className="space-y-8 pb-20">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <div className="flex justify-between items-center gap-4">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent truncate flex-1">
                     Perfil del Club
                 </h1>
-                <Button icon={Save} onClick={handleSaveProfile} disabled={saving}>
-                    {saving ? 'Guardando...' : 'Guardar Cambios'}
+
+                {/* Mobile Logout Button */}
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className="md:hidden text-red-400 border-red-500/30 hover:bg-red-500/10"
+                    onClick={() => {
+                        if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                            logout();
+                        }
+                    }}
+                >
+                    <LogOut size={18} />
+                </Button>
+
+                <Button icon={Save} onClick={handleSaveProfile} disabled={saving} className="md:flex">
+                    {saving ? 'Guardando...' : <span className="hidden sm:inline">Guardar Cambios</span>}
+                    {/* Icon is already passed via prop, but maybe we want icon only on mobile? 
+                        The Button component likely renders icon + children.
+                       If I want icon only on mobile, I can hide the text. 
+                       Let's assume users can find the icon.
+                    */}
+                    {!saving && <span className="sm:hidden">Guardar</span>}
                 </Button>
             </div>
 
