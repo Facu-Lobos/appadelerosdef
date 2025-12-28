@@ -6,7 +6,7 @@ import { Button } from '../../components/ui/Button';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, format, subMonths, getHours } from 'date-fns';
 import { utils, writeFile } from 'xlsx';
 
-const COMMISSION_RATE = 0.05; // 5% commission
+
 
 export default function ClubDashboard() {
     const [club, setClub] = useState<ClubProfile | null>(null);
@@ -91,7 +91,8 @@ export default function ClubDashboard() {
             // Calculate Commission (Current Month)
             // monthlyData[5] corresponds to the current month (last in the array)
             const currentMonthIncome = monthlyData[5] || 0;
-            const commissionMonth = Math.round(currentMonthIncome * COMMISSION_RATE);
+            const rate = clubProfile.commission_rate !== undefined ? clubProfile.commission_rate : 0.05;
+            const commissionMonth = Math.round(currentMonthIncome * rate);
 
             setStats({
                 totalCourts: totalCourtsCount,

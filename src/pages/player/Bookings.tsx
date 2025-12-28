@@ -46,7 +46,7 @@ export default function PlayerBookings() {
                                     <div className="flex items-center text-gray-400 text-sm mt-1">
                                         <Clock size={16} className="mr-1" />
                                         <span className="capitalize">
-                                            {format(new Date(booking.date), 'EEEE d MMMM', { locale: es })} - {booking.time}
+                                            {format(new Date(booking.date + 'T00:00:00'), 'EEEE d MMMM', { locale: es })} - {booking.time}
                                         </span>
                                     </div>
                                     <div className="flex items-center text-gray-400 text-sm mt-1">

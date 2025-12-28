@@ -30,6 +30,7 @@ export interface ClubProfile extends User {
     services: string[];
     description?: string;
     schedule?: ClubSchedule;
+    commission_rate?: number;
 }
 
 export interface ClubSchedule {

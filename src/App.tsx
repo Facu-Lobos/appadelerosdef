@@ -21,6 +21,7 @@ import TournamentDetail from './pages/club/TournamentDetail';
 import ClubProfilePage from './pages/club/Profile';
 import ClubCommunity from './pages/club/Community';
 import ClubRankings from './pages/club/Rankings';
+import AdminDashboard from './pages/admin/Dashboard';
 
 import { ProtectedRoute } from './components/ProtectedRoute';
 
@@ -65,6 +66,7 @@ export default function App() {
                 <Route path="profile" element={<ClubProfilePage />} />
               </Route>
 
+              <Route path="/admin" element={<AdminDashboard />} />
             </Routes>
           </BrowserRouter>
         </NotificationProvider>

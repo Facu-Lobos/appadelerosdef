@@ -146,12 +146,6 @@ export default function Login() {
                             >
                                 <span className="truncate">Registrarse como Jugador</span>
                             </button>
-                            <button
-                                onClick={() => { setRole('club'); setView('signup'); }}
-                                className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 bg-accent text-dark-primary text-base font-bold leading-normal tracking-[0.015em] w-full hover:opacity-90 transition-colors"
-                            >
-                                <span className="truncate">Registrarse como Club</span>
-                            </button>
                         </div>
                     </div>
                     <div className="px-4 pt-6 pb-4 text-center">
@@ -239,14 +233,20 @@ export default function Login() {
                     </form>
 
                     <div className="mt-8 text-center pt-6 border-t border-white/10">
-                        <button
-                            onClick={() => setView(view === 'login' ? 'signup' : 'login')}
-                            className="text-primary hover:text-primary-hover font-medium transition-colors hover:underline"
-                        >
-                            {view === 'login'
-                                ? '¿No tienes cuenta? Regístrate gratis'
-                                : '¿Ya tienes cuenta? Inicia sesión aquí'}
-                        </button>
+                        {role === 'player' ? (
+                            <button
+                                onClick={() => setView(view === 'login' ? 'signup' : 'login')}
+                                className="text-primary hover:text-primary-hover font-medium transition-colors hover:underline"
+                            >
+                                {view === 'login'
+                                    ? '¿No tienes cuenta? Regístrate gratis'
+                                    : '¿Ya tienes cuenta? Inicia sesión aquí'}
+                            </button>
+                        ) : (
+                            <p className="text-gray-400 text-sm">
+                                ¿Eres un club y quieres unirte? <a href="mailto:contacto@appadeleros.com" className="text-primary hover:underline">Contáctanos</a>
+                            </p>
+                        )}
                     </div>
                 </div>
 
