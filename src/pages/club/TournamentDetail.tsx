@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, Trophy, Calendar, Users, ChevronLeft, Check, X, RefreshCw, Trash2, Clock, MapPin, Loader2, Share2 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { ShareTournamentModal } from '../../components/club/ShareTournamentModal';
+import { Plus, Trophy, Calendar, Users, ChevronLeft, Check, X, RefreshCw, Trash2, Clock, MapPin, Loader2, Share2, Download } from 'lucide-react';
 import { supabaseService } from '../../services/supabaseService';
 import type { Tournament } from '../../types';
 import { Button } from '../../components/ui/Button';
@@ -13,10 +15,12 @@ import { es } from 'date-fns/locale';
 const TournamentDetail = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const { user } = useAuth();
     const { showToast } = useToast();
     const [tournament, setTournament] = useState<Tournament | null>(null);
     const [loading, setLoading] = useState(true);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'registrations' | 'groups' | 'playoffs'>('registrations');
 
     // Data State
@@ -224,7 +228,14 @@ const TournamentDetail = () => {
                         }}
                     >
                         <Share2 size={18} className="mr-2" />
-                        Compartir
+                        Link
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        onClick={() => setIsShareModalOpen(true)}
+                    >
+                        <Download size={18} className="mr-2" />
+                        Flyer
                     </Button>
                     {tournament.status === 'ongoing' && (
                         <Button
@@ -770,6 +781,16 @@ const TournamentDetail = () => {
                     />
                 )
             }
+
+            {tournament && user && (
+                <ShareTournamentModal
+                    isOpen={isShareModalOpen}
+                    onClose={() => setIsShareModalOpen(false)}
+                    tournament={tournament}
+                    clubName={user.name}
+                    clubLogoUrl={user.avatar_url}
+                />
+            )}
         </div >
     );
 };

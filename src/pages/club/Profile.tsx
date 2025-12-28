@@ -3,12 +3,12 @@ import { useAuth } from '../../context/AuthContext';
 import { supabaseService } from '../../services/supabaseService';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { Save, Plus, Trash2, Clock, MapPin, Edit2, Camera, Upload } from 'lucide-react';
+import { Save, Plus, Trash2, Clock, MapPin, Edit2, Camera, Upload, LogOut } from 'lucide-react';
 import type { ClubProfile, Court, ClubSchedule } from '../../types';
 import { CourtPriceEditor } from '../../components/club/CourtPriceEditor';
 
 export default function ClubProfilePage() {
-    const { user, refreshProfile } = useAuth();
+    const { user, refreshProfile, logout } = useAuth();
     const [profile, setProfile] = useState<ClubProfile | null>(null);
     const [courts, setCourts] = useState<Court[]>([]);
     const [loading, setLoading] = useState(true);
@@ -260,8 +260,8 @@ export default function ClubProfilePage() {
                         {['Estacionamiento', 'Vestuarios', 'Bar', 'WiFi', 'Kiosco', 'Parrilla', 'Alquiler Palas'].map(service => (
                             <label key={service} className="flex items-center gap-2 cursor-pointer group">
                                 <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${services.includes(service)
-                                        ? 'bg-primary border-primary'
-                                        : 'border-white/20 group-hover:border-white/40'
+                                    ? 'bg-primary border-primary'
+                                    : 'border-white/20 group-hover:border-white/40'
                                     }`}>
                                     {services.includes(service) && <div className="w-2 h-2 bg-black rounded-full" />}
                                 </div>
@@ -422,6 +422,29 @@ export default function ClubProfilePage() {
                         <p className="text-center text-gray-500 py-4">No has agregado canchas todavía.</p>
                     )}
                 </div>
+            </div>
+
+            {/* Logout Section (Mainly for Mobile) */}
+            <div className="card p-6 border-red-500/20">
+                <h2 className="text-xl font-bold text-red-500 mb-4 flex items-center gap-2">
+                    <LogOut size={20} />
+                    Zona de Peligro
+                </h2>
+                <p className="text-gray-400 text-sm mb-4">
+                    Si cierras sesión, tendrás que volver a ingresar tus credenciales para acceder.
+                </p>
+                <Button
+                    variant="outline"
+                    className="text-red-500 hover:text-red-400 border-red-500/50 hover:bg-red-500/10 w-full md:w-auto justify-center"
+                    onClick={() => {
+                        if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                            logout();
+                        }
+                    }}
+                >
+                    <LogOut size={18} className="mr-2" />
+                    Cerrar Sesión
+                </Button>
             </div>
         </div>
     );
