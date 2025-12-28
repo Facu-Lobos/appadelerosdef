@@ -31,6 +31,7 @@ export interface ClubProfile extends User {
     description?: string;
     schedule?: ClubSchedule;
     commission_rate?: number;
+    last_payment_date?: string; // ISO Date
 }
 
 export interface ClubSchedule {

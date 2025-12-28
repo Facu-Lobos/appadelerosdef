@@ -50,13 +50,18 @@ export default function AdminDashboard() {
                 const maxPrice = prices.length ? Math.max(...prices) : 0;
                 const priceDisplay = minPrice === maxPrice ? `$${minPrice}` : `$${minPrice} - $${maxPrice}`;
 
-                // 2. Get Bookings for commission (All time paid)
-                // We'll fetch all paid bookings. This might be heavy in production but fine for MVP.
-                const { data: bookings } = await supabase
+                // 2. Get Bookings for commission (Paid bookings since last payment)
+                let query = supabase
                     .from('bookings')
-                    .select('price, payment_status, courts!inner(club_id)')
+                    .select('price, payment_status, start_time, courts!inner(club_id)')
                     .eq('courts.club_id', club.id)
                     .eq('payment_status', 'paid');
+
+                if (club.last_payment_date) {
+                    query = query.gt('start_time', club.last_payment_date);
+                }
+
+                const { data: bookings } = await query;
 
                 const totalIncome = bookings?.reduce((sum, b) => sum + (b.price || 0), 0) || 0;
                 const commissionRate = club.commission_rate || 0.05;
@@ -228,17 +233,41 @@ export default function AdminDashboard() {
                                         </div>
                                     </td>
                                     <td className="p-4">
-                                        <Button
-                                            size="sm"
-                                            onClick={() => {
-                                                const input = document.getElementById(`commission-${club.id}`) as HTMLInputElement;
-                                                const percentage = parseFloat(input.value);
-                                                handleUpdateCommission(club.id, percentage / 100);
-                                            }}
-                                            icon={Save}
-                                        >
-                                            Guardar
-                                        </Button>
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                size="sm"
+                                                onClick={() => {
+                                                    const input = document.getElementById(`commission-${club.id}`) as HTMLInputElement;
+                                                    const percentage = parseFloat(input.value);
+                                                    handleUpdateCommission(club.id, percentage / 100);
+                                                }}
+                                                icon={Save}
+                                                className="mr-2"
+                                            >
+                                                Guardar
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="secondary"
+                                                onClick={async () => {
+                                                    if (confirm(`¿Confirmas que ${club.name} ha pagado su comisión? Esto reiniciará el contador.`)) {
+                                                        try {
+                                                            const { error } = await supabase
+                                                                .from('profiles')
+                                                                .update({ last_payment_date: new Date().toISOString() })
+                                                                .eq('id', club.id);
+                                                            if (error) throw error;
+                                                            alert('Comisión reiniciada');
+                                                            fetchClubs();
+                                                        } catch (e: any) {
+                                                            alert('Error: ' + e.message);
+                                                        }
+                                                    }
+                                                }}
+                                            >
+                                                Reiniciar
+                                            </Button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}

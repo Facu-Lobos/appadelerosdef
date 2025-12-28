@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabaseService } from '../../services/supabaseService';
+import { supabase } from '../../services/supabaseClient';
 import type { ClubProfile, Court } from '../../types';
 import { Users, Calendar, DollarSign, TrendingUp, Download, RefreshCw, Wallet } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
@@ -88,18 +89,30 @@ export default function ClubDashboard() {
             });
             setMonthlyIncomeData(monthlyData);
 
-            // Calculate Commission (Current Month)
-            // monthlyData[5] corresponds to the current month (last in the array)
-            const currentMonthIncome = monthlyData[5] || 0;
+            // Calculate Commission (Pending)
+            // We need to fetch all paid bookings since last_payment_date
+            let commissionQuery = supabase
+                .from('bookings')
+                .select('price, courts!inner(club_id)')
+                .eq('courts.club_id', clubProfile.id)
+                .eq('payment_status', 'paid');
+
+            if (clubProfile.last_payment_date) {
+                commissionQuery = commissionQuery.gt('start_time', clubProfile.last_payment_date);
+            }
+
+            const { data: commissionBookings } = await commissionQuery;
+
+            const totalIncomeForCommission = commissionBookings?.reduce((sum: number, b: any) => sum + b.price, 0) || 0;
             const rate = clubProfile.commission_rate !== undefined ? clubProfile.commission_rate : 0.05;
-            const commissionMonth = Math.round(currentMonthIncome * rate);
+            const commissionPending = Math.round(totalIncomeForCommission * rate);
 
             setStats({
                 totalCourts: totalCourtsCount,
                 reservationsToday: todayBookings.length,
                 incomeToday,
                 occupancy,
-                commissionMonth
+                commissionMonth: commissionPending
             });
 
             // 5. Hourly Occupancy (Average for current month)
@@ -265,7 +278,7 @@ export default function ClubDashboard() {
         { label: 'Canchas Totales', value: stats.totalCourts, icon: Calendar, color: 'text-primary', bg: 'bg-primary/10' },
         { label: 'Reservas Hoy', value: stats.reservationsToday, icon: Users, color: 'text-blue-400', bg: 'bg-blue-400/10' },
         { label: 'Ingresos Hoy', value: `$${stats.incomeToday}`, icon: DollarSign, color: 'text-green-400', bg: 'bg-green-400/10' },
-        { label: 'Comisión App (Mes)', value: `$${stats.commissionMonth}`, icon: Wallet, color: 'text-purple-400', bg: 'bg-purple-400/10' },
+        { label: 'Comisión Pendiente', value: `$${stats.commissionMonth}`, icon: Wallet, color: 'text-purple-400', bg: 'bg-purple-400/10' },
     ];
 
     return (

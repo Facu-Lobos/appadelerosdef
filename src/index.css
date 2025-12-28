@@ -56,3 +56,7 @@
 body {
   @apply bg-dark-primary text-light-primary font-sans overflow-x-hidden w-full max-w-[100vw];
 }
+
+.card {
+  @apply bg-surface border border-white/5 rounded-2xl p-4 transition-all duration-300;
+}

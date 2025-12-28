@@ -309,7 +309,7 @@ export const supabaseService = {
     async getClubs() {
         const { data, error } = await supabase
             .from('clubs')
-            .select('*, profiles(avatar_url, schedule, location)');
+            .select('*, profiles(avatar_url, schedule, location, services)');
 
         if (error) throw error;
 
@@ -320,7 +320,7 @@ export const supabaseService = {
             avatar_url: club.profiles?.avatar_url,
             schedule: club.profiles?.schedule || club.schedule,
             photos: club.photos || ['https://images.unsplash.com/photo-1554068865-24cecd4e34b8?q=80&w=2940&auto=format&fit=crop'], // Default photo
-            services: club.services || ['Estacionamiento', 'Vestuarios', 'Bar'] // Default services
+            services: club.profiles?.services || club.services || ['Estacionamiento', 'Vestuarios', 'Bar'] // Default services
         })) as ClubProfile[];
     },
 

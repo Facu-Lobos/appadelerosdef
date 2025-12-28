@@ -29,6 +29,7 @@ export default function ClubProfilePage() {
         slot_duration: 60,
         open_days: [1, 2, 3, 4, 5, 6, 0]
     });
+    const [services, setServices] = useState<string[]>([]);
 
     // New Court State
     const [showAddCourt, setShowAddCourt] = useState(false);
@@ -58,6 +59,9 @@ export default function ClubProfilePage() {
             setAvatarUrl(profileData.avatar_url || null);
             if (profileData.schedule) {
                 setSchedule(profileData.schedule);
+            }
+            if (profileData.services) {
+                setServices(profileData.services);
             }
         }
 
@@ -98,6 +102,7 @@ export default function ClubProfilePage() {
             location,
             description,
             schedule,
+            services,
             avatar_url: finalAvatarUrl || undefined
         };
 
@@ -247,6 +252,38 @@ export default function ClubProfilePage() {
                         />
                     </div>
                 </div>
+
+                {/* Services */}
+                <div className="pt-4 border-t border-white/10">
+                    <label className="block text-sm text-gray-400 mb-3">Servicios Disponibles</label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {['Estacionamiento', 'Vestuarios', 'Bar', 'WiFi', 'Kiosco', 'Parrilla', 'Alquiler Palas'].map(service => (
+                            <label key={service} className="flex items-center gap-2 cursor-pointer group">
+                                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${services.includes(service)
+                                        ? 'bg-primary border-primary'
+                                        : 'border-white/20 group-hover:border-white/40'
+                                    }`}>
+                                    {services.includes(service) && <div className="w-2 h-2 bg-black rounded-full" />}
+                                </div>
+                                <input
+                                    type="checkbox"
+                                    className="hidden"
+                                    checked={services.includes(service)}
+                                    onChange={(e) => {
+                                        if (e.target.checked) {
+                                            setServices([...services, service]);
+                                        } else {
+                                            setServices(services.filter(s => s !== service));
+                                        }
+                                    }}
+                                />
+                                <span className={`text-sm ${services.includes(service) ? 'text-white' : 'text-gray-400'}`}>
+                                    {service}
+                                </span>
+                            </label>
+                        ))}
+                    </div>
+                </div>
             </div>
 
             {/* Schedule */}
@@ -386,6 +423,6 @@ export default function ClubProfilePage() {
                     )}
                 </div>
             </div>
-        </div >
+        </div>
     );
 }
