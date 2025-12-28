@@ -8,7 +8,11 @@
   --color-dark-secondary: #1E293B;
   --color-dark-tertiary: #334155;
   --color-light-primary: #E2E8F0;
+  --color-light-primary: #E2E8F0;
   --color-light-secondary: #94A3B8;
+
+  --color-background: #0F172A;
+  --color-surface: #1E293B;
 
   --font-sans: "Plus Jakarta Sans", "Noto Sans", sans-serif;
 
