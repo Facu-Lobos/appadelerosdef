@@ -66,7 +66,13 @@ export default function App() {
                 <Route path="profile" element={<ClubProfilePage />} />
               </Route>
 
-              <Route path="/admin" element={<AdminDashboard />} />
+              <Route element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }>
+                <Route path="/admin" element={<AdminDashboard />} />
+              </Route>
             </Routes>
           </BrowserRouter>
         </NotificationProvider>
