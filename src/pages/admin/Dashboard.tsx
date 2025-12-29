@@ -107,12 +107,22 @@ export default function AdminDashboard() {
 
         try {
             // 1. Update DB - Set last_payment_date to NOW
-            const { error } = await supabase
+            // 1. Update DB - Set last_payment_date to NOW
+            // We use select() to verify the update actually happened via RLS
+            const { data, error } = await supabase
                 .from('profiles')
                 .update({ last_payment_date: new Date().toISOString() })
-                .eq('id', confirmModal.clubId);
+                .eq('id', confirmModal.clubId)
+                .select();
 
             if (error) throw error;
+
+            if (!data || data.length === 0) {
+                alert('⚠️ ALERTA DE DEBUG: No se actualizó ninguna fila. \nPosible causa: RLS (Permisos) o ID incorrecto.\nIntenta volver a correr el script de permisos.');
+                return;
+            } else {
+                // alert('DEBUG: Actualización exitosa en BD. Filas: ' + data.length);
+            }
 
             // 2. Optimistic Update - Set commission to 0 immediately in UI
             setClubStats(prev => ({
