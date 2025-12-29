@@ -2,7 +2,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LayoutDashboard, Calendar, Trophy, Users, User, LogOut, Search, Bell, Medal, Shield } from 'lucide-react';
 import clsx from 'clsx';
-import AIAssistant from './AIAssistant';
+// import AIAssistant from './AIAssistant';
 import { useNotifications } from '../context/NotificationContext';
 import { useState } from 'react';
 import { AppLogo } from './AppLogo';
