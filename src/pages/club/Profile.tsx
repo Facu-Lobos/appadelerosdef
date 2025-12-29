@@ -418,23 +418,29 @@ export default function ClubProfilePage() {
 
                 <div className="grid gap-3">
                     {courts.map(court => (
-                        <div key={court.id} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5 hover:border-primary/30 transition-colors">
-                            <div>
+                        <div key={court.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5 hover:border-primary/30 transition-colors gap-4">
+                            <div className="w-full md:w-auto">
                                 <h3 className="font-bold text-lg">{court.name}</h3>
-                                <div className="flex gap-2 text-sm text-gray-400 mt-1">
+                                <div className="flex flex-wrap gap-2 text-sm text-gray-400 mt-1">
                                     <span className="bg-white/10 px-2 py-0.5 rounded text-xs">{court.type === 'crystal' ? 'Cristal' : 'Pared'}</span>
                                     <span className="bg-white/10 px-2 py-0.5 rounded text-xs">{court.surface === 'synthetic' ? 'Sintético' : 'Cemento'}</span>
                                     {court.is_indoor && <span className="bg-primary/20 text-primary px-2 py-0.5 rounded text-xs">Indoor</span>}
                                 </div>
                             </div>
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center justify-between w-full md:w-auto gap-4 border-t border-white/5 md:border-0 pt-4 md:pt-0">
                                 <CourtPriceEditor
                                     courtId={court.id}
                                     initialPrice={court.hourly_rate || 0}
                                     onSave={handleUpdateCourtPrice}
                                 />
-                                <Button variant="outline" size="sm" icon={Trash2} className="text-red-400 hover:text-red-500 hover:bg-red-500/10 border-red-500/20" onClick={() => handleDeleteCourt(court.id)}>
-                                    Eliminar
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    icon={Trash2}
+                                    className="text-red-400 hover:text-red-500 hover:bg-red-500/10 border-red-500/20"
+                                    onClick={() => handleDeleteCourt(court.id)}
+                                >
+                                    <span className="hidden md:inline">Eliminar</span>
                                 </Button>
                             </div>
                         </div>
