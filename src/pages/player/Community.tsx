@@ -19,6 +19,7 @@ export default function PlayerCommunity() {
     // --- Data States ---
     const [searchTerm, setSearchTerm] = useState('');
     const [players, setPlayers] = useState<PlayerProfile[]>([]);
+    const [myFriends, setMyFriends] = useState<PlayerProfile[]>([]);
     const [recommendedPlayers, setRecommendedPlayers] = useState<PlayerProfile[]>([]);
     const [matches, setMatches] = useState<(MatchRequest & { myApplication?: MatchApplication })[]>([]);
     const [loading, setLoading] = useState(false);
@@ -50,8 +51,13 @@ export default function PlayerCommunity() {
         setSentRequests(sent);
         const received = await supabaseService.getPendingFriendRequests();
         setPendingRequests(received);
+
         const friendIds = await supabaseService.getFriends();
         setFriends(friendIds);
+
+        // Load Full Friend Profiles
+        const friendsData = await supabaseService.getFriendsProfiles();
+        setMyFriends(friendsData);
 
         await loadMatches();
 
@@ -59,7 +65,8 @@ export default function PlayerCommunity() {
         const currentUserProfile = await supabaseService.getProfile(user.id) as PlayerProfile;
         if (currentUserProfile) {
             const similar = await matchService.getSimilarPlayers(currentUserProfile);
-            setRecommendedPlayers(similar);
+            // Filter out friends from recommendations
+            setRecommendedPlayers(similar.filter(p => !friendIds.includes(p.id)));
         }
     };
 
@@ -282,10 +289,40 @@ export default function PlayerCommunity() {
                         </div>
                     </div>
 
+                    {/* My Friends Section */}
+                    {myFriends.length > 0 && (
+                        <div>
+                            <h3 className="text-sm font-bold text-gray-400 mb-3 uppercase tracking-wider flex items-center gap-2">
+                                <Users size={16} /> Mis Amigos ({myFriends.length})
+                            </h3>
+                            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                                {myFriends.map(friend => (
+                                    <div key={friend.id} className="min-w-[150px] bg-white/5 p-3 rounded-xl border border-white/10 flex flex-col items-center gap-2 relative group">
+                                        <div className="w-16 h-16 rounded-full bg-surface border-2 border-white/10 overflow-hidden">
+                                            <img src={friend.avatar_url || "https://via.placeholder.com/150"} className="w-full h-full object-cover" />
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="font-bold text-sm truncate w-full">{friend.name}</p>
+                                            <p className="text-xs text-gray-500">Cat. {friend.category}</p>
+                                        </div>
+                                        <Button
+                                            size="sm"
+                                            variant="secondary"
+                                            className="w-full text-xs h-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            onClick={() => setActiveChat({ id: friend.id, name: friend.name, avatar: friend.avatar_url })}
+                                        >
+                                            Chat
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Recommendations */}
                     {recommendedPlayers.length > 0 && (
                         <div>
-                            <h3 className="text-sm font-bold text-gray-400 mb-3 uppercase tracking-wider">Sugeridos para ti ({user?.role === 'player' ? 'Mismo Nivel' : ''})</h3>
+                            <h3 className="text-sm font-bold text-gray-400 mb-3 uppercase tracking-wider">Sugeridos para ti</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {recommendedPlayers.map(player => (
                                     <PlayerCard

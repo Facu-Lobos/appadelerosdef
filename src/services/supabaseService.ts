@@ -260,6 +260,27 @@ export const supabaseService = {
         return friendIds;
     },
 
+    async getFriendsProfiles() {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return [];
+
+        const friendIds = await this.getFriends();
+
+        if (friendIds.length === 0) return [];
+
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .in('id', friendIds);
+
+        if (error) {
+            console.error('Error fetching friends profiles:', error);
+            return [];
+        }
+
+        return data as PlayerProfile[];
+    },
+
     async respondToFriendRequest(requestId: string, status: 'accepted' | 'rejected') {
         const { error } = await supabase
             .from('friendships')
