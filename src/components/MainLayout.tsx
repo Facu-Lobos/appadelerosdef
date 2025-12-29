@@ -227,8 +227,8 @@ export default function MainLayout() {
                 </div>
             </div>
 
-            {/* AI Assistant Global Component */}
-            {user?.role === 'player' && <AIAssistant />}
+            {/* AI Assistant Removed */}
+            {/* {user?.role === 'player' && <AIAssistant />} */}
         </div>
     );
 }
