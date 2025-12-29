@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { useToast } from '../context/ToastContext';
 import type { PlayerProfile } from '../types';
@@ -24,11 +24,33 @@ export const useCommunityRealtime = ({
 }: UseCommunityRealtimeProps) => {
     const { showToast } = useToast();
 
+    // Refs to keep latest values without triggering effect re-run
+    const myMatchIdsRef = useRef(myMatchIds);
+    const callbacksRef = useRef({
+        onFriendRequestReceived,
+        onFriendRequestAccepted,
+        onMatchApplicationReceived,
+        onMatchApplicationUpdated,
+        onMessageReceived
+    });
+
+    useEffect(() => {
+        myMatchIdsRef.current = myMatchIds;
+        callbacksRef.current = {
+            onFriendRequestReceived,
+            onFriendRequestAccepted,
+            onMatchApplicationReceived,
+            onMatchApplicationUpdated,
+            onMessageReceived
+        };
+    }, [myMatchIds, onFriendRequestReceived, onFriendRequestAccepted, onMatchApplicationReceived, onMatchApplicationUpdated, onMessageReceived]);
+
     useEffect(() => {
         if (!user) return;
 
-        // Channel for user-specific events (friendships, messages, direct application updates)
-        const userChannel = supabase.channel(`user-updates-${user.id}`)
+        console.log('Setting up Realtime subscriptions for user:', user.id);
+
+        const channel = supabase.channel(`community-global-${user.id}`)
             // 1. Friend Requests (Incoming)
             .on(
                 'postgres_changes',
@@ -39,12 +61,12 @@ export const useCommunityRealtime = ({
                     filter: `receiver_id=eq.${user.id}`
                 },
                 (payload) => {
-                    console.log('New friend request:', payload);
+                    console.log('Realtime: Friend Request', payload);
                     showToast('¡Nueva solicitud de amistad!', 'info');
-                    onFriendRequestReceived();
+                    callbacksRef.current.onFriendRequestReceived();
                 }
             )
-            // 2. Friend Requests (Accepted by others)
+            // 2. Friend Requests (Accepted)
             .on(
                 'postgres_changes',
                 {
@@ -55,8 +77,9 @@ export const useCommunityRealtime = ({
                 },
                 (payload: any) => {
                     if (payload.new.status === 'accepted') {
+                        console.log('Realtime: Friend Accepted', payload);
                         showToast('¡Solicitud de amistad aceptada!', 'success');
-                        onFriendRequestAccepted();
+                        callbacksRef.current.onFriendRequestAccepted();
                     }
                 }
             )
@@ -70,13 +93,14 @@ export const useCommunityRealtime = ({
                     filter: `player_id=eq.${user.id}`
                 },
                 (payload: any) => {
+                    console.log('Realtime: Application Update', payload);
                     const status = payload.new.status;
                     if (status === 'accepted') {
                         showToast('¡Te han aceptado en un partido!', 'success');
                     } else if (status === 'rejected') {
                         showToast('Tu solicitud a un partido fue rechazada', 'error');
                     }
-                    onMatchApplicationUpdated();
+                    callbacksRef.current.onMatchApplicationUpdated();
                 }
             )
             // 4. Messages (Incoming)
@@ -89,7 +113,8 @@ export const useCommunityRealtime = ({
                     filter: `receiver_id=eq.${user.id}`
                 },
                 async (payload: any) => {
-                    // Fetch sender name for nicer toast
+                    console.log('Realtime: New Message', payload);
+
                     const { data } = await supabase
                         .from('profiles')
                         .select('name')
@@ -97,20 +122,13 @@ export const useCommunityRealtime = ({
                         .single();
 
                     const senderName = data?.name || 'Alguien';
+                    // Only show toast if message is NOT read (which it should be by default)
+                    // In a perfect world we check payload.new.read === false
                     showToast(`Mensaje nuevo de ${senderName}`, 'info');
-                    onMessageReceived(senderName);
+                    callbacksRef.current.onMessageReceived(senderName);
                 }
             )
-            .subscribe();
-
-        // Channel for My Matches (Someone applying to MY matches)
-        // Since RLS might prevent listening to all rows, we might need a workaround or specific filters.
-        // But for INSERTs, if RLS allows selecting the row, we might see it.
-        // A common pattern if table-wide listen isn't allowed is to rely on client-side filter
-        // OR listen to a channel per match (could be too many channels).
-        // Let's try listening to INSERT on match_applications and filtering by match_id in client.
-
-        const applicationsChannel = supabase.channel('applications-global')
+            // 5. Match Applications (Incoming to My Matches)
             .on(
                 'postgres_changes',
                 {
@@ -119,18 +137,21 @@ export const useCommunityRealtime = ({
                     table: 'match_applications'
                 },
                 (payload: any) => {
-                    // Check if the application is for one of MY matches
-                    if (myMatchIds.includes(payload.new.match_id)) {
+                    // Check if match_id is mine using the REF (always up to date)
+                    if (myMatchIdsRef.current.includes(payload.new.match_id)) {
+                        console.log('Realtime: Application Received for match', payload.new.match_id);
                         showToast('¡Alguien se postuló a tu partido!', 'info');
-                        onMatchApplicationReceived();
+                        callbacksRef.current.onMatchApplicationReceived();
                     }
                 }
             )
-            .subscribe();
+            .subscribe((status) => {
+                console.log(`Subscription status for ${user.id}:`, status);
+            });
 
         return () => {
-            supabase.removeChannel(userChannel);
-            supabase.removeChannel(applicationsChannel);
+            console.log('Cleaning up subscriptions');
+            supabase.removeChannel(channel);
         };
-    }, [user, myMatchIds]); // Re-subscribe if myMatchIds changes (e.g. I create a new match)
+    }, [user?.id]); // Only re-subscribe if user changes.
 };
