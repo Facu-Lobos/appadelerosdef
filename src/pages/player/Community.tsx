@@ -308,7 +308,7 @@ export default function PlayerCommunity() {
                                         <Button
                                             size="sm"
                                             variant="secondary"
-                                            className="w-full text-xs h-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            className="w-full text-xs h-7"
                                             onClick={() => setActiveChat({ id: friend.id, name: friend.name, avatar: friend.avatar_url })}
                                         >
                                             Chat
