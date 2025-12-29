@@ -196,7 +196,7 @@ export default function MainLayout() {
 
 
             {/* Main Content */}
-            <main className="flex-1 xl:ml-64 p-4 lg:p-8 pt-28 lg:pt-8 pb-28 lg:pb-8">
+            <main className="flex-1 xl:ml-64 p-3 md:p-4 lg:p-8 pt-28 lg:pt-8 pb-28 lg:pb-8 w-full overflow-x-hidden">
                 <Outlet />
             </main>
 

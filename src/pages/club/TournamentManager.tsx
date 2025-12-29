@@ -36,12 +36,12 @@ export const TournamentManager = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-white mb-2">Torneos</h1>
                     <p className="text-gray-400">Gestiona tus competiciones y ligas</p>
                 </div>
-                <Button onClick={() => setIsCreateModalOpen(true)} icon={Plus}>
+                <Button onClick={() => setIsCreateModalOpen(true)} icon={Plus} className="w-full sm:w-auto justify-center">
                     Nuevo Torneo
                 </Button>
             </div>

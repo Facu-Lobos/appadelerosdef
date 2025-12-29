@@ -58,7 +58,13 @@
 }
 
 body {
-  @apply bg-dark-primary text-light-primary font-sans overflow-x-hidden w-full max-w-[100vw];
+  @apply bg-dark-primary text-light-primary font-sans w-full max-w-[100vw];
+  overflow-x: hidden !important;
+}
+
+#root {
+  @apply w-full max-w-[100vw];
+  overflow-x: hidden !important;
 }
 
 .card {

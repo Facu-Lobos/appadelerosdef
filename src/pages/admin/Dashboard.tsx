@@ -106,6 +106,7 @@ export default function AdminDashboard() {
         if (!confirmModal) return;
 
         try {
+            // 1. Update DB - Set last_payment_date to NOW
             const { error } = await supabase
                 .from('profiles')
                 .update({ last_payment_date: new Date().toISOString() })
@@ -113,7 +114,7 @@ export default function AdminDashboard() {
 
             if (error) throw error;
 
-            // Update local stats immediately
+            // 2. Optimistic Update - Set commission to 0 immediately in UI
             setClubStats(prev => ({
                 ...prev,
                 [confirmModal.clubId]: {
@@ -122,14 +123,16 @@ export default function AdminDashboard() {
                 }
             }));
 
-            // Also update the club list to reflect the new last_payment_date if needed, 
-            // but for commission display, updating stats is enough.
-            // We can re-fetch to be sure.
-            fetchClubs();
-
             setConfirmModal(null);
+
+            // 3. Background Re-fetch (Optional, to ensure consistency)
+            setTimeout(() => {
+                fetchClubs();
+            }, 1000);
+
         } catch (e: any) {
-            alert('Error: ' + e.message);
+            console.error('Error reseting commission:', e);
+            alert('Error al reiniciar comisión: ' + e.message);
         }
     };
 
