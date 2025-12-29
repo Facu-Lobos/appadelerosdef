@@ -139,3 +139,20 @@ export interface Message {
         avatar_url?: string;
     };
 }
+
+export interface MatchRequest {
+    id: string;
+    player_id: string;
+    club_id?: string;
+    date: string; // ISO Date YYYY-MM-DD
+    time?: string; // HH:MM
+    category: string;
+    location?: string;
+    description?: string;
+    players_needed: number;
+    status: 'open' | 'closed' | 'cancelled';
+    created_at: string;
+    // Joined fields
+    player?: PlayerProfile;
+    club?: ClubProfile;
+}
