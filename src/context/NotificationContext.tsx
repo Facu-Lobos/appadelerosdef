@@ -116,12 +116,16 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
             // It's new!
             senders.add(msg.sender_id);
+
+            // Determine base path based on role
+            const basePath = user?.role === 'club' ? '/club/community' : '/player/community';
+
             newNotifications.push({
                 id: `msg-${msg.id}`,
                 type: 'message',
                 title: 'Nuevo Mensaje',
                 description: `Mensaje de ${msg.sender?.name || 'Usuario'}`,
-                link: `/player/community?chatWith=${msg.sender_id}&name=${encodeURIComponent(msg.sender?.name || 'Usuario')}&avatar=${encodeURIComponent(msg.sender?.avatar_url || '')}`,
+                link: `${basePath}?chatWith=${msg.sender_id}&name=${encodeURIComponent(msg.sender?.name || 'Usuario')}&avatar=${encodeURIComponent(msg.sender?.avatar_url || '')}`,
                 read: false,
                 created_at: msg.created_at,
                 metadata: { senderId: msg.sender_id }

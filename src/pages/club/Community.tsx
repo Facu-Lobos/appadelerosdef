@@ -36,6 +36,24 @@ export default function ClubCommunity() {
         loadData();
     }, [user]);
 
+    // Check for query params (Notifications)
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const chatWith = params.get('chatWith');
+        const name = params.get('name');
+        const avatar = params.get('avatar');
+
+        if (chatWith) {
+            setActiveChat({
+                id: chatWith,
+                name: name || 'Usuario',
+                avatar: avatar || undefined
+            });
+            // Clean URL
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+    }, [window.location.search]);
+
     const handleRespond = async (requestId: string, status: 'accepted' | 'rejected') => {
         const success = await supabaseService.respondToFriendRequest(requestId, status);
         if (success) {
