@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Search, UserPlus, MessageCircle, UserCheck, Loader2, Users, Calendar, MapPin, Plus, Trophy, CheckCircle, XCircle } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -9,6 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { Modal } from '../../components/ui/Modal';
 import ChatWindow from '../../components/ChatWindow';
+import { useCommunityRealtime } from '../../hooks/useCommunityRealtime';
 
 export default function PlayerCommunity() {
     const { user } = useAuth();
@@ -66,26 +67,6 @@ export default function PlayerCommunity() {
         if (!user) return;
         const openMatches = await matchService.getOpenMatches();
 
-        // Augment matches with "myApplication" status if any
-        // Note: In a real app we would fetch my applications separately or eager load.
-        // For now, let's assume getOpenMatches DOES NOT return detailed application info mainly for security/perf
-        // But for "my" status we might need a separate query or adjust the service.
-        // Let's optimize: We can just fetch "my applications" separately.
-
-        // HACK: For this iteration, I'll rely on the client to check if I am in the list if the list is public
-        // BUT standard RLS might hide other's applications. 
-        // Let's fetch Open Matches normally.
-
-        // Better approach: fetch *my* applications
-        const { data: myApps } = await supabaseService.signIn('player').then(auth =>
-            auth.getUser().then(u =>
-                matchService.getMatchApplications(u.data.user?.id || '') // This is wrong, this gets apps FOR A MATCH
-            )
-        ) as any;
-
-        // Correct approach: Just check the 'applications' array if included? 
-        // We updated the service to include `applications:match_applications(player_id, status)`.
-
         const matchesWithStatus = openMatches.map((m: any) => {
             const myApp = m.applications?.find((a: any) => a.player_id === user.id);
             return { ...m, myApplication: myApp };
@@ -93,6 +74,45 @@ export default function PlayerCommunity() {
 
         setMatches(matchesWithStatus);
     };
+
+    // Calculate My Match Ids for Realtime Filter
+    const myMatchIds = useMemo(() => {
+        return matches.filter(m => m.player_id === user?.id).map(m => m.id);
+    }, [matches, user]);
+
+    // --- Realtime Integration ---
+    useCommunityRealtime({
+        user: user as PlayerProfile,
+        myMatchIds,
+        onFriendRequestReceived: async () => {
+            // Reload pending requests
+            const received = await supabaseService.getPendingFriendRequests();
+            setPendingRequests(received);
+        },
+        onFriendRequestAccepted: async () => {
+            // Reload friends list and refresh UI
+            const friendIds = await supabaseService.getFriends();
+            setFriends(friendIds);
+            const sent = await supabaseService.getSentFriendRequests();
+            setSentRequests(sent);
+            loadData();
+        },
+        onMatchApplicationReceived: async () => {
+            // If managing, refresh application list
+            if (showManageMatch) {
+                const apps = await matchService.getMatchApplications(showManageMatch.id);
+                setMatchApplications(apps);
+            }
+            // Refresh main match list anyway (to update counters if visualized)
+            loadMatches();
+        },
+        onMatchApplicationUpdated: () => {
+            loadMatches(); // Refresh to see updated status
+        },
+        onMessageReceived: () => {
+            // Optional: Update unread indicators if they existed
+        }
+    });
 
     const handleSearch = async () => {
         setLoading(true);
@@ -162,7 +182,6 @@ export default function PlayerCommunity() {
             // Refresh matches (to update player count)
             loadMatches();
 
-            // If match is now closed (0 players needed), close modal? Maybe keep open to see
             if (status === 'accepted') {
                 // Check local state or just refresh
             }
