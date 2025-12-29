@@ -573,7 +573,14 @@ function PlayerCard({ player, isFriend, isSent, onAdd, onChat }: { player: Playe
                 </div>
             </div>
             <div className="flex gap-2">
-                <Button size="sm" variant="secondary" icon={MessageCircle} onClick={onChat}>Chat</Button>
+                <Button
+                    size="sm"
+                    icon={MessageCircle}
+                    className="bg-transparent border border-white text-white hover:bg-white/10 hover:border-white"
+                    onClick={onChat}
+                >
+                    Chat
+                </Button>
                 {isFriend ? (
                     <div className="px-3 py-1.5 bg-green-500/10 text-green-400 rounded-lg text-sm font-medium flex items-center gap-2 border border-green-500/20">
                         <UserCheck size={16} />
