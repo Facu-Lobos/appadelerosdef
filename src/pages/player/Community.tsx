@@ -307,8 +307,8 @@ export default function PlayerCommunity() {
                                         </div>
                                         <Button
                                             size="sm"
-                                            variant="secondary"
-                                            className="w-full text-xs h-7"
+                                            icon={MessageCircle}
+                                            className="w-full text-xs h-7 bg-transparent border border-white text-white hover:bg-white/10 hover:border-white"
                                             onClick={() => setActiveChat({ id: friend.id, name: friend.name, avatar: friend.avatar_url })}
                                         >
                                             Chat
