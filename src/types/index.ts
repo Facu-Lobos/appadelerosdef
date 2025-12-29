@@ -156,3 +156,13 @@ export interface MatchRequest {
     player?: PlayerProfile;
     club?: ClubProfile;
 }
+
+export interface MatchApplication {
+    id: string;
+    match_id: string;
+    player_id: string;
+    status: 'pending' | 'accepted' | 'rejected';
+    created_at: string;
+    // Joined fields
+    player?: PlayerProfile;
+}

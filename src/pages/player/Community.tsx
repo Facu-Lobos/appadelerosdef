@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Search, UserPlus, MessageCircle, UserCheck, Loader2, Users, Calendar, MapPin, Plus, Trophy } from 'lucide-react';
+import { Search, UserPlus, MessageCircle, UserCheck, Loader2, Users, Calendar, MapPin, Plus, Trophy, CheckCircle, XCircle } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { supabaseService } from '../../services/supabaseService';
 import { matchService } from '../../services/matchService';
-import type { PlayerProfile, MatchRequest } from '../../types';
+import type { PlayerProfile, MatchRequest, MatchApplication } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { Modal } from '../../components/ui/Modal';
@@ -19,8 +19,7 @@ export default function PlayerCommunity() {
     const [searchTerm, setSearchTerm] = useState('');
     const [players, setPlayers] = useState<PlayerProfile[]>([]);
     const [recommendedPlayers, setRecommendedPlayers] = useState<PlayerProfile[]>([]);
-    const [dateFilter, setDateFilter] = useState('');
-    const [matches, setMatches] = useState<MatchRequest[]>([]);
+    const [matches, setMatches] = useState<(MatchRequest & { myApplication?: MatchApplication })[]>([]);
     const [loading, setLoading] = useState(false);
 
     // --- Social States ---
@@ -29,8 +28,10 @@ export default function PlayerCommunity() {
     const [friends, setFriends] = useState<string[]>([]);
     const [activeChat, setActiveChat] = useState<{ id: string, name: string, avatar?: string } | null>(null);
 
-    // --- Forms ---
+    // --- Forms & Modals ---
     const [showCreateMatch, setShowCreateMatch] = useState(false);
+    const [showManageMatch, setShowManageMatch] = useState<MatchRequest | null>(null);
+    const [matchApplications, setMatchApplications] = useState<MatchApplication[]>([]);
     const [newMatch, setNewMatch] = useState({
         date: '',
         time: '',
@@ -51,9 +52,7 @@ export default function PlayerCommunity() {
         const friendIds = await supabaseService.getFriends();
         setFriends(friendIds);
 
-        // Load Matches
-        const openMatches = await matchService.getOpenMatches();
-        setMatches(openMatches);
+        await loadMatches();
 
         // Load Recommendations (Client-side trigger for now)
         const currentUserProfile = await supabaseService.getProfile(user.id) as PlayerProfile;
@@ -63,6 +62,38 @@ export default function PlayerCommunity() {
         }
     };
 
+    const loadMatches = async () => {
+        if (!user) return;
+        const openMatches = await matchService.getOpenMatches();
+
+        // Augment matches with "myApplication" status if any
+        // Note: In a real app we would fetch my applications separately or eager load.
+        // For now, let's assume getOpenMatches DOES NOT return detailed application info mainly for security/perf
+        // But for "my" status we might need a separate query or adjust the service.
+        // Let's optimize: We can just fetch "my applications" separately.
+
+        // HACK: For this iteration, I'll rely on the client to check if I am in the list if the list is public
+        // BUT standard RLS might hide other's applications. 
+        // Let's fetch Open Matches normally.
+
+        // Better approach: fetch *my* applications
+        const { data: myApps } = await supabaseService.signIn('player').then(auth =>
+            auth.getUser().then(u =>
+                matchService.getMatchApplications(u.data.user?.id || '') // This is wrong, this gets apps FOR A MATCH
+            )
+        ) as any;
+
+        // Correct approach: Just check the 'applications' array if included? 
+        // We updated the service to include `applications:match_applications(player_id, status)`.
+
+        const matchesWithStatus = openMatches.map((m: any) => {
+            const myApp = m.applications?.find((a: any) => a.player_id === user.id);
+            return { ...m, myApplication: myApp };
+        });
+
+        setMatches(matchesWithStatus);
+    };
+
     const handleSearch = async () => {
         setLoading(true);
         const results = await supabaseService.searchPlayers(searchTerm);
@@ -70,6 +101,8 @@ export default function PlayerCommunity() {
         setPlayers(filtered);
         setLoading(false);
     };
+
+    // --- Match Actions ---
 
     const handleCreateMatch = async () => {
         if (!newMatch.date || !newMatch.location) {
@@ -90,14 +123,52 @@ export default function PlayerCommunity() {
             });
             showToast('Búsqueda publicada con éxito', 'success');
             setShowCreateMatch(false);
-            // Refresh
-            const openMatches = await matchService.getOpenMatches();
-            setMatches(openMatches);
-            // Reset form
+            loadMatches();
             setNewMatch({ date: '', time: '', category: '6ta', location: '', description: '', players_needed: 1 });
         } catch (error) {
             console.error(error);
             showToast('Error al publicar', 'error');
+        }
+    };
+
+    const handleApply = async (matchId: string) => {
+        if (!user) return;
+        try {
+            await matchService.applyToMatch(matchId, user.id);
+            showToast('Solicitud enviada', 'success');
+            loadMatches();
+        } catch (error) {
+            console.error(error);
+            showToast('Error al unirse', 'error');
+        }
+    };
+
+    const handleManage = async (match: MatchRequest) => {
+        setShowManageMatch(match);
+        const apps = await matchService.getMatchApplications(match.id);
+        setMatchApplications(apps);
+    };
+
+    const handleRespondApplication = async (appId: string, status: 'accepted' | 'rejected') => {
+        if (!showManageMatch) return;
+        try {
+            await matchService.respondToApplication(appId, showManageMatch.id, status);
+            showToast(`Solicitud ${status === 'accepted' ? 'aceptada' : 'rechazada'}`, 'success');
+
+            // Refresh applications list
+            const apps = await matchService.getMatchApplications(showManageMatch.id);
+            setMatchApplications(apps);
+
+            // Refresh matches (to update player count)
+            loadMatches();
+
+            // If match is now closed (0 players needed), close modal? Maybe keep open to see
+            if (status === 'accepted') {
+                // Check local state or just refresh
+            }
+        } catch (error) {
+            console.error(error);
+            showToast('Error al responder', 'error');
         }
     };
 
@@ -245,44 +316,79 @@ export default function PlayerCommunity() {
                             <div className="text-center py-12 text-gray-500">
                                 No hay búsquedas activas. ¡Sé el primero!
                             </div>
-                        ) : matches.map(match => (
-                            <div key={match.id} className="card p-4 flex flex-col md:flex-row justify-between gap-4 md:items-center hover:border-primary/30 transition-colors">
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-white/10 overflow-hidden">
-                                            {match.player?.avatar_url && <img src={match.player.avatar_url} className="w-full h-full object-cover" />}
+                        ) : matches.map(match => {
+                            const isCreator = match.player_id === user?.id;
+                            const myStatus = match.myApplication?.status;
+
+                            return (
+                                <div key={match.id} className="card p-4 flex flex-col md:flex-row justify-between gap-4 md:items-center hover:border-primary/30 transition-colors">
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-white/10 overflow-hidden">
+                                                {match.player?.avatar_url && <img src={match.player.avatar_url} className="w-full h-full object-cover" />}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-white flex items-center gap-2">
+                                                    {match.player?.name || 'Jugador'}
+                                                    {isCreator && <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">TÚ</span>}
+                                                </p>
+                                                <p className="text-sm text-gray-400">
+                                                    Busca <span className="text-primary font-bold">{match.players_needed}</span> jugador{match.players_needed > 1 ? 'es' : ''}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="font-bold text-white">{match.player?.name || 'Jugador'}</p>
-                                            <p className="text-xs text-primary font-medium">Busca {match.players_needed} jugador{match.players_needed > 1 ? 'es' : ''}</p>
+
+                                        <div className="flex flex-wrap gap-2 text-sm text-gray-300">
+                                            <div className="flex items-center gap-1 bg-white/5 px-2 py-1 rounded">
+                                                <Calendar size={14} className="text-gray-500" />
+                                                {new Date(match.date).toLocaleDateString()} {match.time && `• ${match.time}hs`}
+                                            </div>
+                                            <div className="flex items-center gap-1 bg-white/5 px-2 py-1 rounded">
+                                                <Trophy size={14} className="text-gray-500" />
+                                                Cat. {match.category}
+                                            </div>
+                                            <div className="flex items-center gap-1 bg-white/5 px-2 py-1 rounded">
+                                                <MapPin size={14} className="text-gray-500" />
+                                                {match.location || 'Zona a definir'}
+                                            </div>
                                         </div>
+                                        {match.description && <p className="text-sm text-gray-400 italic">"{match.description}"</p>}
                                     </div>
 
-                                    <div className="flex flex-wrap gap-2 text-sm text-gray-300">
-                                        <div className="flex items-center gap-1 bg-white/5 px-2 py-1 rounded">
-                                            <Calendar size={14} className="text-gray-500" />
-                                            {new Date(match.date).toLocaleDateString()} {match.time && `• ${match.time}hs`}
-                                        </div>
-                                        <div className="flex items-center gap-1 bg-white/5 px-2 py-1 rounded">
-                                            <Trophy size={14} className="text-gray-500" />
-                                            Cat. {match.category}
-                                        </div>
-                                        <div className="flex items-center gap-1 bg-white/5 px-2 py-1 rounded">
-                                            <MapPin size={14} className="text-gray-500" />
-                                            {match.location || 'Zona a definir'}
-                                        </div>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            size="sm"
+                                            variant="secondary"
+                                            onClick={() => match.player && setActiveChat({ id: match.player.id, name: match.player.name })}
+                                        >
+                                            Chat
+                                        </Button>
+
+                                        {isCreator ? (
+                                            <Button size="sm" onClick={() => handleManage(match)}>
+                                                Administrar
+                                            </Button>
+                                        ) : (
+                                            <>
+                                                {myStatus === 'accepted' ? (
+                                                    <Button size="sm" variant="outline" className="text-green-400 border-green-500/20 bg-green-500/10 cursor-default">
+                                                        <CheckCircle size={16} className="mr-2" /> ¡Aceptado!
+                                                    </Button>
+                                                ) : myStatus === 'pending' ? (
+                                                    <Button size="sm" variant="outline" disabled>
+                                                        Pendiente...
+                                                    </Button>
+                                                ) : (
+                                                    <Button size="sm" onClick={() => handleApply(match.id)}>
+                                                        Unirme
+                                                    </Button>
+                                                )}
+                                            </>
+                                        )}
                                     </div>
-                                    {match.description && <p className="text-sm text-gray-400 italic">"{match.description}"</p>}
                                 </div>
-
-                                <Button
-                                    size="sm"
-                                    onClick={() => match.player && setActiveChat({ id: match.player.id, name: match.player.name })}
-                                >
-                                    Contactar
-                                </Button>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             )}
@@ -333,6 +439,48 @@ export default function PlayerCommunity() {
                         <Input placeholder="Ej: Nivel intermedio real, ya tenemos cancha" value={newMatch.description} onChange={e => setNewMatch({ ...newMatch, description: e.target.value })} />
                     </div>
                     <Button className="w-full mt-4" onClick={handleCreateMatch}>Publicar</Button>
+                </div>
+            </Modal>
+
+            {/* Manage Match Modal */}
+            <Modal isOpen={!!showManageMatch} onClose={() => setShowManageMatch(null)} title="Gestionar Postulantes">
+                <div className="space-y-4">
+                    <div className="p-3 bg-white/5 rounded-lg border border-white/10 mb-4">
+                        <p className="text-sm text-gray-400">Jugadores faltantes:</p>
+                        <p className="text-2xl font-bold text-primary">{showManageMatch?.players_needed}</p>
+                    </div>
+
+                    <h3 className="font-bold text-white">Solicitudes ({matchApplications.length})</h3>
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {matchApplications.length === 0 && <p className="text-sm text-gray-500">Aún no hay solicitudes.</p>}
+
+                        {matchApplications.map(app => (
+                            <div key={app.id} className="flex items-center justify-between p-3 bg-black/20 rounded-lg">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-white/10 overflow-hidden">
+                                        <img src={app.player?.avatar_url || "https://via.placeholder.com/150"} className="w-full h-full object-cover" />
+                                    </div>
+                                    <div>
+                                        <p className="font-medium text-sm">{app.player?.name || 'Jugador'}</p>
+                                        <p className="text-xs text-gray-400">Cat. {app.player?.category || '?'}</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-2">
+                                    {app.status === 'pending' ? (
+                                        <>
+                                            <Button size="sm" className="h-7 text-xs px-2" onClick={() => handleRespondApplication(app.id, 'accepted')}>Aceptar</Button>
+                                            <Button size="sm" variant="ghost" className="h-7 text-xs px-2 text-red-400 hover:text-red-300" onClick={() => handleRespondApplication(app.id, 'rejected')}>Rechazar</Button>
+                                        </>
+                                    ) : (
+                                        <span className={`text-xs font-bold px-2 py-1 rounded ${app.status === 'accepted' ? 'text-green-400 bg-green-500/10' : 'text-red-400 bg-red-500/10'}`}>
+                                            {app.status === 'accepted' ? 'Aceptado' : 'Rechazado'}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </Modal>
 

@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import type { MatchRequest, PlayerProfile } from '../types';
+import type { MatchRequest, PlayerProfile, MatchApplication } from '../types';
 
 export const matchService = {
     // --- Match Requests ---
@@ -11,7 +11,8 @@ export const matchService = {
             .select(`
                 *,
                 player:profiles!player_id(*),
-                club:clubs(*)
+                club:clubs(*),
+                applications:match_applications(player_id, status)
             `)
             .eq('status', 'open')
             .gte('date', new Date().toISOString().split('T')[0]) // Only future or today
@@ -43,6 +44,65 @@ export const matchService = {
             .eq('id', requestId);
 
         if (error) throw error;
+        return true;
+    },
+
+    // --- Applications (Join Requests) ---
+
+    async applyToMatch(matchId: string, playerId: string) {
+        const { error } = await supabase
+            .from('match_applications')
+            .insert([{ match_id: matchId, player_id: playerId, status: 'pending' }]);
+
+        if (error) throw error;
+        return true;
+    },
+
+    async getMatchApplications(matchId: string) {
+        const { data, error } = await supabase
+            .from('match_applications')
+            .select('*, player:profiles!player_id(*)')
+            .eq('match_id', matchId);
+
+        if (error) {
+            console.error('Error fetching applications:', error);
+            return [];
+        }
+        return data as MatchApplication[];
+    },
+
+    async respondToApplication(applicationId: string, matchId: string, status: 'accepted' | 'rejected') {
+        // 1. Update Application Status
+        const { error } = await supabase
+            .from('match_applications')
+            .update({ status })
+            .eq('id', applicationId);
+
+        if (error) throw error;
+
+        // 2. If Accepted, Decrement players_needed
+        if (status === 'accepted') {
+            // Fetch current match to check needed count
+            const { data: match } = await supabase
+                .from('match_requests')
+                .select('players_needed')
+                .eq('id', matchId)
+                .single();
+
+            if (match) {
+                const newCount = Math.max(0, match.players_needed - 1);
+                const newStatus = newCount === 0 ? 'closed' : 'open';
+
+                await supabase
+                    .from('match_requests')
+                    .update({
+                        players_needed: newCount,
+                        status: newStatus
+                    })
+                    .eq('id', matchId);
+            }
+        }
+
         return true;
     },
 
