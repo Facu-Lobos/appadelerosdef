@@ -328,23 +328,32 @@ export const supabaseService = {
 
     // Data Fetching
     async getClubs() {
+        // Query profiles directly to ensure we get the latest schema columns (last_payment_date, commission_rate)
         const { data, error } = await supabase
-            .from('clubs')
-            .select('*, profiles(avatar_url, schedule, location, services, last_payment_date, commission_rate)');
+            .from('profiles')
+            .select('*, clubs(*)')
+            .eq('role', 'club');
 
         if (error) throw error;
 
-        return data.map((club: any) => ({
-            ...club,
-            role: 'club',
-            location: club.location || club.profiles?.location || 'Ubicación pendiente',
-            avatar_url: club.profiles?.avatar_url,
-            schedule: club.profiles?.schedule || club.schedule,
-            photos: club.photos || ['https://images.unsplash.com/photo-1554068865-24cecd4e34b8?q=80&w=2940&auto=format&fit=crop'], // Default photo
-            services: club.profiles?.services || club.services || ['Estacionamiento', 'Vestuarios', 'Bar'], // Default services
-            last_payment_date: club.profiles?.last_payment_date,
-            commission_rate: club.profiles?.commission_rate
-        })) as ClubProfile[];
+        return data.map((profile: any) => {
+            // profile.clubs might be an object or array depending on relation. Usually array with 1 item or object.
+            const clubData = Array.isArray(profile.clubs) ? profile.clubs[0] : profile.clubs;
+
+            return {
+                ...profile,
+                ...clubData, // Merge club specific data
+                id: profile.id, // Ensure ID is preserved from profile
+                role: 'club',
+                location: profile.location || clubData?.location || 'Ubicación pendiente',
+                avatar_url: profile.avatar_url,
+                schedule: profile.schedule || clubData?.schedule, // schedule might be in either
+                photos: clubData?.photos || ['https://images.unsplash.com/photo-1554068865-24cecd4e34b8?q=80&w=2940&auto=format&fit=crop'],
+                services: profile.services || clubData?.services || ['Estacionamiento', 'Vestuarios', 'Bar'],
+                last_payment_date: profile.last_payment_date,
+                commission_rate: profile.commission_rate
+            };
+        }) as ClubProfile[];
     },
 
     async getCourts(clubId: string) {
