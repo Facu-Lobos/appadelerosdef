@@ -9,6 +9,8 @@ export const OneSignalService = {
             await OneSignal.init({
                 appId: ONESIGNAL_APP_ID,
                 allowLocalhostAsSecureOrigin: true, // For development
+                serviceWorkerParam: { scope: '/' },
+                serviceWorkerPath: 'OneSignalSDKWorker.js',
                 notifyButton: {
                     enable: true,
                     prenotify: true,

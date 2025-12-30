@@ -8,13 +8,10 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'OneSignalSDKWorker.js',
       includeAssets: ['favicon.svg', 'robots.txt', 'apple-touch-icon.png'],
-      workbox: {
-        cleanupOutdatedCaches: true,
-        skipWaiting: true,
-        clientsClaim: true,
-        sourcemap: true
-      },
       manifest: {
         name: 'APPadeleros',
         short_name: 'APPadeleros',
