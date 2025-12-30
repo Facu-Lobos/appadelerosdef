@@ -153,6 +153,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     useEffect(() => {
         refreshNotifications();
         const interval = setInterval(refreshNotifications, 10000); // Poll every 10s
+
+        // Initialize Push Notifications (OneSignal)
+        if (user) {
+            import('../services/OneSignalService').then(({ OneSignalService }) => {
+                OneSignalService.init(user.id);
+            });
+        }
+
         return () => clearInterval(interval);
     }, [user, dismissedRequests]); // Re-run if dismissed list changes
 
