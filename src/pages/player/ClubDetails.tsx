@@ -6,16 +6,19 @@ import type { ClubProfile, Court } from '../../types';
 import { Button } from '../../components/ui/Button';
 import { format, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Calendar, Trophy, MapPin, ArrowLeft, Medal, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
-import { CourtVisual } from '../../components/ui/CourtVisual';
+import { Calendar, Trophy, MapPin, ArrowLeft, Medal, Clock, ChevronLeft, ChevronRight, Heart } from 'lucide-react';
+import { WeatherWidget } from '../../components/WeatherWidget';
 
 export default function ClubDetails() {
+    // ... existing code ...
+
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { showToast } = useToast();
     const [club, setClub] = useState<ClubProfile | null>(null);
     const [activeTab, setActiveTab] = useState<'booking' | 'ranking'>('booking');
     const [loading, setLoading] = useState(true);
+    const [isFavorite, setIsFavorite] = useState(false);
 
     // Booking State
     const [courts, setCourts] = useState<Court[]>([]);
@@ -59,6 +62,10 @@ export default function ClubDetails() {
                 setClub(foundClub);
                 const courtsData = await supabaseService.getCourts(foundClub.id);
                 setCourts(courtsData);
+
+                // Check if favorite
+                const favs = await supabaseService.getFavoriteClubs();
+                setIsFavorite(favs.some(f => f.id === foundClub.id));
             }
         } catch (error) {
             console.error('Error loading club:', error);
@@ -152,20 +159,42 @@ export default function ClubDetails() {
         <div className="space-y-6 pb-20 w-full max-w-[100vw] overflow-x-hidden px-4 md:px-0">
             {/* Header */}
             <div className="relative h-48 rounded-2xl overflow-hidden shadow-2xl">
+                {/* ... existing header code ... */}
                 <img
                     src={club.avatar_url || club.photos[0] || "https://via.placeholder.com/800x400"}
                     alt={club.name}
                     className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-6">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="absolute top-4 left-4 text-white hover:bg-white/20"
-                        onClick={() => navigate('/player')}
-                    >
-                        <ArrowLeft size={20} className="mr-2" /> Volver
-                    </Button>
+                    <div className="flex justify-between items-start">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="absolute top-4 left-4 text-white hover:bg-white/20"
+                            onClick={() => navigate('/player')}
+                        >
+                            <ArrowLeft size={20} className="mr-2" /> Volver
+                        </Button>
+
+                        <button
+                            onClick={async (e) => {
+                                e.stopPropagation();
+                                if (!club) return;
+                                try {
+                                    // Optimistic toggle
+                                    setIsFavorite(!isFavorite);
+                                    await supabaseService.toggleFavoriteClub(club.id);
+                                } catch (error) {
+                                    console.error(error);
+                                    setIsFavorite(!isFavorite); // Revert
+                                }
+                            }}
+                            className="absolute top-4 right-4 bg-black/50 p-2 rounded-full hover:bg-black/70 backdrop-blur-sm transition-all hover:scale-110 z-10"
+                        >
+                            <Heart size={24} className={isFavorite ? "text-red-500 fill-red-500 transition-colors" : "text-white transition-colors"} />
+                        </button>
+                    </div>
+
                     <h1 className="text-3xl font-bold text-white">{club.name}</h1>
                     <div className="flex items-center text-gray-300 mt-2">
                         <MapPin size={16} className="mr-2" />
@@ -173,6 +202,10 @@ export default function ClubDetails() {
                     </div>
                 </div>
             </div>
+
+            {/* Weather Widget */}
+            <WeatherWidget location={club.location} />
+
 
             {/* Tabs */}
             <div className="flex border-b border-white/10 -mx-4 md:mx-0 px-4 md:px-0">

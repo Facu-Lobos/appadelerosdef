@@ -12,6 +12,7 @@ import PlayerHome from './pages/player/Home';
 import PlayerBookings from './pages/player/Bookings';
 import PlayerTournaments from './pages/player/Tournaments';
 import TournamentResults from './pages/player/TournamentResults';
+import MatchSharePage from './pages/player/MatchSharePage';
 import PlayerCommunity from './pages/player/Community';
 import PlayerProfilePage from './pages/player/Profile';
 import ClubDetails from './pages/player/ClubDetails';
@@ -48,6 +49,7 @@ export default function App() {
                 <Route path="bookings" element={<PlayerBookings />} />
                 <Route path="tournaments" element={<PlayerTournaments />} />
                 <Route path="tournaments/:id" element={<TournamentResults />} />
+                <Route path="tournament/match/:id" element={<MatchSharePage />} />
                 <Route path="community" element={<PlayerCommunity />} />
                 <Route path="community" element={<PlayerCommunity />} />
                 <Route path="profile" element={<PlayerProfilePage />} />
