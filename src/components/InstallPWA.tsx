@@ -17,6 +17,15 @@ export const InstallPWA = () => {
 
         window.addEventListener('beforeinstallprompt', handler);
 
+        // Debug Check: If SW is not active, prompt might not fire.
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(registration => {
+                console.log('SW Registered:', registration);
+            }).catch(err => {
+                console.error('SW Registration failing:', err);
+            });
+        }
+
         return () => {
             window.removeEventListener('beforeinstallprompt', handler);
         };
