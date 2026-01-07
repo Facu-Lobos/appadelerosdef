@@ -26,11 +26,13 @@ import ClubRankings from './pages/club/Rankings';
 import AdminDashboard from './pages/admin/Dashboard';
 
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { InstallPWA } from './components/InstallPWA';
 
 export default function App() {
   return (
     <AuthProvider>
       <ToastProvider>
+        <InstallPWA />
         <NotificationProvider>
           <BrowserRouter>
             <Routes>
