@@ -8,6 +8,7 @@ import { format, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Calendar, Trophy, MapPin, ArrowLeft, Medal, Clock, ChevronLeft, ChevronRight, Heart } from 'lucide-react';
 import { WeatherWidget } from '../../components/WeatherWidget';
+import { CourtVisual } from '../../components/ui/CourtVisual';
 
 export default function ClubDetails() {
     // ... existing code ...
