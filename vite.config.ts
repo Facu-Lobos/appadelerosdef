@@ -13,7 +13,9 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         skipWaiting: true,
         clientsClaim: true,
-        sourcemap: true
+        sourcemap: true,
+        importScripts: ['OneSignalSDKWorker.js'],
+        navigateFallback: '/index.html'
       },
       manifest: {
         name: 'APPadeleros',

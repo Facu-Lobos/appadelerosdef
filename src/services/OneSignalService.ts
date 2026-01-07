@@ -23,7 +23,7 @@ export const OneSignalService = {
                 appId: ONESIGNAL_APP_ID,
                 allowLocalhostAsSecureOrigin: true, // For development
                 serviceWorkerParam: { scope: '/' },
-                serviceWorkerPath: 'OneSignalSDKWorker.js',
+                serviceWorkerPath: 'sw.js',
                 notifyButton: {
                     enable: true,
                     prenotify: true,
