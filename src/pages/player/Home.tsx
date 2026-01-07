@@ -11,6 +11,9 @@ import { PadelRacket } from '../../components/PadelIcons';
 export default function PlayerHome() {
     const navigate = useNavigate();
 
+    const [clubs, setClubs] = useState<ClubProfile[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
     const [favorites, setFavorites] = useState<string[]>([]);
 
     const fetchFavorites = async () => {
