@@ -4,7 +4,20 @@ import OneSignal from 'react-onesignal';
 const ONESIGNAL_APP_ID = '0da5084a-b752-4a3e-ad30-cab1adc1d22a';
 
 export const OneSignalService = {
+    initialized: false, // Flag to track initialization
+
     async init(userId: string) {
+        if (this.initialized) {
+            console.log('OneSignal already initialized');
+            // Still try to login if userId is provided, as it might be a re-login/page refresh context
+            if (userId) {
+                try {
+                    await OneSignal.login(userId);
+                } catch (e) { console.error(e); }
+            }
+            return;
+        }
+
         try {
             await OneSignal.init({
                 appId: ONESIGNAL_APP_ID,
@@ -35,6 +48,7 @@ export const OneSignalService = {
             }
 
             console.log('OneSignal Initialized');
+            this.initialized = true;
         } catch (error) {
             console.error('OneSignal Initialization Error:', error);
         }

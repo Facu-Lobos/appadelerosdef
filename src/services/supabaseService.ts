@@ -331,28 +331,41 @@ export const supabaseService = {
 
     // Data Fetching
     async getClubs() {
-        // Query profiles directly to ensure we get the latest schema columns (last_payment_date, commission_rate)
-        const { data, error } = await supabase
+        // Fetch profiles and clubs separately to avoid ambiguous embedding errors (PGRST201)
+        const { data: profiles, error: profilesError } = await supabase
             .from('profiles')
-            .select('*, clubs(*)')
+            .select('*')
             .eq('role', 'club');
 
-        if (error) throw error;
+        if (profilesError) throw profilesError;
 
-        return data.map((profile: any) => {
-            // profile.clubs might be an object or array depending on relation. Usually array with 1 item or object.
-            const clubData = Array.isArray(profile.clubs) ? profile.clubs[0] : profile.clubs;
+        // Fetch auxiliary data from 'clubs' table
+        const clubIds = profiles.map(p => p.id);
+        const { data: clubsData, error: clubsError } = await supabase
+            .from('clubs')
+            .select('*')
+            .in('id', clubIds);
+
+        if (clubsError) {
+            console.warn('Error fetching extra club details:', clubsError);
+            // Continue with just profile data
+        }
+
+        const clubsMap = new Map(clubsData?.map(c => [c.id, c]) || []);
+
+        return profiles.map((profile: any) => {
+            const clubMoreInfo = clubsMap.get(profile.id) || {};
 
             return {
                 ...profile,
-                ...clubData, // Merge club specific data
+                ...clubMoreInfo, // Merge club specific data (photos, etc)
                 id: profile.id, // Ensure ID is preserved from profile
                 role: 'club',
-                location: profile.location || clubData?.location || 'Ubicación pendiente',
+                location: profile.location || clubMoreInfo?.location || 'Ubicación pendiente',
                 avatar_url: profile.avatar_url,
-                schedule: profile.schedule || clubData?.schedule, // schedule might be in either
-                photos: clubData?.photos || ['https://images.unsplash.com/photo-1554068865-24cecd4e34b8?q=80&w=2940&auto=format&fit=crop'],
-                services: profile.services || clubData?.services || ['Estacionamiento', 'Vestuarios', 'Bar'],
+                schedule: profile.schedule || clubMoreInfo?.schedule,
+                photos: clubMoreInfo?.photos || ['https://images.unsplash.com/photo-1554068865-24cecd4e34b8?q=80&w=2940&auto=format&fit=crop'],
+                services: profile.services || clubMoreInfo?.services || ['Estacionamiento', 'Vestuarios', 'Bar'],
                 last_payment_date: profile.last_payment_date,
                 commission_rate: profile.commission_rate
             };
@@ -363,19 +376,10 @@ export const supabaseService = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return [];
 
-        const { data, error } = await supabase
+        // Fetch favorite IDs first
+        const { data: favorites, error } = await supabase
             .from('favorite_clubs')
-            .select(`
-                club_id,
-                clubs (
-                    *,
-                    profiles:id (
-                        phone,
-                        schedule,
-                        services
-                    )
-                )
-            `)
+            .select('club_id')
             .eq('user_id', user.id);
 
         if (error) {
@@ -383,17 +387,45 @@ export const supabaseService = {
             return [];
         }
 
-        return data.map((item: any) => ({
-            id: item.clubs.id,
-            name: item.clubs.name,
-            location: item.clubs.location || '',
-            description: item.clubs.description || '',
-            phone: item.clubs.profiles?.phone || '',
-            courts: [],
-            schedule: item.clubs.profiles?.schedule || item.clubs.schedule || {},
-            photos: item.clubs.photos || ['https://images.unsplash.com/photo-1554068865-24cecd4e34b8?q=80&w=2940&auto=format&fit=crop'],
-            services: item.clubs.profiles?.services || item.clubs.services || [],
-        })) as ClubProfile[];
+        if (!favorites || favorites.length === 0) return [];
+
+        const favoriteClubIds = favorites.map(f => f.club_id);
+
+        // Then fetch the actual club profiles using the IDs
+        // Reuse getClubs logic or similar query but filtered by IDs
+        const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('*')
+            .in('id', favoriteClubIds);
+
+        if (profilesError) {
+            console.error('Error fetching favorite profiles:', profilesError);
+            return [];
+        }
+
+        // Also fetch club details
+        const { data: clubsData } = await supabase
+            .from('clubs')
+            .select('*')
+            .in('id', favoriteClubIds);
+
+        const clubsMap = new Map(clubsData?.map(c => [c.id, c]) || []);
+
+        return profiles.map((item: any) => {
+            const clubMore = clubsMap.get(item.id) || {};
+            return {
+                id: item.id,
+                name: item.name,
+                location: item.location || clubMore.location || '',
+                description: item.description || clubMore.description || '',
+                phone: item.phone || '',
+                courts: [],
+                schedule: item.schedule || clubMore.schedule || {},
+                photos: clubMore.photos || ['https://images.unsplash.com/photo-1554068865-24cecd4e34b8?q=80&w=2940&auto=format&fit=crop'],
+                services: item.services || clubMore.services || [],
+                avatar_url: item.avatar_url
+            };
+        }) as ClubProfile[];
     },
 
     async toggleFavoriteClub(clubId: string) {
