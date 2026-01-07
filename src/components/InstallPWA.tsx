@@ -46,8 +46,16 @@ export const InstallPWA = () => {
             });
         }
 
+        // Force show banner after 3 seconds if not installed, to ensure visibility
+        const timer = setTimeout(() => {
+            if (!checkStandalone()) {
+                setShowBanner(true);
+            }
+        }, 3000);
+
         return () => {
             window.removeEventListener('beforeinstallprompt', handler);
+            clearTimeout(timer);
         };
     }, []);
 
