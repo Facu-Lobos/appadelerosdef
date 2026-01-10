@@ -781,7 +781,7 @@ export const supabaseService = {
         let query = supabase
             .from('tournaments')
             .select('*')
-            .order('start_date', { ascending: true });
+            .order('start_date', { ascending: false });
 
         if (clubId) {
             query = query.eq('club_id', clubId);

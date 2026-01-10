@@ -556,8 +556,8 @@ export default function PlayerCommunity() {
 // Sub-component for Cleaner Code
 function PlayerCard({ player, isFriend, isSent, onAdd, onChat }: { player: PlayerProfile, isFriend: boolean, isSent: boolean, onAdd: () => void, onChat: () => void }) {
     return (
-        <div className="card flex items-center justify-between p-4">
-            <div className="flex items-center gap-4">
+        <div className="card flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 gap-4">
+            <div className="flex items-center gap-3 overflow-hidden w-full">
                 <div className="w-12 h-12 rounded-full bg-surface border-2 border-white/10 overflow-hidden shrink-0 aspect-square">
                     <img
                         src={player.avatar_url || "https://via.placeholder.com/150"}
@@ -565,30 +565,31 @@ function PlayerCard({ player, isFriend, isSent, onAdd, onChat }: { player: Playe
                         className="w-full h-full object-cover"
                     />
                 </div>
-                <div>
-                    <h3 className="font-bold">{player.name}</h3>
-                    <p className="text-sm text-gray-400">
-                        {player.category ? `Categoría ${player.category}` : 'Sin categoría'} • {player.location || 'Sin ubicación'}
+                <div className="min-w-0 flex-1">
+                    <h3 className="font-bold truncate">{player.name}</h3>
+                    <p className="text-sm text-gray-400 truncate">
+                        {player.category ? `Cat. ${player.category}` : 'Sin cat.'} • {player.location || 'Sin ubicación'}
                     </p>
                 </div>
             </div>
-            <div className="flex gap-2">
+
+            <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
                 <Button
                     size="sm"
                     icon={MessageCircle}
-                    className="bg-transparent border border-white text-white hover:bg-white/10 hover:border-white"
+                    className="flex-1 sm:flex-none bg-transparent border border-white text-white hover:bg-white/10 hover:border-white justify-center"
                     onClick={onChat}
                 >
                     Chat
                 </Button>
                 {isFriend ? (
-                    <div className="px-3 py-1.5 bg-green-500/10 text-green-400 rounded-lg text-sm font-medium flex items-center gap-2 border border-green-500/20">
-                        <UserCheck size={16} />
+                    <div className="flex-1 sm:flex-none px-3 py-1.5 bg-green-500/10 text-green-400 rounded-lg text-sm font-medium flex items-center justify-center gap-2 border border-green-500/20">
+                        <UserCheck size={16} /> <span className="sm:hidden">Amigos</span>
                     </div>
                 ) : isSent ? (
-                    <Button size="sm" variant="outline" disabled>Enviada</Button>
+                    <Button size="sm" variant="outline" className="flex-1 sm:flex-none justify-center" disabled>Enviada</Button>
                 ) : (
-                    <Button size="sm" variant="outline" icon={UserPlus} onClick={onAdd}>Agregar</Button>
+                    <Button size="sm" variant="outline" icon={UserPlus} className="flex-1 sm:flex-none justify-center" onClick={onAdd}>Add</Button>
                 )}
             </div>
         </div>
