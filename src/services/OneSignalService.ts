@@ -49,6 +49,27 @@ export const OneSignalService = {
 
             console.log('OneSignal Initialized');
             this.initialized = true;
+
+            // Handle Notification Clicks
+            OneSignal.Notifications.addEventListener('click', (event) => {
+                console.log('Notification clicked:', event);
+                const data = event.notification.additionalData as any;
+                const url = event.notification.launchURL || event.result.url; // url is often in result
+
+                if (url) {
+                    // Start from root if it's a relative path appening to domain
+                    // But usually OneSignal sends full URL. 
+                    // If we want SPA navigation (without reload), we might need to use window.history or a router instance.
+                    // For simplicity, letting the browser handle the URL via default behavior is usually fine,
+                    // BUT if the user says it doesn't open the message, maybe the URL is constructed wrong in SQL.
+                    // Let's rely on browser default for now but log it.
+                    // Actually, if we want to force it inside the app we can do:
+                    if (url.includes(window.location.origin)) {
+                        const path = url.replace(window.location.origin, '');
+                        window.location.href = path; // Force navigation
+                    }
+                }
+            });
         } catch (error) {
             console.error('OneSignal Initialization Error:', error);
         }
