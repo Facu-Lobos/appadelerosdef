@@ -21,6 +21,8 @@ BEGIN
       body := jsonb_build_object(
           'app_id', app_id,
           'target_channel', 'push',
+          'priority', 10,
+          'ios_sound', 'default',
           'include_aliases', jsonb_build_object('external_id', to_jsonb(receiver_ids)), 
           'headings', jsonb_build_object('en', title),
           'contents', jsonb_build_object('en', content),
