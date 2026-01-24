@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Mail, Lock, ArrowLeft, Key } from 'lucide-react';
@@ -12,8 +13,18 @@ export default function Login() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const { user } = useAuth();
+    const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
-    const [view, setView] = useState<'landing' | 'login' | 'signup' | 'forgot_password' | 'update_password'>('landing');
+
+    // Initialize view directly from URL to avoid race conditions
+    const [view, setView] = useState<'landing' | 'login' | 'signup' | 'forgot_password' | 'update_password'>(() => {
+        const paramView = searchParams.get('view');
+        if (paramView === 'update_password') return 'update_password';
+        if (paramView === 'login') return 'login';
+        if (paramView === 'signup') return 'signup';
+        return 'landing';
+    });
+
     const [role, setRole] = useState<'player' | 'club'>('player');
 
     // Form state
@@ -21,28 +32,26 @@ export default function Login() {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
+    // Sync view with URL if it changes later (optional but good for history navigation)
     useEffect(() => {
-        // Build initial view from query params or default
         const paramView = searchParams.get('view');
-        if (paramView === 'update_password') {
+        if (paramView === 'update_password' && view !== 'update_password') {
             setView('update_password');
-        } else if (paramView === 'login') {
-            setView('login');
-        } else if (paramView === 'signup') {
-            setView('signup');
         }
-    }, [searchParams]);
+    }, [searchParams, view]);
 
     useEffect(() => {
-        // Redirect logic
-        if (user && view !== 'update_password') {
+        // Redirect logic - Check BOTH state and URL param to be safe
+        const isUpdatePassword = view === 'update_password' || searchParams.get('view') === 'update_password';
+
+        if (user && !isUpdatePassword) {
             if (user.role === 'club') {
                 navigate('/club');
             } else {
                 navigate('/player');
             }
         }
-    }, [user, navigate, view]);
+    }, [user, navigate, view, searchParams]);
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -57,7 +66,7 @@ export default function Login() {
                     }
                 });
                 if (error) throw error;
-                alert('Registro exitoso! Por favor verifica tu email (si está habilitado) o inicia sesión.');
+                showToast('¡Registro exitoso! Por favor verifica tu email o inicia sesión.', 'success');
                 setView('login');
             } else if (view === 'login') {
                 const { error } = await supabase.auth.signInWithPassword({
@@ -70,7 +79,7 @@ export default function Login() {
                     redirectTo: window.location.origin + '/auth/login?view=update_password',
                 });
                 if (error) throw error;
-                alert('¡Enlace enviado! Revisa tu correo electrónico para restablecer tu contraseña. El enlace expirará en 24 horas.');
+                showToast('¡Enlace enviado! Revisa tu correo.', 'success');
                 setView('login');
             } else if (view === 'update_password') {
                 if (password !== confirmPassword) {
@@ -80,13 +89,13 @@ export default function Login() {
                     password
                 });
                 if (error) throw error;
-                alert('Contraseña actualizada correctamente');
+                showToast('Contraseña actualizada correctamente', 'success');
                 // Force redirect after update
                 if (user?.role === 'club') navigate('/club');
                 else navigate('/player');
             }
         } catch (error: any) {
-            alert(error.message);
+            showToast(error.message, 'error');
         } finally {
             setLoading(false);
         }
