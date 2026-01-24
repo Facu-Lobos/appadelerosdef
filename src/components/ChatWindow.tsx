@@ -119,7 +119,7 @@ export default function ChatWindow({ otherUserId, otherUserName, otherUserAvatar
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-surface border border-white/10 overflow-hidden">
                         <img
-                            src={otherUserAvatar || "https://via.placeholder.com/150"}
+                            src={otherUserAvatar || "https://ui-avatars.com/api/?name=User&background=random"}
                             alt={otherUserName}
                             className="w-full h-full object-cover"
                         />

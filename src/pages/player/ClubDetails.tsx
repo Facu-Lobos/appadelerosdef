@@ -162,7 +162,7 @@ export default function ClubDetails() {
             <div className="relative h-48 rounded-2xl overflow-hidden shadow-2xl">
                 {/* ... existing header code ... */}
                 <img
-                    src={club.avatar_url || club.photos[0] || "https://via.placeholder.com/800x400"}
+                    src={club.avatar_url || club.photos[0] || "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?q=80&w=1000&auto=format&fit=crop"}
                     alt={club.name}
                     className="w-full h-full object-cover"
                 />

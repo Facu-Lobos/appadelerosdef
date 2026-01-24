@@ -108,7 +108,7 @@ export default function ManualBookingModal({ isOpen, onClose, court, date, time,
                                             className="w-full flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg transition-colors text-left"
                                         >
                                             <div className="w-8 h-8 rounded-full bg-surface overflow-hidden">
-                                                <img src={player.avatar_url || "https://via.placeholder.com/150"} alt={player.name} className="w-full h-full object-cover" />
+                                                <img src={player.avatar_url || "https://ui-avatars.com/api/?name=User&background=random"} alt={player.name} className="w-full h-full object-cover" />
                                             </div>
                                             <div>
                                                 <div className="font-bold text-sm">{player.name}</div>
@@ -123,7 +123,7 @@ export default function ManualBookingModal({ isOpen, onClose, court, date, time,
                                 <div className="bg-primary/10 border border-primary p-4 rounded-xl flex items-center justify-between">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-surface overflow-hidden border border-primary/30">
-                                            <img src={selectedPlayer.avatar_url || "https://via.placeholder.com/150"} alt={selectedPlayer.name} className="w-full h-full object-cover" />
+                                            <img src={selectedPlayer.avatar_url || "https://ui-avatars.com/api/?name=User&background=random"} alt={selectedPlayer.name} className="w-full h-full object-cover" />
                                         </div>
                                         <div>
                                             <div className="font-bold text-primary">{selectedPlayer.name}</div>

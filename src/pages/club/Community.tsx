@@ -83,7 +83,7 @@ export default function ClubCommunity() {
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-full bg-surface border border-white/10 overflow-hidden">
                                         <img
-                                            src={req.profiles?.avatar_url || "https://via.placeholder.com/150"}
+                                            src={req.profiles?.avatar_url || "https://ui-avatars.com/api/?name=User&background=random"}
                                             alt={req.profiles?.name}
                                             className="w-full h-full object-cover"
                                         />
@@ -122,7 +122,7 @@ export default function ClubCommunity() {
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-full bg-surface border-2 border-white/10 overflow-hidden">
                                 <img
-                                    src={player.avatar_url || "https://via.placeholder.com/150"}
+                                    src={player.avatar_url || "https://ui-avatars.com/api/?name=User&background=random"}
                                     alt={player.name}
                                     className="w-full h-full object-cover"
                                 />

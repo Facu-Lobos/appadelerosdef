@@ -321,7 +321,7 @@ export default function PlayerCommunity() {
                                 {myFriends.map(friend => (
                                     <div key={friend.id} className="min-w-[150px] bg-white/5 p-3 rounded-xl border border-white/10 flex flex-col items-center gap-2 relative group">
                                         <div className="w-16 h-16 rounded-full bg-surface border-2 border-white/10 overflow-hidden">
-                                            <img src={friend.avatar_url || "https://via.placeholder.com/150"} className="w-full h-full object-cover" />
+                                            <img src={friend.avatar_url || "https://ui-avatars.com/api/?name=User&background=random"} className="w-full h-full object-cover" />
                                         </div>
                                         <div className="text-center">
                                             <p className="font-bold text-sm truncate w-full">{friend.name}</p>
@@ -536,7 +536,7 @@ export default function PlayerCommunity() {
                             <div key={app.id} className="flex items-center justify-between p-3 bg-black/20 rounded-lg">
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-full bg-white/10 overflow-hidden">
-                                        <img src={app.player?.avatar_url || "https://via.placeholder.com/150"} className="w-full h-full object-cover" />
+                                        <img src={app.player?.avatar_url || "https://ui-avatars.com/api/?name=User&background=random"} className="w-full h-full object-cover" />
                                     </div>
                                     <div>
                                         <p className="font-medium text-sm">{app.player?.name || 'Jugador'}</p>
@@ -582,7 +582,7 @@ function PlayerCard({ player, isFriend, isSent, onAdd, onChat }: { player: Playe
             <div className="flex items-center gap-3 overflow-hidden w-full">
                 <div className="w-12 h-12 rounded-full bg-surface border-2 border-white/10 overflow-hidden shrink-0 aspect-square">
                     <img
-                        src={player.avatar_url || "https://via.placeholder.com/150"}
+                        src={player.avatar_url || "https://ui-avatars.com/api/?name=User&background=random"}
                         alt={player.name}
                         className="w-full h-full object-cover"
                     />
