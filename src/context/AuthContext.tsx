@@ -63,15 +63,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 return;
             }
 
+            // Handle session updates (SIGNED_IN, TOKEN_REFRESHED, USER_UPDATED)
             if (session?.user) {
                 // Only update if user changed or we don't have one
                 if (mounted && (!user || user.id !== session.user.id)) {
                     const profile = await supabaseService.getProfile(session.user.id);
                     if (profile) setUser(profile);
                 }
-            } else if (!session && mounted) {
-                setUser(null);
             }
+            // INTENTIONAL: We do NOT clear the user if session is null but event is NOT SIGNED_OUT.
+            // This prevents clearing the session on network glitches or transient states.
         });
 
         return () => {
