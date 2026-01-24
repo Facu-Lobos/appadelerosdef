@@ -7,14 +7,16 @@ export const OneSignalService = {
     initialized: false, // Flag to track initialization
 
     async init(userId: string) {
-        if (this.initialized) {
+        // Prevent double init if OneSignal is already globally present or our flag is set
+        if (this.initialized || (window as any).OneSignal?.Initialized) {
             console.log('OneSignal already initialized');
             // Still try to login if userId is provided, as it might be a re-login/page refresh context
             if (userId) {
                 try {
                     await OneSignal.login(userId);
-                } catch (e) { console.error(e); }
+                } catch (e) { console.error('OneSignal login error:', e); }
             }
+            this.initialized = true; // Sync flag
             return;
         }
 
