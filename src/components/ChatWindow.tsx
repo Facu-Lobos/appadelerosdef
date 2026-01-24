@@ -20,6 +20,12 @@ export default function ChatWindow({ otherUserId, otherUserName, otherUserAvatar
     const lastTypedTimeRef = useRef<number>(0);
     const channelRef = useRef<any>(null);
 
+    // Restore missing state
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [newMessage, setNewMessage] = useState('');
+    const [loading, setLoading] = useState(true);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
     const getChannelId = () => {
         if (!user) return null;
         const ids = [user.id, otherUserId].sort();
