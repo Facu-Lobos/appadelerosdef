@@ -11,9 +11,12 @@ import { Modal } from '../../components/ui/Modal';
 import ChatWindow from '../../components/ChatWindow';
 import { useCommunityRealtime } from '../../hooks/useCommunityRealtime';
 
+import { useSearchParams } from 'react-router-dom';
+
 export default function PlayerCommunity() {
     const { user } = useAuth();
     const { showToast } = useToast();
+    const [searchParams, setSearchParams] = useSearchParams(); // Deep linking support
     const [activeTab, setActiveTab] = useState<'players' | 'matches'>('players');
 
     // --- Data States ---
@@ -198,10 +201,29 @@ export default function PlayerCommunity() {
         }
     };
 
-    // Initial load
+    // Initial load & Deep Link Handling
     useEffect(() => {
         handleSearch();
         loadData();
+
+        // Handle Deep Link for Chat
+        const chatWithId = searchParams.get('chatWith');
+        if (chatWithId && user) {
+            // Fetch profile to open chat
+            const fetchChatUser = async () => {
+                const profile = await supabaseService.getProfile(chatWithId);
+                if (profile) {
+                    setActiveChat({
+                        id: profile.id,
+                        name: profile.name,
+                        avatar: profile.avatar_url
+                    });
+                    // Clean URL
+                    setSearchParams({});
+                }
+            };
+            fetchChatUser();
+        }
     }, [user]);
 
     // Handlers
