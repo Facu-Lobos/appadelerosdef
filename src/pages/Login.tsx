@@ -1,36 +1,50 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Mail, Lock, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, ArrowLeft, Key } from 'lucide-react';
 import Logo from '../components/Logo';
 import { PadelBallIcon, PadelRacketIcon } from '../components/icons';
 
 export default function Login() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
-    const [view, setView] = useState<'landing' | 'login' | 'signup'>('landing');
+    const [view, setView] = useState<'landing' | 'login' | 'signup' | 'forgot_password' | 'update_password'>('landing');
     const [role, setRole] = useState<'player' | 'club'>('player');
 
     // Form state
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
 
     useEffect(() => {
-        if (user) {
+        // Build initial view from query params or default
+        const paramView = searchParams.get('view');
+        if (paramView === 'update_password') {
+            setView('update_password');
+        } else if (paramView === 'login') {
+            setView('login');
+        } else if (paramView === 'signup') {
+            setView('signup');
+        }
+    }, [searchParams]);
+
+    useEffect(() => {
+        // Redirect logic
+        if (user && view !== 'update_password') {
             if (user.role === 'club') {
                 navigate('/club');
             } else {
                 navigate('/player');
             }
         }
-    }, [user, navigate]);
+    }, [user, navigate, view]);
 
     const handleAuth = async (e: React.FormEvent) => {
-        // ... (existing implementation)
         e.preventDefault();
         setLoading(true);
         try {
@@ -44,14 +58,32 @@ export default function Login() {
                 });
                 if (error) throw error;
                 alert('Registro exitoso! Por favor verifica tu email (si está habilitado) o inicia sesión.');
-                setView('login'); // Switch to login after signup
-            } else {
+                setView('login');
+            } else if (view === 'login') {
                 const { error } = await supabase.auth.signInWithPassword({
                     email,
                     password
                 });
                 if (error) throw error;
-                // AuthContext listener will handle the redirect via the useEffect above
+            } else if (view === 'forgot_password') {
+                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin + '/auth/login?view=update_password',
+                });
+                if (error) throw error;
+                alert('¡Enlace enviado! Revisa tu correo electrónico para restablecer tu contraseña. El enlace expirará en 24 horas.');
+                setView('login');
+            } else if (view === 'update_password') {
+                if (password !== confirmPassword) {
+                    throw new Error("Las contraseñas no coinciden");
+                }
+                const { error } = await supabase.auth.updateUser({
+                    password
+                });
+                if (error) throw error;
+                alert('Contraseña actualizada correctamente');
+                // Force redirect after update
+                if (user?.role === 'club') navigate('/club');
+                else navigate('/player');
             }
         } catch (error: any) {
             alert(error.message);
@@ -162,7 +194,17 @@ export default function Login() {
         );
     }
 
-    // Login/Signup Form View
+    // Login/Signup/Forgot/Update Form View
+    const getTitle = () => {
+        switch (view) {
+            case 'login': return 'Bienvenido';
+            case 'signup': return 'Crear Cuenta';
+            case 'forgot_password': return 'Recuperar Contraseña';
+            case 'update_password': return 'Nueva Contraseña';
+            default: return '';
+        }
+    };
+
     return (
         <div className="min-h-[100dvh] flex items-center justify-center text-white relative overflow-hidden bg-dark-primary">
             {/* Centered Form Container */}
@@ -179,51 +221,70 @@ export default function Login() {
                     <div className="text-center mb-8">
                         <Logo className="h-10 w-40 mx-auto mb-6" />
                         <h2 className="text-3xl font-bold text-white mb-2">
-                            {view === 'login' ? 'Bienvenido' : 'Crear Cuenta'}
+                            {getTitle()}
                         </h2>
-                        <p className="text-gray-300">
-                            {role === 'player' ? 'Portal de Jugadores' : 'Gestión de Clubes'}
-                        </p>
+                        {view !== 'forgot_password' && view !== 'update_password' && (
+                            <p className="text-gray-300">
+                                {role === 'player' ? 'Portal de Jugadores' : 'Gestión de Clubes'}
+                            </p>
+                        )}
+                        {view === 'forgot_password' && (
+                            <p className="text-gray-300 text-sm">
+                                Ingresa tu correo para recibir un enlace de recuperación.
+                            </p>
+                        )}
+                        {view === 'update_password' && (
+                            <p className="text-gray-300 text-sm">
+                                Ingresa tu nueva contraseña para actualizar tu cuenta.
+                            </p>
+                        )}
                     </div>
 
                     <form onSubmit={handleAuth} className="space-y-5">
-                        <Input
-                            label="Correo Electrónico"
-                            type="email"
-                            icon={Mail}
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            placeholder="tu@email.com"
-                            className="bg-black/30 border-white/10 focus:border-primary/50"
-                        />
+                        {view !== 'update_password' && (
+                            <Input
+                                label="Correo Electrónico"
+                                type="email"
+                                icon={Mail}
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                placeholder="tu@email.com"
+                                className="bg-black/30 border-white/10 focus:border-primary/50"
+                            />
+                        )}
 
-                        <Input
-                            label="Contraseña"
-                            type="password"
-                            icon={Lock}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            placeholder="••••••••"
-                            className="bg-black/30 border-white/10 focus:border-primary/50"
-                        />
+                        {view !== 'forgot_password' && (
+                            <Input
+                                label={view === 'update_password' ? "Nueva Contraseña" : "Contraseña"}
+                                type="password"
+                                icon={Lock}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                placeholder="••••••••"
+                                className="bg-black/30 border-white/10 focus:border-primary/50"
+                            />
+                        )}
+
+                        {view === 'update_password' && (
+                            <Input
+                                label="Confirmar Contraseña"
+                                type="password"
+                                icon={Lock}
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                required
+                                placeholder="••••••••"
+                                className="bg-black/30 border-white/10 focus:border-primary/50"
+                            />
+                        )}
 
                         {view === 'login' && (
                             <div className="flex justify-end">
                                 <button
                                     type="button"
-                                    onClick={async () => {
-                                        if (!email) {
-                                            alert('Por favor escribe tu email primero para enviarte el enlace de recuperación.');
-                                            return;
-                                        }
-                                        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                                            redirectTo: window.location.origin + '/auth/login?view=update_password',
-                                        });
-                                        if (error) alert(error.message);
-                                        else alert('¡Enlace enviado! Revisa tu correo electrónico.');
-                                    }}
+                                    onClick={() => setView('forgot_password')}
                                     className="text-xs text-primary hover:text-primary-hover hover:underline"
                                 >
                                     ¿Olvidaste tu contraseña?
@@ -237,26 +298,38 @@ export default function Login() {
                             className="w-full h-12 text-lg font-bold shadow-lg shadow-primary/20 mt-2"
                             variant="primary"
                         >
-                            {view === 'login' ? 'Ingresar' : 'Registrarse'}
+                            {view === 'login' ? 'Ingresar' : view === 'signup' ? 'Registrarse' : view === 'forgot_password' ? 'Enviar Enlace' : 'Actualizar Contraseña'}
                         </Button>
+
+                        {(view === 'forgot_password' || view === 'update_password') && (
+                            <button
+                                type="button"
+                                onClick={() => setView('login')}
+                                className="w-full text-center text-sm text-gray-400 hover:text-white mt-4"
+                            >
+                                Cancelar y volver al login
+                            </button>
+                        )}
                     </form>
 
-                    <div className="mt-8 text-center pt-6 border-t border-white/10">
-                        {role === 'player' ? (
-                            <button
-                                onClick={() => setView(view === 'login' ? 'signup' : 'login')}
-                                className="text-primary hover:text-primary-hover font-medium transition-colors hover:underline"
-                            >
-                                {view === 'login'
-                                    ? '¿No tienes cuenta? Regístrate gratis'
-                                    : '¿Ya tienes cuenta? Inicia sesión aquí'}
-                            </button>
-                        ) : (
-                            <p className="text-gray-400 text-sm">
-                                ¿Eres un club y quieres unirte? <a href="mailto:contacto@appadeleros.com" className="text-primary hover:underline">Contáctanos</a>
-                            </p>
-                        )}
-                    </div>
+                    {(view === 'login' || view === 'signup') && (
+                        <div className="mt-8 text-center pt-6 border-t border-white/10">
+                            {role === 'player' ? (
+                                <button
+                                    onClick={() => setView(view === 'login' ? 'signup' : 'login')}
+                                    className="text-primary hover:text-primary-hover font-medium transition-colors hover:underline"
+                                >
+                                    {view === 'login'
+                                        ? '¿No tienes cuenta? Regístrate gratis'
+                                        : '¿Ya tienes cuenta? Inicia sesión aquí'}
+                                </button>
+                            ) : (
+                                <p className="text-gray-400 text-sm">
+                                    ¿Eres un club y quieres unirte? <a href="mailto:contacto@appadeleros.com" className="text-primary hover:underline">Contáctanos</a>
+                                </p>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 <p className="text-center text-white/60 text-sm mt-8 drop-shadow-md">
