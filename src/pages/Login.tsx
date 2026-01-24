@@ -164,20 +164,7 @@ export default function Login() {
 
     // Login/Signup Form View
     return (
-        <div className="min-h-[100dvh] flex items-center justify-center text-white relative overflow-hidden">
-            {/* Full Screen Background */}
-            <div className="absolute inset-0 z-0">
-                <div
-                    className="absolute inset-0 bg-cover bg-center transition-all duration-1000 ease-in-out transform scale-105"
-                    style={{
-                        backgroundImage: `url("${role === 'club' ? '/admin-login-bg.png' : '/login-bg.png'}")`
-                    }}
-                >
-                    {/* Gradient Overlay for legibility */}
-                    <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"></div>
-                </div>
-            </div>
-
+        <div className="min-h-[100dvh] flex items-center justify-center text-white relative overflow-hidden bg-dark-primary">
             {/* Centered Form Container */}
             <div className="w-full max-w-md p-4 relative z-10 animate-in fade-in zoom-in-95 duration-500">
                 <button
@@ -221,6 +208,28 @@ export default function Login() {
                             placeholder="••••••••"
                             className="bg-black/30 border-white/10 focus:border-primary/50"
                         />
+
+                        {view === 'login' && (
+                            <div className="flex justify-end">
+                                <button
+                                    type="button"
+                                    onClick={async () => {
+                                        if (!email) {
+                                            alert('Por favor escribe tu email primero para enviarte el enlace de recuperación.');
+                                            return;
+                                        }
+                                        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                                            redirectTo: window.location.origin + '/auth/login?view=update_password',
+                                        });
+                                        if (error) alert(error.message);
+                                        else alert('¡Enlace enviado! Revisa tu correo electrónico.');
+                                    }}
+                                    className="text-xs text-primary hover:text-primary-hover hover:underline"
+                                >
+                                    ¿Olvidaste tu contraseña?
+                                </button>
+                            </div>
+                        )}
 
                         <Button
                             type="submit"
