@@ -19,37 +19,20 @@ export const supabaseService = {
     async getProfile(userId: string) {
         console.log('supabaseService: getProfile called for', userId);
         try {
-            // Retry logic: try twice
-            let data: any = null;
-            let error: any = null;
+            const profilePromise = supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', userId)
+                .single();
 
-            for (let i = 0; i < 2; i++) {
-                try {
-                    const profilePromise = supabase
-                        .from('profiles')
-                        .select('*')
-                        .eq('id', userId)
-                        .single();
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Profile fetch timed out')), 15000)
+            );
 
-                    const timeoutPromise = new Promise((_, reject) =>
-                        setTimeout(() => reject(new Error('Profile fetch timed out')), 30000)
-                    );
-
-                    const result = await Promise.race([
-                        profilePromise,
-                        timeoutPromise
-                    ]) as any;
-
-                    data = result.data;
-                    error = result.error;
-
-                    if (!error) break; // Success!
-                    console.warn(`Attempt ${i + 1} failed, retrying...`);
-                } catch (e) {
-                    error = e;
-                    console.warn(`Attempt ${i + 1} threw error, retrying...`, e);
-                }
-            }
+            const { data, error } = await Promise.race([
+                profilePromise,
+                timeoutPromise
+            ]) as any;
 
             if (error) {
                 console.error('Error fetching profile:', error);

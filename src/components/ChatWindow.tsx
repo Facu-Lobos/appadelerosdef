@@ -15,60 +15,10 @@ interface ChatWindowProps {
 
 export default function ChatWindow({ otherUserId, otherUserName, otherUserAvatar, onClose }: ChatWindowProps) {
     const { user } = useAuth();
-    const [isTyping, setIsTyping] = useState(false);
-    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const lastTypedTimeRef = useRef<number>(0);
-    const channelRef = useRef<any>(null);
-
-    // Restore missing state
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-
-    const getChannelId = () => {
-        if (!user) return null;
-        const ids = [user.id, otherUserId].sort();
-        return `chat:${ids[0]}-${ids[1]}`;
-    };
-
-    useEffect(() => {
-        if (!user) return;
-
-        const channelId = getChannelId();
-        if (!channelId) return;
-
-        const channel = supabaseService.getClient().channel(channelId);
-
-        channel
-            .on('broadcast', { event: 'typing' }, (payload) => {
-                // Ignore our own typing events (broadcast sends to everyone including sender by default in some setups, but usually excludes sender.
-                // However, safe to check payload or just rely on the fact that we are listening.)
-                // Actually, let's verify payload if we send sender_id, but for simple signal:
-                if (payload.payload?.sender_id === otherUserId) {
-                    setIsTyping(true);
-
-                    // Clear existing timeout
-                    if (typingTimeoutRef.current) {
-                        clearTimeout(typingTimeoutRef.current);
-                    }
-
-                    // Set new timeout to hide indicator
-                    typingTimeoutRef.current = setTimeout(() => {
-                        setIsTyping(false);
-                    }, 3000);
-                }
-            })
-            .subscribe();
-
-        channelRef.current = channel;
-
-        return () => {
-            // Cleanup
-            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-            channel.unsubscribe();
-        };
-    }, [user, otherUserId]);
 
     const fetchMessages = async () => {
         const msgs = await supabaseService.getMessages(otherUserId);
@@ -85,22 +35,7 @@ export default function ChatWindow({ otherUserId, otherUserName, otherUserAvatar
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages, isTyping]); // Scroll when typing indicator appears too
-
-    const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setNewMessage(e.target.value);
-
-        // Throttle typing events (max 1 per 2 seconds)
-        const now = Date.now();
-        if (now - lastTypedTimeRef.current > 2000 && channelRef.current && user) {
-            channelRef.current.send({
-                type: 'broadcast',
-                event: 'typing',
-                payload: { sender_id: user.id }
-            });
-            lastTypedTimeRef.current = now;
-        }
-    };
+    }, [messages]);
 
     const handleSend = async () => {
         if (!newMessage.trim()) return;
@@ -119,7 +54,7 @@ export default function ChatWindow({ otherUserId, otherUserName, otherUserAvatar
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-surface border border-white/10 overflow-hidden">
                         <img
-                            src={otherUserAvatar || "https://ui-avatars.com/api/?name=User&background=random"}
+                            src={otherUserAvatar || "https://via.placeholder.com/150"}
                             alt={otherUserName}
                             className="w-full h-full object-cover"
                         />
@@ -167,19 +102,6 @@ export default function ChatWindow({ otherUserId, otherUserName, otherUserAvatar
                         );
                     })
                 )}
-
-                {/* Typing Indicator */}
-                {isTyping && (
-                    <div className="flex justify-start">
-                        <div className="bg-white/5 text-gray-400 p-2 rounded-xl rounded-bl-none text-xs flex items-center gap-1">
-                            <span className="animate-bounce">.</span>
-                            <span className="animate-bounce delay-100">.</span>
-                            <span className="animate-bounce delay-200">.</span>
-                            <span className="ml-1">escribiendo</span>
-                        </div>
-                    </div>
-                )}
-
                 <div ref={messagesEndRef} />
             </div>
 
@@ -187,7 +109,7 @@ export default function ChatWindow({ otherUserId, otherUserName, otherUserAvatar
             <div className="p-3 border-t border-white/10 flex gap-2 bg-surface">
                 <Input
                     value={newMessage}
-                    onChange={handleInput}
+                    onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                     placeholder="Escribe un mensaje..."
                     className="flex-1"

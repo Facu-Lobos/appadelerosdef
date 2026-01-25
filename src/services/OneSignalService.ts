@@ -7,25 +7,26 @@ export const OneSignalService = {
     initialized: false, // Flag to track initialization
 
     async init(userId: string) {
-        // Prevent double init if OneSignal is already globally present or our flag is set
-        if (this.initialized || (window as any).OneSignal?.Initialized) {
+        // Suppress annoying logs
+        OneSignal.Debug.setLogLevel('error');
+
+        if (this.initialized) {
             console.log('OneSignal already initialized');
             // Still try to login if userId is provided, as it might be a re-login/page refresh context
             if (userId) {
                 try {
                     await OneSignal.login(userId);
-                } catch (e) { console.error('OneSignal login error:', e); }
+                } catch (e) { console.error(e); }
             }
-            this.initialized = true; // Sync flag
             return;
         }
 
         try {
             await OneSignal.init({
                 appId: ONESIGNAL_APP_ID,
-                allowLocalhostAsSecureOrigin: true, // Restored for mobile/mixed content compatibility
-                serviceWorkerParam: { scope: '/' }, // Explicit scope required for some PWA contexts
-                serviceWorkerPath: 'sw.js', // Match the VitePWA generated file
+                allowLocalhostAsSecureOrigin: true, // For development
+                serviceWorkerParam: { scope: '/' },
+                serviceWorkerPath: 'OneSignalSDKWorker.js', // Match the actual file in public/
                 notifyButton: {
                     enable: true,
                     prenotify: true,

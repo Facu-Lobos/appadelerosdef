@@ -72,7 +72,7 @@ export default function PlayerProfilePage() {
                 <div className="flex flex-col md:flex-row items-center gap-6">
                     <div className="w-32 h-32 rounded-full bg-surface border-4 border-background overflow-hidden shrink-0">
                         <img
-                            src={formData.avatar_url || profile.avatar_url || "https://ui-avatars.com/api/?name=User&background=random"}
+                            src={formData.avatar_url || profile.avatar_url || "https://via.placeholder.com/150"}
                             alt={profile.name}
                             className="w-full h-full object-cover"
                         />
