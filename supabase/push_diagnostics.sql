@@ -11,7 +11,7 @@ create table if not exists public.push_logs (
 create or replace function public.test_push_debug()
 returns jsonb as $$
 declare
-  api_key text := 'os_v2_app_bwsqqsvxkjfd5ljqzky23qosfjewjq3afgtuutvplev66vdrnd3naozj67xuik4oery24n4dqxv6sfdaorialz5upojzicjnt7wfk3y';
+  api_key text := 'os_v2_app_bwsqqsvxkjfd5ljqzky23qosfjhu42q7ccnujg4zwtgrj6mtlavagaoims7gacewrteppyhod7dezoiqlah6725usuksweea7cbxpxi';
   app_id text := '0da5084a-b752-4a3e-ad30-cab1adc1d22a';
   request_body jsonb;
   request_id int;
