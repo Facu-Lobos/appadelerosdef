@@ -1,12 +1,14 @@
 import OneSignal from 'react-onesignal';
 
 // NOTE: You must replace this with your actual OneSignal App ID
-const ONESIGNAL_APP_ID = 'hu42q7ccnujg4zwtgrj6mtlav';
+const ONESIGNAL_APP_ID = '0da5084a-b752-4a3e-ad30-cab1adc1d22a';
 
 export const OneSignalService = {
     initialized: false, // Flag to track initialization
 
     async init(userId: string) {
+        console.log('OneSignal Init Start. Origin:', window.location.origin, 'AppID:', ONESIGNAL_APP_ID);
+
         // Suppress annoying logs
         OneSignal.Debug.setLogLevel('error');
 
