@@ -13,12 +13,13 @@ export const OneSignalService = {
         OneSignal.Debug.setLogLevel('error');
 
         if (this.initialized) {
-            console.log('OneSignal already initialized');
-            // Still try to login if userId is provided, as it might be a re-login/page refresh context
+            // Already initialized, just ensure login if needed
             if (userId) {
                 try {
                     await OneSignal.login(userId);
-                } catch (e) { console.error(e); }
+                } catch (e) {
+                    // Ignore login errors if already logged in or network blip
+                }
             }
             return;
         }
