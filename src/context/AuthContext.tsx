@@ -37,7 +37,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     // 2. If user exists, fetch profile immediately
                     if (mounted) {
                         const profile = await supabaseService.getProfile(session.user.id);
-                        if (profile) setUser(profile);
+
+                        if (profile) {
+                            setUser(profile);
+                        } else {
+                            // FALLBACK: If profile fetch fails (timeout), use session data to allow login
+                            // This prevents "stuck at login" on poor connections
+                            console.warn('Profile fetch failed, using session fallback');
+                            const fallbackUser: User = {
+                                id: session.user.id,
+                                email: session.user.email || '',
+                                role: (session.user.user_metadata?.role as any) || 'player', // Default to player if metadata missing
+                                name: (session.user.user_metadata?.name) || 'Usuario',
+                                avatar_url: session.user.user_metadata?.avatar_url
+                            };
+                            setUser(fallbackUser);
+                        }
                     }
                 }
             } catch (error) {
