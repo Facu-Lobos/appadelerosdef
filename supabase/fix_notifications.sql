@@ -1,6 +1,14 @@
 -- 1. Habilitar la extensión para peticiones HTTP
 create extension if not exists pg_net;
 
+-- TABLA DE LOGS PARA DEBUG (Asegurarnos que el trigger dispara)
+create table if not exists public.notification_logs (
+    id uuid default gen_random_uuid() primary key,
+    created_at timestamptz default now(),
+    payload text,
+    status text
+);
+
 -- 2. Función Helper Genérica para enviar a OneSignal
 -- Primero borramos la versión anterior para evitar errores de cambio de nombre de parámetros (Error 42P13)
 drop function if exists public.send_push_notification_fn(text[], text, text, text);
@@ -15,7 +23,7 @@ returns void as $$
 declare
   -- IMPORTANTE: Reemplaza esto con tu REST API Key real dentro de Supabase.
   -- NO la subas a GitHub.
-  api_key text := 'TU_ONESIGNAL_REST_API_KEY_AQUI';
+  api_key text := 'TU_ONESIGNAL_REST_API_KEY_AQUI'; 
   app_id text := '0da5084a-b752-4a3e-ad30-cab1adc1d22a';
   request_body jsonb;
 begin
@@ -30,16 +38,16 @@ begin
 
   -- Agregar URL si existe
   if launch_url is not null then
-      -- Asegurar que la URL sea absoluta o compatible con el frontend
-      -- OneSignal suele manejar paths relativos si la app está configurada, 
-      -- pero para web a veces es mejor full URL.
-      -- Si es relativa, prepende el dominio de vercel
       if launch_url not like 'http%' then
          request_body := request_body || jsonb_build_object('url', 'https://appadeleros.vercel.app' || launch_url);
       else
          request_body := request_body || jsonb_build_object('url', launch_url);
       end if;
   end if;
+
+  -- 🔍 DEBUG: Loguear intento en la base de datos
+  insert into public.notification_logs (payload, status) 
+  values (request_body::text, 'ATTEMPT_SENDING');
 
   -- Realizar la petición HTTP POST asíncrona mediante pg_net
   perform net.http_post(
