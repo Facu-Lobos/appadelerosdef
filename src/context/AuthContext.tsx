@@ -21,13 +21,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         let mounted = true;
 
         const initializeAuth = async () => {
-            // Safety timeout: If auth takes too long (e.g. 5s), stop loading
+            // Safety timeout: If auth takes too long (e.g. 15s), stop loading
             const timeoutId = setTimeout(() => {
                 if (mounted && isLoading) {
                     console.warn('Auth initialization timed out, forcing load completion');
                     setIsLoading(false);
                 }
-            }, 5000);
+            }, 15000);
 
             try {
                 // 1. Check local session specifically first (to avoid waiting for event)
