@@ -21,6 +21,11 @@ export const OneSignalService = {
             return;
         }
 
+        // Optional: If you want to strictly prevent running on other domains
+        // const isProd = window.location.hostname === 'appadeleros.vercel.app';
+        // const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        // if (!isProd && !isLocal) { ... }
+
         try {
             await OneSignal.init({
                 appId: ONESIGNAL_APP_ID,
@@ -36,8 +41,7 @@ export const OneSignalService = {
                         'tip.state.subscribed': 'Estás suscrito a notificaciones',
                         'tip.state.blocked': 'Has bloqueado las notificaciones',
                         'message.action.subscribed': '¡Gracias por suscribirte!',
-                        'message.action.resubscribe': 'Suscribirse de nuevo',
-                        'message.action.unsubscribe': 'Desuscribirse',
+                        'message.action.resubscribed': 'Suscribirse de nuevo',
                         'dialog.main.title': 'Gestionar notificaciones',
                         'dialog.main.button.subscribe': 'SUSCRIBIRSE',
                         'dialog.main.button.unsubscribe': 'DESUSCRIBIRSE',
@@ -56,7 +60,6 @@ export const OneSignalService = {
             // Handle Notification Clicks
             OneSignal.Notifications.addEventListener('click', (event) => {
                 console.log('Notification clicked:', event);
-                const data = event.notification.additionalData as any;
                 const url = event.notification.launchURL || event.result.url; // url is often in result
 
                 if (url) {
@@ -73,8 +76,13 @@ export const OneSignalService = {
                     }
                 }
             });
-        } catch (error) {
-            console.error('OneSignal Initialization Error:', error);
+        } catch (error: any) {
+            // Check if error is related to domain restriction and valid configuration
+            if (error?.message?.includes('Can only be used on')) {
+                console.warn('OneSignal Warning: Domain restriction prevented initialization. This is expected in development environments using Main App ID.', error.message);
+            } else {
+                console.error('OneSignal Initialization Error:', error);
+            }
         }
     },
 
