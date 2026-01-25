@@ -37,7 +37,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     // 2. If user exists, fetch profile immediately
                     if (mounted) {
                         const profile = await supabaseService.getProfile(session.user.id);
-                        if (profile) setUser(profile);
+                        if (profile) {
+                            setUser(profile);
+                            // Init OneSignal immediately for existing session
+                            import('../services/OneSignalService').then(({ OneSignalService }) => {
+                                OneSignalService.init(session.user.id);
+                            });
+                        }
                     }
                 }
             } catch (error) {
@@ -68,7 +74,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 // If we don't have a user, OR the user changed, OR it's just a refresh commit
                 if (mounted && (!user || user.id !== session.user.id)) {
                     const profile = await supabaseService.getProfile(session.user.id);
-                    if (profile) setUser(profile);
+                    if (profile) {
+                        setUser(profile);
+                        // Init OneSignal with the user ID to enable push notifications
+                        import('../services/OneSignalService').then(({ OneSignalService }) => {
+                            OneSignalService.init(session.user.id);
+                        });
+                    }
                 }
             }
             // CRITICAL CHANGE: We DO NOT automatically clear user if session is missing 
