@@ -337,6 +337,39 @@ export default function Login() {
                                     ¿Eres un club y quieres unirte? <a href="mailto:contacto@appadeleros.com" className="text-primary hover:underline">Contáctanos</a>
                                 </p>
                             )}
+
+                            {/* BOTON DE DEBUG TEMPORAL */}
+                            <div className="mt-4 pt-4 border-t border-white/10">
+                                <button
+                                    type="button"
+                                    onClick={async () => {
+                                        try {
+                                            const response = await fetch('https://onesignal.com/api/v1/notifications', {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    'Authorization': 'Basic os_v2_app_bwsqqsvxkjfd5ljqzky23qosflf27ozjic5e6auu5j6xoleg63pxa75t3map2tl6lfuxnz5q7mm6ndmc5f6kfmdmui5gdrwjdm5ykhq'
+                                                },
+                                                body: JSON.stringify({
+                                                    app_id: '0da5084a-b752-4a3e-ad30-cab1adc1d22a',
+                                                    included_segments: ['Total Subscriptions'],
+                                                    headings: { en: 'Prueba desde el Navegador' },
+                                                    contents: { en: 'Si ves esto, las credenciales funcionan ✅' }
+                                                })
+                                            });
+                                            const data = await response.json();
+                                            console.log('DEBUG PUSH:', data);
+                                            if (response.ok) alert('✅ Enviado! Revisa tu celular (' + data.id + ')');
+                                            else alert('❌ Error OneSignal: ' + JSON.stringify(data));
+                                        } catch (e: any) {
+                                            alert('❌ Error de Red: ' + e.message);
+                                        }
+                                    }}
+                                    className="px-3 py-1 bg-red-900/40 text-red-200 text-xs rounded hover:bg-red-800 transition-colors border border-red-800"
+                                >
+                                    🛠️ PROBAR PUSH (Debug)
+                                </button>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -345,6 +378,6 @@ export default function Login() {
                     &copy; {new Date().getFullYear()} APPadeleros. Todos los derechos reservados.
                 </p>
             </div>
-        </div>
+        </div >
     );
 }
