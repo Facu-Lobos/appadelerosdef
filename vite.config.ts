@@ -7,6 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      injectRegister: null, // Disable auto registration to avoid conflict with OneSignal
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'robots.txt', 'apple-touch-icon.png'],
       workbox: {
