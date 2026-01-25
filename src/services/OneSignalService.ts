@@ -23,8 +23,8 @@ export const OneSignalService = {
         try {
             await OneSignal.init({
                 appId: ONESIGNAL_APP_ID,
-                // allowLocalhostAsSecureOrigin: true, // Removed for production stability
-                // serviceWorkerParam: { scope: '/' }, // Let it default to SW location
+                allowLocalhostAsSecureOrigin: true, // Restored for mobile/mixed content compatibility
+                serviceWorkerParam: { scope: '/' }, // Explicit scope required for some PWA contexts
                 serviceWorkerPath: 'sw.js', // Match the VitePWA generated file
                 notifyButton: {
                     enable: true,
