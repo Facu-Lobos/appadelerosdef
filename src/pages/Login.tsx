@@ -4,7 +4,7 @@ import { supabase } from '../services/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import OneSignal from 'react-onesignal';
-import { Button } from '../components/Button';
+import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Mail, Lock, ArrowLeft, Key } from 'lucide-react';
 import Logo from '../components/Logo';
