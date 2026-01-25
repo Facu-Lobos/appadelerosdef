@@ -21,36 +21,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         let mounted = true;
 
         const initializeAuth = async () => {
-            // Safety timeout: If auth takes too long (e.g. 5s), stop loading
-            const timeoutId = setTimeout(() => {
-                if (mounted && isLoading) {
-                    console.warn('Auth initialization timed out, forcing load completion');
-                    setIsLoading(false);
+            // 0. QUICK LOAD: Try to recover state from localStorage immediately
+            const cachedProfile = localStorage.getItem('cached_profile');
+            if (cachedProfile) {
+                try {
+                    const parsed = JSON.parse(cachedProfile);
+                    if (mounted) {
+                        setUser(parsed);
+                        // If we have cache, we don't need to block UI, but we keep isLoading true 
+                        // for a tiny bit just to let supabase check session verify validity 
+                        // OR we set isLoading false immediately for "Instant Load" feel.
+                        // Let's optimize for speed: if cache exists, show it.
+                    }
+                } catch (e) {
+                    console.error('Error parsing cached profile', e);
                 }
-            }, 5000);
+            }
 
             try {
-                // 1. Check local session specifically first (to avoid waiting for event)
+                // 1. CheckSupabase session
                 const { data: { session } } = await supabase.auth.getSession();
 
                 if (session?.user) {
-                    // 2. If user exists, fetch profile immediately
+                    // We have a session, assume valid for now if we have cache
+                    if (mounted && cachedProfile) setIsLoading(false);
+
+                    // 2. Fetch fresh profile in background (or foreground if no cache)
                     if (mounted) {
                         const profile = await supabaseService.getProfile(session.user.id);
                         if (profile) {
                             setUser(profile);
-                            // Init OneSignal immediately for existing session
+                            localStorage.setItem('cached_profile', JSON.stringify(profile));
+
+                            // Init OneSignal
                             import('../services/OneSignalService').then(({ OneSignalService }) => {
                                 OneSignalService.init(session.user.id);
                             });
                         }
                     }
+                } else {
+                    // No session effectively
+                    if (mounted) {
+                        setUser(null);
+                        localStorage.removeItem('cached_profile');
+                    }
                 }
             } catch (error) {
                 console.error('Error initializing auth:', error);
             } finally {
-                clearTimeout(timeoutId);
-                // 3. Only now allow the app to render content
                 if (mounted) setIsLoading(false);
             }
         };
@@ -76,6 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     const profile = await supabaseService.getProfile(session.user.id);
                     if (profile) {
                         setUser(profile);
+                        localStorage.setItem('cached_profile', JSON.stringify(profile));
                         // Init OneSignal with the user ID to enable push notifications
                         import('../services/OneSignalService').then(({ OneSignalService }) => {
                             OneSignalService.init(session.user.id);
@@ -119,6 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const logout = async () => {
         await supabaseService.signOut();
+        localStorage.removeItem('cached_profile'); // Clear cache
         setUser(null);
     };
 
@@ -127,6 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const updatedProfile = await supabaseService.getProfile(user.id);
             if (updatedProfile) {
                 setUser(updatedProfile);
+                localStorage.setItem('cached_profile', JSON.stringify(updatedProfile));
             }
         }
     };
