@@ -1,8 +1,5 @@
 -- TABLA DE DIAGNOSTICO
--- Borramos la tabla vieja para evitar conflicto de columnas
-drop table if exists public.push_logs;
-
-create table public.push_logs (
+create table if not exists public.push_logs (
     id uuid default gen_random_uuid() primary key,
     created_at timestamptz default now(),
     status text,
@@ -14,7 +11,7 @@ create table public.push_logs (
 create or replace function public.test_push_debug()
 returns jsonb as $$
 declare
-  api_key text := 'os_v2_app_bwsqqsvxkjfd5ljqzky23qosflf27ozjic5e6auu5j6xoleg63pxa75t3map2tl6lfuxnz5q7mm6ndmc5f6kfmdmui5gdrwjdm5ykhq';
+  api_key text := 'os_v2_app_bwsqqsvxkjfd5ljqzky23qosfjewjq3afgtuutvplev66vdrnd3naozj67xuik4oery24n4dqxv6sfdaorialz5upojzicjnt7wfk3y';
   app_id text := '0da5084a-b752-4a3e-ad30-cab1adc1d22a';
   request_body jsonb;
   request_id int;

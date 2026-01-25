@@ -9,7 +9,6 @@ import AuthLayout from './components/AuthLayout';
 import Login from './pages/Login';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { InstallPWA } from './components/InstallPWA';
-import { OneSignalService } from './services/OneSignalService';
 
 // Lazy Load Pages
 const PlayerHome = React.lazy(() => import('./pages/player/Home'));
@@ -36,11 +35,6 @@ const PageLoader = () => (
 );
 
 export default function App() {
-  React.useEffect(() => {
-    // Initialize OneSignal anonymously to allow prompts on Login/Landing
-    OneSignalService.init('');
-  }, []);
-
   return (
     <AuthProvider>
       <ToastProvider>

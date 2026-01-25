@@ -1,7 +1,7 @@
 import OneSignal from 'react-onesignal';
 
 // NOTE: You must replace this with your actual OneSignal App ID
-const ONESIGNAL_APP_ID = '0da5084a-b752-4a3e-ad30-cab1adc1d22a';
+const ONESIGNAL_APP_ID = 'hu42q7ccnujg4zwtgrj6mtlav';
 
 export const OneSignalService = {
     initialized: false, // Flag to track initialization

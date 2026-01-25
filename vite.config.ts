@@ -10,7 +10,14 @@ export default defineConfig({
       injectRegister: null, // Disable auto registration to avoid conflict with OneSignal
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'robots.txt', 'apple-touch-icon.png'],
-      // workbox: { ... } Removed to Ensure OneSignal Full Control
+      workbox: {
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true,
+        sourcemap: true,
+        importScripts: ['OneSignalSDKWorker.js'],
+        navigateFallback: '/index.html'
+      },
       manifest: {
         name: 'APPadeleros',
         short_name: 'APPadeleros',

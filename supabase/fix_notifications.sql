@@ -13,7 +13,7 @@ create or replace function public.send_push_notification_fn(
 )
 returns void as $$
 declare
-  api_key text := 'os_v2_app_bwsqqsvxkjfd5ljqzky23qosflf27ozjic5e6auu5j6xoleg63pxa75t3map2tl6lfuxnz5q7mm6ndmc5f6kfmdmui5gdrwjdm5ykhq';
+  api_key text := 'os_v2_app_bwsqqsvxkjfd5ljqzky23qosfjewjq3afgtuutvplev66vdrnd3naozj67xuik4oery24n4dqxv6sfdaorialz5upojzicjnt7wfk3y';
   app_id text := '0da5084a-b752-4a3e-ad30-cab1adc1d22a';
   request_body jsonb;
 begin

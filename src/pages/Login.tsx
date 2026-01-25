@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import OneSignal from 'react-onesignal';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Mail, Lock, ArrowLeft, Key } from 'lucide-react';
@@ -338,44 +337,6 @@ export default function Login() {
                                     ¿Eres un club y quieres unirte? <a href="mailto:contacto@appadeleros.com" className="text-primary hover:underline">Contáctanos</a>
                                 </p>
                             )}
-
-                            {/* BOTON DE DIAGNOSTICO DE SUSCRIPCION */}
-                            <div className="mt-4 pt-4 border-t border-white/10">
-                                <button
-                                    type="button"
-                                    onClick={async () => {
-                                        try {
-                                            // 1. Chequear estado interno de OneSignal
-                                            const id = OneSignal.User?.PushSubscription?.id;
-                                            const optedIn = OneSignal.User?.PushSubscription?.optedIn;
-                                            const permission = Notification.permission;
-
-                                            let msg = `🔍 Diagnóstico:\n\n`;
-                                            msg += `🆔 ID Dispositivo: ${id ? id : 'NO ASIGNADO (Error)'}\n`;
-                                            msg += `✅ Suscrito (Opt-In): ${optedIn ? 'SÍ' : 'NO'}\n`;
-                                            msg += `🔒 Permiso Navegador: ${permission}\n\n`;
-
-                                            if (!optedIn || permission !== 'granted') {
-                                                msg += "⚠️ PROBLEMA: No estás suscrito. Intentando activar...";
-                                                alert(msg);
-                                                // Forzar solicitud de permiso
-                                                await OneSignal.User?.PushSubscription?.optIn();
-                                            } else {
-                                                msg += "✅ Todo parece correcto en el cliente.";
-                                                alert(msg);
-                                                console.log("OS ID:", id);
-                                            }
-
-                                        } catch (e: any) {
-                                            alert('❌ Error al chequear OneSignal: ' + e.message);
-                                            console.error(e);
-                                        }
-                                    }}
-                                    className="px-3 py-1 bg-blue-900/40 text-blue-200 text-xs rounded hover:bg-blue-800 transition-colors border border-blue-800"
-                                >
-                                    🔍 CHEQUEAR SUSCRIPCIÓN
-                                </button>
-                            </div>
                         </div>
                     )}
                 </div>
@@ -384,6 +345,6 @@ export default function Login() {
                     &copy; {new Date().getFullYear()} APPadeleros. Todos los derechos reservados.
                 </p>
             </div>
-        </div >
+        </div>
     );
 }
