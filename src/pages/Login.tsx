@@ -346,8 +346,8 @@ export default function Login() {
                                     onClick={async () => {
                                         try {
                                             // 1. Chequear estado interno de OneSignal
-                                            const id = OneSignal.User.PushSubscription.id;
-                                            const optedIn = OneSignal.User.PushSubscription.optedIn;
+                                            const id = OneSignal.User?.PushSubscription?.id;
+                                            const optedIn = OneSignal.User?.PushSubscription?.optedIn;
                                             const permission = Notification.permission;
 
                                             let msg = `🔍 Diagnóstico:\n\n`;
@@ -359,7 +359,7 @@ export default function Login() {
                                                 msg += "⚠️ PROBLEMA: No estás suscrito. Intentando activar...";
                                                 alert(msg);
                                                 // Forzar solicitud de permiso
-                                                await OneSignal.User.PushSubscription.optIn();
+                                                await OneSignal.User?.PushSubscription?.optIn();
                                             } else {
                                                 msg += "✅ Todo parece correcto en el cliente.";
                                                 alert(msg);
