@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Button } from '../components/ui/Button';
+import OneSignal from 'react-onesignal';
+import { Button } from '../components/Button';
 import { Input } from '../components/ui/Input';
 import { Mail, Lock, ArrowLeft, Key } from 'lucide-react';
 import Logo from '../components/Logo';
@@ -338,36 +339,41 @@ export default function Login() {
                                 </p>
                             )}
 
-                            {/* BOTON DE DEBUG TEMPORAL */}
+                            {/* BOTON DE DIAGNOSTICO DE SUSCRIPCION */}
                             <div className="mt-4 pt-4 border-t border-white/10">
                                 <button
                                     type="button"
                                     onClick={async () => {
                                         try {
-                                            const response = await fetch('https://onesignal.com/api/v1/notifications', {
-                                                method: 'POST',
-                                                headers: {
-                                                    'Content-Type': 'application/json',
-                                                    'Authorization': 'Basic os_v2_app_bwsqqsvxkjfd5ljqzky23qosflf27ozjic5e6auu5j6xoleg63pxa75t3map2tl6lfuxnz5q7mm6ndmc5f6kfmdmui5gdrwjdm5ykhq'
-                                                },
-                                                body: JSON.stringify({
-                                                    app_id: '0da5084a-b752-4a3e-ad30-cab1adc1d22a',
-                                                    included_segments: ['Total Subscriptions'],
-                                                    headings: { en: 'Prueba desde el Navegador' },
-                                                    contents: { en: 'Si ves esto, las credenciales funcionan ✅' }
-                                                })
-                                            });
-                                            const data = await response.json();
-                                            console.log('DEBUG PUSH:', data);
-                                            if (response.ok) alert('✅ Enviado! Revisa tu celular (' + data.id + ')');
-                                            else alert('❌ Error OneSignal: ' + JSON.stringify(data));
+                                            // 1. Chequear estado interno de OneSignal
+                                            const id = OneSignal.User.PushSubscription.id;
+                                            const optedIn = OneSignal.User.PushSubscription.optedIn;
+                                            const permission = Notification.permission;
+
+                                            let msg = `🔍 Diagnóstico:\n\n`;
+                                            msg += `🆔 ID Dispositivo: ${id ? id : 'NO ASIGNADO (Error)'}\n`;
+                                            msg += `✅ Suscrito (Opt-In): ${optedIn ? 'SÍ' : 'NO'}\n`;
+                                            msg += `🔒 Permiso Navegador: ${permission}\n\n`;
+
+                                            if (!optedIn || permission !== 'granted') {
+                                                msg += "⚠️ PROBLEMA: No estás suscrito. Intentando activar...";
+                                                alert(msg);
+                                                // Forzar solicitud de permiso
+                                                await OneSignal.User.PushSubscription.optIn();
+                                            } else {
+                                                msg += "✅ Todo parece correcto en el cliente.";
+                                                alert(msg);
+                                                console.log("OS ID:", id);
+                                            }
+
                                         } catch (e: any) {
-                                            alert('❌ Error de Red: ' + e.message);
+                                            alert('❌ Error al chequear OneSignal: ' + e.message);
+                                            console.error(e);
                                         }
                                     }}
-                                    className="px-3 py-1 bg-red-900/40 text-red-200 text-xs rounded hover:bg-red-800 transition-colors border border-red-800"
+                                    className="px-3 py-1 bg-blue-900/40 text-blue-200 text-xs rounded hover:bg-blue-800 transition-colors border border-blue-800"
                                 >
-                                    🛠️ PROBAR PUSH (Debug)
+                                    🔍 CHEQUEAR SUSCRIPCIÓN
                                 </button>
                             </div>
                         </div>
