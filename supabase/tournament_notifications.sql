@@ -37,13 +37,15 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION public.notify_match_score_update()
 RETURNS trigger AS $$
 DECLARE
-  player1_name text;
-  player2_name text;
-  team1_name text;
-  team2_name text;
   tournament_name text;
   msg_title text;
   msg_content text;
+  
+  -- Variables to hold player IDs
+  t1_p1 uuid;
+  t1_p2 uuid;
+  t2_p1 uuid;
+  t2_p2 uuid;
 BEGIN
     -- Only trigger if score changed and is not null
     IF (OLD.score IS DISTINCT FROM NEW.score) AND (NEW.score IS NOT NULL) THEN
@@ -53,32 +55,42 @@ BEGIN
         FROM public.tournaments 
         WHERE id = NEW.tournament_id;
 
+        -- Get Player IDs from Team Registrations
+        -- Team 1
+        IF NEW.team1_id IS NOT NULL THEN
+             SELECT player1_id, player2_id INTO t1_p1, t1_p2
+             FROM public.tournament_registrations
+             WHERE id = NEW.team1_id;
+        END IF;
+
+        -- Team 2
+        IF NEW.team2_id IS NOT NULL THEN
+             SELECT player1_id, player2_id INTO t2_p1, t2_p2
+             FROM public.tournament_registrations
+             WHERE id = NEW.team2_id;
+        END IF;
+
         -- Construct Message
         msg_title := 'Resultado Actualizado 🎾';
         msg_content := 'Nuevo resultado en ' || COALESCE(tournament_name, 'el torneo') || ': ' || NEW.score;
 
-        -- Notify Player 1 (if exists)
-        IF NEW.player1_id IS NOT NULL THEN
-             PERFORM public.send_push_notification_fn(
-                ARRAY[NEW.player1_id::text], 
-                msg_title, 
-                msg_content, 
-                '/player/tournament/match/' || NEW.id || '?share=true'
-             );
+        -- Notify ALL visible players
+        -- Create array of valid IDs
+        -- Since ARRAY_REMOVE doesn't remove NULLs nicely in one go if constructed manually, let's just call notify individually or build cleaner.
+        
+        -- Helper: Notify if ID exists
+        IF t1_p1 IS NOT NULL THEN
+             PERFORM public.send_push_notification_fn(ARRAY[t1_p1::text], msg_title, msg_content, '/player/tournament/match/' || NEW.id || '?share=true');
         END IF;
-
-        -- Notify Player 2 (if exists)
-        IF NEW.player2_id IS NOT NULL THEN
-             PERFORM public.send_push_notification_fn(
-                ARRAY[NEW.player2_id::text], 
-                msg_title, 
-                msg_content, 
-                '/player/tournament/match/' || NEW.id || '?share=true'
-             );
+        IF t1_p2 IS NOT NULL THEN
+             PERFORM public.send_push_notification_fn(ARRAY[t1_p2::text], msg_title, msg_content, '/player/tournament/match/' || NEW.id || '?share=true');
         END IF;
-
-        -- Notify Partner 1 (if double, optional, assuming matches table structure)
-        -- Notify Partner 2 (if double, optional)
+        IF t2_p1 IS NOT NULL THEN
+             PERFORM public.send_push_notification_fn(ARRAY[t2_p1::text], msg_title, msg_content, '/player/tournament/match/' || NEW.id || '?share=true');
+        END IF;
+        IF t2_p2 IS NOT NULL THEN
+             PERFORM public.send_push_notification_fn(ARRAY[t2_p2::text], msg_title, msg_content, '/player/tournament/match/' || NEW.id || '?share=true');
+        END IF;
         
     END IF;
     RETURN NEW;

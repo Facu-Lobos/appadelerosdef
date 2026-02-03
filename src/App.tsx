@@ -27,6 +27,7 @@ const ClubProfilePage = React.lazy(() => import('./pages/club/Profile'));
 const ClubCommunity = React.lazy(() => import('./pages/club/Community'));
 const ClubRankings = React.lazy(() => import('./pages/club/Rankings'));
 const AdminDashboard = React.lazy(() => import('./pages/admin/Dashboard'));
+const SeederPage = React.lazy(() => import('./pages/dev/SeederPage'));
 
 const PageLoader = () => (
   <div className="min-h-screen bg-slate-900 flex items-center justify-center">
@@ -85,6 +86,8 @@ export default function App() {
                 }>
                   <Route path="/admin" element={<AdminDashboard />} />
                 </Route>
+
+                <Route path="/dev/seed" element={<SeederPage />} />
               </Routes>
             </Suspense>
           </BrowserRouter>

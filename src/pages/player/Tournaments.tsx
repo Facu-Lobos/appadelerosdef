@@ -21,7 +21,10 @@ export default function PlayerTournaments() {
     const [partnerEmail, setPartnerEmail] = useState('');
     const [partner, setPartner] = useState<PlayerProfile | null>(null);
     const [searchingPartner, setSearchingPartner] = useState(false);
+    const [partner, setPartner] = useState<PlayerProfile | null>(null);
+    const [searchingPartner, setSearchingPartner] = useState(false);
     const [registrationStatus, setRegistrationStatus] = useState<{ [key: string]: string }>({}); // tournamentId -> status
+    const [myRegistrations, setMyRegistrations] = useState<{ [key: string]: string }>({}); // tournamentId -> registrationId
 
     useEffect(() => {
         loadTournaments();
@@ -130,20 +133,33 @@ export default function PlayerTournaments() {
                                     <Users size={16} />
                                     <span>Cupo: {tournament.max_teams} parejas</span>
                                 </div>
-                                <Button
-                                    size="sm"
-                                    onClick={() => openRegisterModal(tournament)}
-                                    disabled={registrationStatus[tournament.id] === 'sent'}
-                                >
-                                    {registrationStatus[tournament.id] === 'sent' ? 'Enviado' : 'Inscribirse'}
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="secondary"
-                                    onClick={() => navigate(`/player/tournaments/${tournament.id}`)}
-                                >
-                                    Ver Resultados
-                                </Button>
+                                <div className="flex gap-2">
+                                    {registrationStatus[tournament.id] ? (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="border-red-500/30 text-red-500 hover:bg-red-500/10"
+                                            onClick={() => handleUnsubscribe(tournament.id)}
+                                        >
+                                            {registrationStatus[tournament.id] === 'pending' ? 'Cancelar Solicitud' : 'Darse de Baja'}
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            size="sm"
+                                            onClick={() => openRegisterModal(tournament)}
+                                        >
+                                            Inscribirse
+                                        </Button>
+                                    )}
+
+                                    <Button
+                                        size="sm"
+                                        variant="secondary"
+                                        onClick={() => navigate(`/player/tournaments/${tournament.id}`)}
+                                    >
+                                        Ver Resultados
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     ))

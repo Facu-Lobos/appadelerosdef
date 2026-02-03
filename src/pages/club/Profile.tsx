@@ -148,6 +148,8 @@ export default function ClubProfilePage() {
         const success = await supabaseService.deleteCourt(courtId);
         if (success) {
             loadData();
+        } else {
+            alert('No se pudo eliminar la cancha. Es posible que tenga reservas o partidos asociados. Intenta cancelar las reservas futuras primero.');
         }
     };
 

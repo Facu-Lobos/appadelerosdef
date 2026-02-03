@@ -8,18 +8,34 @@ import { es } from 'date-fns/locale';
 export default function PlayerBookings() {
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchBookings = async () => {
-            const user = await supabaseService.getCurrentUser();
-            if (user) {
-                const data = await supabaseService.getBookings(user.id);
-                setBookings(data);
-            }
-            setLoading(false);
-        };
         fetchBookings();
     }, []);
+
+    const fetchBookings = async () => {
+        const user = await supabaseService.getCurrentUser();
+        if (user) {
+            const data = await supabaseService.getBookings(user.id);
+            setBookings(data);
+        }
+        setLoading(false);
+    };
+
+    const handleCancelBooking = async (bookingId: string) => {
+        if (!confirm('¿Estás seguro de que quieres cancelar esta reserva?')) return;
+
+        setActionLoading(bookingId);
+        const success = await supabaseService.cancelBooking(bookingId);
+        if (success) {
+            // Refresh list
+            fetchBookings();
+        } else {
+            alert('Error al cancelar la reserva');
+        }
+        setActionLoading(null);
+    };
 
     if (loading) return <div>Cargando reservas...</div>;
 
@@ -61,15 +77,28 @@ export default function PlayerBookings() {
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-4">
-                                <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${booking.status === 'confirmed' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
+                            <div className="flex flex-col items-end gap-2">
+                                <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${booking.status === 'confirmed' ? 'bg-green-500/20 text-green-400' :
+                                    booking.status === 'cancelled' ? 'bg-red-500/20 text-red-400' :
+                                        'bg-yellow-500/20 text-yellow-400'
                                     }`}>
-                                    {booking.status === 'confirmed' ? 'Confirmada' : 'Pendiente'}
+                                    {booking.status === 'confirmed' ? 'Confirmada' :
+                                        booking.status === 'cancelled' ? 'Cancelada' : 'Pendiente'}
                                 </div>
                                 <div className="text-right">
                                     <div className="text-sm text-gray-400">Precio</div>
                                     <div className="font-bold text-primary">${booking.price}</div>
                                 </div>
+
+                                {booking.status !== 'cancelled' && (
+                                    <button
+                                        disabled={actionLoading === booking.id}
+                                        onClick={() => handleCancelBooking(booking.id)}
+                                        className="text-xs text-red-400 hover:text-red-300 underline disabled:opacity-50"
+                                    >
+                                        {actionLoading === booking.id ? 'Cancelando...' : 'Cancelar Reserva'}
+                                    </button>
+                                )}
                             </div>
                         </div>
                     ))}

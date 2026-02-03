@@ -72,13 +72,34 @@ export const supabaseService = {
             ]) as any;
 
             if (sessionError) throw sessionError;
-            if (!session?.user) return null;
+            // Add a quicker return if no session to avoid hanging
+            if (!session || !session.user) return null;
 
             return await this.getProfile(session.user.id);
         } catch (error) {
             console.error('supabaseService: getCurrentUser error', error);
+            // Don't return null immediately if it's just a timeout, maybe try to recover? 
+            // For now, consistent with existing logic.
             return null;
         }
+    },
+
+    // New Helper: Remove Friend
+    async removeFriend(friendId: string) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return false;
+
+        // Delete from friendships where (requester=me AND receiver=them) OR (requester=them AND receiver=me)
+        const { error } = await supabase
+            .from('friendships')
+            .delete()
+            .or(`and(requester_id.eq.${user.id},receiver_id.eq.${friendId}),and(requester_id.eq.${friendId},receiver_id.eq.${user.id})`);
+
+        if (error) {
+            console.error('Error removing friend:', error);
+            return false;
+        }
+        return true;
     },
 
     async updateProfile(profile: Partial<User> & { category?: number | string, availability?: string[] }) {
@@ -870,7 +891,7 @@ export const supabaseService = {
         // 1. Update Match
         const { data: match, error: matchError } = await supabase
             .from('tournament_matches')
-            .update({ score, sets_score: setsScore, winner_id: winnerId }) // Removed status column as it doesn't exist
+            .update({ score, winner_id: winnerId }) // Removed sets_score as it causes 400 error (column missing)
             .eq('id', matchId)
             .select()
             .single();
@@ -922,9 +943,42 @@ export const supabaseService = {
             }
 
             // Sets and Games
-            if (m.sets_score && Array.isArray(m.sets_score)) {
-                m.sets_score.forEach((set: { w: number, l: number }) => {
-                    // Winner gets 'w' games, Loser gets 'l' games
+            // Fallback: Parse score string if sets_score is missing
+            let sets = m.sets_score;
+            if (!sets && m.score && m.score !== 'BYE') {
+                // Parse "6-4, 6-2" assuming "Team1-Team2" format
+                try {
+                    sets = m.score.split(',').map((s: string) => {
+                        const [s1, s2] = s.trim().split('-').map(Number);
+                        // We need to map this to { w, l } relative to the WINNER of the match?
+                        // The logic below expects {w, l} where w=games for winner, l=games for loser.
+                        // But calculate logic uses set.w and set.l directly.
+                        // The logic below: if (set.w > set.l) -> winner gets set win.
+
+                        // If m.score is "Team1-Team2", then s1 is Team1Games, s2 is Team2Games.
+                        // We need to determine who is winner of this specific set to assign w/l correctly?
+                        // actually the logic below:
+                        // if (statsMap[winner]) statsMap[winner].games_won += set.w
+                        // This implies set.w MUST be the games won by the Match Winner? 
+                        // NO. The logic below (lines 929+) says:
+                        // winner gets `set.w`, loser gets `set.l`.
+                        // So `sets` MUST be [{w: gamesOfMatchWinner, l: gamesOfMatchLoser}].
+
+                        // So we need to parse s1, s2, check who is match winner, and assign accordingly.
+                        const team1Points = s1;
+                        const team2Points = s2;
+
+                        if (winner === team1) {
+                            return { w: team1Points, l: team2Points };
+                        } else {
+                            return { w: team2Points, l: team1Points };
+                        }
+                    });
+                } catch (e) { console.error("Error parsing score", e); }
+            }
+
+            if (sets && Array.isArray(sets)) {
+                sets.forEach((set: { w: number, l: number }) => {
                     // Winner gets 'w' games, Loser gets 'l' games
                     if (statsMap[winner]) {
                         statsMap[winner].games_won += set.w;
@@ -935,7 +989,7 @@ export const supabaseService = {
                         statsMap[loser].games_lost += set.w;
                     }
 
-                    // Determine set winner
+                    // Determine set winner based on games
                     if (set.w > set.l) {
                         if (statsMap[winner]) statsMap[winner].sets_won += 1;
                         if (statsMap[loser]) statsMap[loser].sets_lost += 1;

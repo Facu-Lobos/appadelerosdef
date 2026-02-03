@@ -244,6 +244,17 @@ export default function PlayerCommunity() {
         }
     };
 
+    const handleRemoveFriend = async (friendId: string) => {
+        if (!confirm('¿Estás seguro de que quieres eliminar a este amigo?')) return;
+        const success = await supabaseService.removeFriend(friendId);
+        if (success) {
+            showToast('Amigo eliminado', 'success');
+            loadData();
+        } else {
+            showToast('Error al eliminar amigo', 'error');
+        }
+    };
+
     return (
         <div className="space-y-6 relative pb-20">
             <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
@@ -354,6 +365,7 @@ export default function PlayerCommunity() {
                                         isSent={sentRequests.includes(player.id)}
                                         onAdd={() => handleAddFriend(player.id)}
                                         onChat={() => setActiveChat({ id: player.id, name: player.name, avatar: player.avatar_url })}
+                                        onRemove={() => handleRemoveFriend(player.id)}
                                     />
                                 ))}
                             </div>
@@ -370,6 +382,7 @@ export default function PlayerCommunity() {
                                 isSent={sentRequests.includes(player.id)}
                                 onAdd={() => handleAddFriend(player.id)}
                                 onChat={() => setActiveChat({ id: player.id, name: player.name, avatar: player.avatar_url })}
+                                onRemove={() => handleRemoveFriend(player.id)}
                             />
                         ))}
                     </div>
@@ -575,8 +588,9 @@ export default function PlayerCommunity() {
     );
 }
 
+
 // Sub-component for Cleaner Code
-function PlayerCard({ player, isFriend, isSent, onAdd, onChat }: { player: PlayerProfile, isFriend: boolean, isSent: boolean, onAdd: () => void, onChat: () => void }) {
+function PlayerCard({ player, isFriend, isSent, onAdd, onChat, onRemove }: { player: PlayerProfile, isFriend: boolean, isSent: boolean, onAdd: () => void, onChat: () => void, onRemove?: () => void }) {
     return (
         <div className="card flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 gap-4">
             <div className="flex items-center gap-3 overflow-hidden w-full">
@@ -605,8 +619,15 @@ function PlayerCard({ player, isFriend, isSent, onAdd, onChat }: { player: Playe
                     Chat
                 </Button>
                 {isFriend ? (
-                    <div className="flex-1 sm:flex-none px-3 py-1.5 bg-green-500/10 text-green-400 rounded-lg text-sm font-medium flex items-center justify-center gap-2 border border-green-500/20">
-                        <UserCheck size={16} /> <span className="sm:hidden">Amigos</span>
+                    <div className="flex gap-2">
+                        <div className="flex-1 sm:flex-none px-3 py-1.5 bg-green-500/10 text-green-400 rounded-lg text-sm font-medium flex items-center justify-center gap-2 border border-green-500/20">
+                            <UserCheck size={16} /> <span className="sm:hidden">Amigos</span>
+                        </div>
+                        {onRemove && (
+                            <Button size="sm" variant="ghost" className="text-red-400 hover:bg-red-500/10" onClick={onRemove} title="Eliminar amigo">
+                                <XCircle size={18} />
+                            </Button>
+                        )}
                     </div>
                 ) : isSent ? (
                     <Button size="sm" variant="outline" className="flex-1 sm:flex-none justify-center" disabled>Enviada</Button>

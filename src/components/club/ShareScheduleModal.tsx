@@ -144,7 +144,7 @@ export function ShareScheduleModal({ isOpen, onClose, clubName, clubLogoUrl, dat
                                 <div className="mt-8 w-full pt-4 border-t border-white/10">
                                     <div className="bg-primary/20 border border-primary/30 rounded-lg p-3 text-center">
                                         <p className="text-[10px] uppercase tracking-widest text-primary font-bold mb-1">Reservá ahora en</p>
-                                        <p className="text-white font-bold text-sm">appadelerosdef.vercel.app</p>
+                                        <p className="text-white font-bold text-sm">APPadeleros.vercel.app</p>
                                     </div>
                                 </div>
                             </div>

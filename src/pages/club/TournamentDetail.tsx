@@ -150,6 +150,22 @@ const TournamentDetail = () => {
         }
     };
 
+    const handleDeleteRegistration = async (registrationId: string) => {
+        if (!confirm('¿Estás seguro de eliminar este equipo del torneo?')) return;
+        try {
+            const success = await supabaseService.deleteTournamentRegistration(registrationId);
+            if (success) {
+                showToast('Equipo eliminado correctamente', 'success');
+                loadRegistrations(tournament!.id);
+            } else {
+                showToast('Error al eliminar equipo', 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting registration:', error);
+            showToast('Error al eliminar equipo', 'error');
+        }
+    };
+
     const handleEditScore = (match: any) => {
         setSelectedMatch(match);
         setIsScoreModalOpen(true);
@@ -349,11 +365,21 @@ const TournamentDetail = () => {
                                                         size="sm"
                                                         variant="ghost"
                                                         className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
-                                                        onClick={() => handleStatusUpdate(reg.id, 'rejected')}
+                                                        onClick={() => handleDeleteRegistration(reg.id)}
                                                     >
-                                                        <X size={18} />
+                                                        <Trash2 size={18} />
                                                     </Button>
                                                 </div>
+                                            )}
+                                            {reg.status === 'approved' && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    className="text-gray-500 hover:text-red-400 hover:bg-red-400/10"
+                                                    onClick={() => handleDeleteRegistration(reg.id)}
+                                                >
+                                                    <Trash2 size={18} />
+                                                </Button>
                                             )}
                                         </div>
                                     ))
@@ -712,9 +738,14 @@ const TournamentDetail = () => {
                                                                     <span className={`text-xs truncate max-w-[140px] ${!match.team1_id ? 'text-gray-600 italic' : ''}`}>
                                                                         {match.team1?.team_name || (match.score === 'BYE' ? 'BYE' : 'TBD')}
                                                                     </span>
-                                                                    {match.sets_score && <span className="text-xs font-mono font-bold">
-                                                                        {match.sets_score.map((s: any) => match.winner_id === match.team1_id ? s.w : s.l).join('-')}
-                                                                    </span>}
+                                                                    {(match.sets_score || (match.score && match.score !== 'BYE' && !match.score.includes('TBD'))) && (
+                                                                        <span className="text-xs font-mono font-bold">
+                                                                            {match.sets_score
+                                                                                ? match.sets_score.map((s: any) => match.winner_id === match.team1_id ? s.w : s.l).join('-')
+                                                                                : match.score?.split(',').map((s: string) => s.trim().split('-')[0]).join('-')
+                                                                            }
+                                                                        </span>
+                                                                    )}
                                                                 </div>
 
                                                                 {/* Team 2 */}
@@ -722,9 +753,14 @@ const TournamentDetail = () => {
                                                                     <span className={`text-xs truncate max-w-[140px] ${!match.team2_id ? 'text-gray-600 italic' : ''}`}>
                                                                         {match.team2?.team_name || (match.score === 'BYE' ? 'BYE' : 'TBD')}
                                                                     </span>
-                                                                    {match.sets_score && <span className="text-xs font-mono font-bold">
-                                                                        {match.sets_score.map((s: any) => match.winner_id === match.team2_id ? s.w : s.l).join('-')}
-                                                                    </span>}
+                                                                    {(match.sets_score || (match.score && match.score !== 'BYE' && !match.score.includes('TBD'))) && (
+                                                                        <span className="text-xs font-mono font-bold">
+                                                                            {match.sets_score
+                                                                                ? match.sets_score.map((s: any) => match.winner_id === match.team2_id ? s.w : s.l).join('-')
+                                                                                : match.score?.split(',').map((s: string) => s.trim().split('-')[1]).join('-')
+                                                                            }
+                                                                        </span>
+                                                                    )}
                                                                 </div>
                                                             </div>
 

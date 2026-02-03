@@ -214,7 +214,7 @@ export default function ClubCalendar() {
                                                     <div className="text-xs text-white/60 font-mono">${booking.price}</div>
 
                                                     {booking.payment_status !== 'paid' && (
-                                                        <div className="absolute inset-0 bg-black/80 opacity-0 group-hover/booked:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm z-10">
+                                                        <div className="absolute inset-0 bg-black/80 opacity-0 group-hover/booked:opacity-100 transition-opacity flex flex-col gap-2 items-center justify-center backdrop-blur-sm z-10">
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
@@ -227,6 +227,18 @@ export default function ClubCalendar() {
                                                                 className="bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-1 px-3 rounded-full shadow-lg transform hover:scale-105 transition-all cursor-pointer relative z-20"
                                                             >
                                                                 Cobrar
+                                                            </button>
+                                                            <button
+                                                                onClick={async (e) => {
+                                                                    e.stopPropagation();
+                                                                    if (confirm('¿Cancelar esta reserva?')) {
+                                                                        await supabaseService.cancelBooking(booking.id);
+                                                                        loadBookings();
+                                                                    }
+                                                                }}
+                                                                className="bg-red-500/20 hover:bg-red-500/40 text-red-400 border border-red-500/50 text-xs font-bold py-1 px-3 rounded-full shadow-lg transform hover:scale-105 transition-all cursor-pointer relative z-20"
+                                                            >
+                                                                Cancelar
                                                             </button>
                                                         </div>
                                                     )}
