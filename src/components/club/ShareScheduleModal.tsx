@@ -43,8 +43,23 @@ export function ShareScheduleModal({ isOpen, onClose, clubName, clubLogoUrl, dat
         }
     };
 
-    // Filter only available slots
-    const availableSlots = schedule.filter(s => s.available);
+    // Filter only available slots and filter past slots if today
+    const availableSlots = schedule.filter(s => {
+        if (!s.available) return false;
+
+        // Filter past times if it's today
+        const now = new Date();
+        const isToday = date.toDateString() === now.toDateString();
+        if (isToday) {
+            const [h, m] = s.time.split(':').map(Number);
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            if (h < currentHour || (h === currentHour && m <= currentMinute)) {
+                return false;
+            }
+        }
+        return true;
+    });
 
     // Group slots by court
     const slotsByCourt = availableSlots.reduce((acc, slot) => {

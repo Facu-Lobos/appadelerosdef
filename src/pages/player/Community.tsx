@@ -249,7 +249,10 @@ export default function PlayerCommunity() {
         const success = await supabaseService.removeFriend(friendId);
         if (success) {
             showToast('Amigo eliminado', 'success');
-            loadData();
+            // Optimistic update
+            setFriends(prev => prev.filter(id => id !== friendId));
+            setMyFriends(prev => prev.filter(f => f.id !== friendId));
+            loadData(); // Background refresh
         } else {
             showToast('Error al eliminar amigo', 'error');
         }

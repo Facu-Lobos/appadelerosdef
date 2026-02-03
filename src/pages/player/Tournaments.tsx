@@ -117,6 +117,36 @@ export default function PlayerTournaments() {
         }
     };
 
+    const handleUnsubscribe = async (tournamentId: string) => {
+        const regId = myRegistrations[tournamentId];
+        if (!regId) return; // Should not happen if button is shown
+
+        if (!confirm('¿Estás seguro de que deseas cancelar tu inscripción?')) return;
+
+        try {
+            const success = await supabaseService.deleteTournamentRegistration(regId);
+            if (success) {
+                showToast('Inscripción cancelada', 'success');
+                // Update local state
+                setRegistrationStatus(prev => {
+                    const next = { ...prev };
+                    delete next[tournamentId];
+                    return next;
+                });
+                setMyRegistrations(prev => {
+                    const next = { ...prev };
+                    delete next[tournamentId];
+                    return next;
+                });
+            } else {
+                showToast('Error al cancelar inscripción', 'error');
+            }
+        } catch (error) {
+            console.error('Error cancelling registration:', error);
+            showToast('Error al cancelar inscripción', 'error');
+        }
+    };
+
     const openRegisterModal = (tournament: Tournament) => {
         setSelectedTournament(tournament);
         setShowRegisterModal(true);
