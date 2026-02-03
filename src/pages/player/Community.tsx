@@ -366,6 +366,7 @@ export default function PlayerCommunity() {
                                         player={player}
                                         isFriend={friends.includes(player.id)}
                                         isSent={sentRequests.includes(player.id)}
+                                        isPending={pendingRequests.some(r => r.requester_id === player.id)}
                                         onAdd={() => handleAddFriend(player.id)}
                                         onChat={() => setActiveChat({ id: player.id, name: player.name, avatar: player.avatar_url })}
                                         onRemove={() => handleRemoveFriend(player.id)}
@@ -383,6 +384,7 @@ export default function PlayerCommunity() {
                                 player={player}
                                 isFriend={friends.includes(player.id)}
                                 isSent={sentRequests.includes(player.id)}
+                                isPending={pendingRequests.some(r => r.requester_id === player.id)}
                                 onAdd={() => handleAddFriend(player.id)}
                                 onChat={() => setActiveChat({ id: player.id, name: player.name, avatar: player.avatar_url })}
                                 onRemove={() => handleRemoveFriend(player.id)}
@@ -593,7 +595,7 @@ export default function PlayerCommunity() {
 
 
 // Sub-component for Cleaner Code
-function PlayerCard({ player, isFriend, isSent, onAdd, onChat, onRemove }: { player: PlayerProfile, isFriend: boolean, isSent: boolean, onAdd: () => void, onChat: () => void, onRemove?: () => void }) {
+function PlayerCard({ player, isFriend, isSent, isPending, onAdd, onChat, onRemove }: { player: PlayerProfile, isFriend: boolean, isSent: boolean, isPending?: boolean, onAdd: () => void, onChat: () => void, onRemove?: () => void }) {
     return (
         <div className="card flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 gap-4">
             <div className="flex items-center gap-3 overflow-hidden w-full">
@@ -634,6 +636,8 @@ function PlayerCard({ player, isFriend, isSent, onAdd, onChat, onRemove }: { pla
                     </div>
                 ) : isSent ? (
                     <Button size="sm" variant="outline" className="flex-1 sm:flex-none justify-center" disabled>Enviada</Button>
+                ) : isPending ? (
+                    <Button size="sm" variant="outline" className="flex-1 sm:flex-none justify-center border-primary text-primary" disabled>Te envió solicitud</Button>
                 ) : (
                     <Button size="sm" variant="outline" icon={UserPlus} className="flex-1 sm:flex-none justify-center" onClick={onAdd}>Add</Button>
                 )}

@@ -174,6 +174,11 @@ export const supabaseService = {
             .insert([{ requester_id: user.id, receiver_id: receiverId }]);
 
         if (error) {
+            // Check for duplicate key error (code 23505)
+            if (error.code === '23505') {
+                console.log('Friend request already exists or you are already friends.');
+                return true; // Treat as success or handle gracefully
+            }
             console.error('Error sending friend request:', error);
             return false;
         }
