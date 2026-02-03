@@ -692,6 +692,33 @@ export const supabaseService = {
         return true;
     },
 
+    async cancelBooking(bookingId: string) {
+        // Option 2: Soft Delete / Status Update (Better for history)
+        const { error } = await supabase
+            .from('bookings')
+            .update({ status: 'cancelled' })
+            .eq('id', bookingId);
+
+        if (error) {
+            console.error('Error cancelling booking:', error);
+            return false;
+        }
+        return true;
+    },
+
+    async deleteTournamentRegistration(registrationId: string) {
+        const { error } = await supabase
+            .from('tournament_registrations')
+            .delete()
+            .eq('id', registrationId);
+
+        if (error) {
+            console.error('Error deleting registration:', error);
+            return false;
+        }
+        return true;
+    },
+
     async getClubBookingsRange(clubId: string, startDate: string, endDate: string) {
         const { data: bookings, error: bookingError } = await supabase
             .from('bookings')
