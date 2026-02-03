@@ -318,8 +318,16 @@ export default function ClubDetails() {
                                                             ) : (
                                                                 <div
                                                                     onClick={() => {
-                                                                        setSelectedCourt(court.id);
-                                                                        setSelectedTime(time);
+                                                                        if (isSelected) {
+                                                                            handleBooking();
+                                                                        } else {
+                                                                            setSelectedCourt(court.id);
+                                                                            setSelectedTime(time);
+                                                                        }
+                                                                    }}
+                                                                    onDoubleClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleBooking();
                                                                     }}
                                                                     className={`w-full h-full relative cursor-pointer transition-all duration-300 p-1 ${isSelected ? 'scale-[0.98]' : 'hover:scale-[1.02]'}`}
                                                                 >
@@ -330,7 +338,7 @@ export default function ClubDetails() {
                                                                             <span className="text-white font-bold text-lg drop-shadow-md">{time}</span>
                                                                             <span className={`text-xs font-medium px-2 py-0.5 rounded mt-1 transition-all ${isSelected ? 'bg-primary text-white' : 'text-white/80'
                                                                                 }`}>
-                                                                                {isSelected ? 'SELECCIONADO' : 'DISPONIBLE'}
+                                                                                {isSelected ? 'RESERVAR' : 'DISPONIBLE'}
                                                                             </span>
                                                                         </div>
                                                                     </CourtVisual>
