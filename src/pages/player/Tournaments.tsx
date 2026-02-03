@@ -21,8 +21,6 @@ export default function PlayerTournaments() {
     const [partnerEmail, setPartnerEmail] = useState('');
     const [partner, setPartner] = useState<PlayerProfile | null>(null);
     const [searchingPartner, setSearchingPartner] = useState(false);
-    const [partner, setPartner] = useState<PlayerProfile | null>(null);
-    const [searchingPartner, setSearchingPartner] = useState(false);
     const [registrationStatus, setRegistrationStatus] = useState<{ [key: string]: string }>({}); // tournamentId -> status
     const [myRegistrations, setMyRegistrations] = useState<{ [key: string]: string }>({}); // tournamentId -> registrationId
 
