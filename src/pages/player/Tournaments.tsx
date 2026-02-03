@@ -30,8 +30,41 @@ export default function PlayerTournaments() {
 
     const loadTournaments = async () => {
         try {
-            const data = await supabaseService.getTournaments();
-            setTournaments(data);
+            const [tournamentsData, userReq] = await Promise.all([
+                supabaseService.getTournaments(),
+                supabaseService.getCurrentUser()
+            ]);
+
+            setTournaments(tournamentsData);
+
+            // If user is logged in, check registrations
+            if (userReq) {
+                // We need a way to get MY registrations. 
+                // Currently supabaseService doesn't have a direct "getMyRegistrations" but we can iterate tournaments or add a method.
+                // Or simpler: fetch all registrations for my ID? 
+                // Let's assume for now we don't have a direct method, so we might need to fetch per tournament or fetch all.
+                // Ideally, supabaseService should have getPlayerRegistrations(userId).
+
+                // Let's check supabaseService again.
+                // It has getTournamentRegistrations(tournamentId). 
+                // We could iterate active tournaments and check.
+
+                const statusMap: { [key: string]: string } = {};
+                const idMap: { [key: string]: string } = {};
+
+                // For optimization, better to have a query. But loop is acceptable for small number of tournaments.
+                for (const t of tournamentsData) {
+                    const regs = await supabaseService.getTournamentRegistrations(t.id);
+                    const myReg = regs.find(r => r.player1_id === userReq.id || r.player2_id === userReq.id);
+                    if (myReg) {
+                        statusMap[t.id] = myReg.status; // pending, approved, etc
+                        idMap[t.id] = myReg.id;
+                    }
+                }
+                setRegistrationStatus(statusMap);
+                setMyRegistrations(idMap);
+            }
+
         } catch (error) {
             console.error('Error loading tournaments:', error);
         } finally {
