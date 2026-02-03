@@ -142,8 +142,22 @@ export default function ClubDetails() {
         while (currentMinutes + duration <= closeMinutes) {
             const h = Math.floor(currentMinutes / 60);
             const m = currentMinutes % 60;
-            slots.push(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
+            const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+            slots.push(timeStr);
             currentMinutes += duration;
+        }
+
+        // Filter past slots if selected date is today
+        const now = new Date();
+        const isToday = selectedDate.toDateString() === now.toDateString();
+
+        if (isToday) {
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            return slots.filter(slot => {
+                const [h, m] = slot.split(':').map(Number);
+                return h > currentHour || (h === currentHour && m > currentMinute);
+            });
         }
 
         return slots;

@@ -609,7 +609,8 @@ export const supabaseService = {
             .select('*, courts!inner(club_id), profiles:player_id(name)')
             .eq('courts.club_id', clubId)
             .gte('start_time', startDate.toISOString())
-            .lte('start_time', endDate.toISOString());
+            .lte('start_time', endDate.toISOString())
+            .neq('status', 'cancelled');
 
         if (bookingError) {
             console.error('Error fetching club bookings:', bookingError);
@@ -657,7 +658,8 @@ export const supabaseService = {
             .select('court_id, start_time')
             .in('court_id', courtIds)
             .gte('start_time', startDate.toISOString())
-            .lte('start_time', endDate.toISOString());
+            .lte('start_time', endDate.toISOString())
+            .neq('status', 'cancelled');
 
         if (error) {
             console.error('Error fetching club availability:', error);
