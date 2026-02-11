@@ -576,7 +576,7 @@ export const supabaseService = {
         const startDate = new Date(date);
         startDate.setDate(startDate.getDate() - 1);
         const endDate = new Date(date);
-        endDate.setDate(endDate.getDate() + 1);
+        endDate.setDate(endDate.getDate() + 2);
 
         const { data, error } = await supabase
             .from('bookings')
@@ -611,7 +611,7 @@ export const supabaseService = {
         const startDate = new Date(date);
         startDate.setDate(startDate.getDate() - 1);
         const endDate = new Date(date);
-        endDate.setDate(endDate.getDate() + 1);
+        endDate.setDate(endDate.getDate() + 2);
 
         const { data: bookings, error: bookingError } = await supabase
             .from('bookings')
@@ -650,7 +650,7 @@ export const supabaseService = {
         const startDate = new Date(date);
         startDate.setDate(startDate.getDate() - 1);
         const endDate = new Date(date);
-        endDate.setDate(endDate.getDate() + 1);
+        endDate.setDate(endDate.getDate() + 2);
 
         // First get court IDs to avoid inner join RLS issues
         const { data: courts } = await supabase
