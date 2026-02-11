@@ -489,11 +489,15 @@ export const supabaseService = {
         return data as Court[];
     },
 
-    async createBooking(booking: Omit<Booking, 'id' | 'status' | 'price'> & { price?: number }) {
+    async createBooking(booking: Omit<Booking, 'id' | 'status' | 'price'> & { price?: number, duration?: number }) {
+        const durationMinutes = booking.duration || 60;
+        const calculatedStartTime = new Date(`${booking.date}T${booking.time}:00`);
+        const endTime = new Date(calculatedStartTime.getTime() + durationMinutes * 60000);
+
         const bookingData: any = {
             court_id: booking.court_id,
-            start_time: new Date(`${booking.date}T${booking.time.padStart(5, '0')}:00`).toISOString(),
-            end_time: new Date(`${booking.date}T${(parseInt(booking.time) + 1).toString().padStart(2, '0')}:00:00`).toISOString(),
+            start_time: calculatedStartTime.toISOString(),
+            end_time: endTime.toISOString(),
             status: 'confirmed',
             payment_status: 'unpaid'
         };

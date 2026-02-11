@@ -109,7 +109,8 @@ export default function ClubDetails() {
             court_id: selectedCourt,
             user_id: user.id,
             date: format(selectedDate, 'yyyy-MM-dd'),
-            time: selectedTime
+            time: selectedTime,
+            duration: parseInt((club.schedule as any)?.slot_duration || '60')
         });
 
         setBookingLoading(false);
@@ -420,7 +421,8 @@ export default function ClubDetails() {
                                                                                 court_id: court.id,
                                                                                 user_id: user.id,
                                                                                 date: format(selectedDate, 'yyyy-MM-dd'),
-                                                                                time: time
+                                                                                time: time,
+                                                                                duration: parseInt((club.schedule as any)?.slot_duration || '60')
                                                                             });
 
                                                                             setBookingLoading(false);

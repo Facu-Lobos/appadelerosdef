@@ -332,6 +332,7 @@ export default function ClubCalendar() {
                     court={manualBooking.court}
                     date={currentDate}
                     time={manualBooking.time}
+                    duration={parseInt(schedule?.slot_duration || '60')}
                     onBookingCreated={() => {
                         loadBookings();
                         setManualBooking(null);

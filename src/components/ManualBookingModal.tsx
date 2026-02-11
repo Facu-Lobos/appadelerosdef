@@ -15,9 +15,10 @@ interface ManualBookingModalProps {
     date: Date;
     time: string;
     onBookingCreated: () => void;
+    duration?: number;
 }
 
-export default function ManualBookingModal({ isOpen, onClose, court, date, time, onBookingCreated }: ManualBookingModalProps) {
+export default function ManualBookingModal({ isOpen, onClose, court, date, time, onBookingCreated, duration = 60 }: ManualBookingModalProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [players, setPlayers] = useState<PlayerProfile[]>([]);
     const [selectedPlayer, setSelectedPlayer] = useState<PlayerProfile | null>(null);
@@ -45,7 +46,8 @@ export default function ManualBookingModal({ isOpen, onClose, court, date, time,
                 user_id: bookingType === 'registered' ? selectedPlayer!.id : '',
                 guest_name: bookingType === 'guest' ? guestName : undefined,
                 date: format(date, 'yyyy-MM-dd'),
-                time: time
+                time: time,
+                duration: duration
             });
             onBookingCreated();
             onClose();

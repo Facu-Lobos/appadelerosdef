@@ -42,7 +42,8 @@ export default function BookingModal({ isOpen, onClose, club }: BookingModalProp
             user_id: user.id,
             date: format(selectedDate, 'yyyy-MM-dd'),
             time: selectedTime,
-            price: 12000 // Mock price
+            price: 12000, // Mock price
+            duration: parseInt((club.schedule as any)?.slot_duration || '60')
         });
 
         setLoading(false);
