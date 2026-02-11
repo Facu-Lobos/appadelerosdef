@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabaseService } from '../../services/supabaseService';
 import { supabase } from '../../services/supabaseClient';
 import type { ClubProfile, Court } from '../../types';
-import { Users, Calendar, DollarSign, TrendingUp, Download, RefreshCw, Wallet } from 'lucide-react';
+import { Users, Calendar, DollarSign, Download, RefreshCw, Wallet } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, format, subMonths, getHours } from 'date-fns';
 import { utils, writeFile } from 'xlsx';
@@ -53,7 +53,9 @@ export default function ClubDashboard() {
 
             // 2. Calculate Stats
             const today = format(now, 'yyyy-MM-dd');
-            const todayBookings = bookings.filter((b: any) => b.start_time.startsWith(today));
+            const todayBookings = bookings.filter((b: any) => {
+                return format(new Date(b.start_time), 'yyyy-MM-dd') === today;
+            });
 
             const incomeToday = todayBookings.reduce((sum: number, b: any) => sum + (b.payment_status === 'paid' ? b.price : 0), 0);
 
@@ -70,7 +72,9 @@ export default function ClubDashboard() {
             const dailyData = daysOfWeek.map(day => {
                 const dateStr = format(day, 'yyyy-MM-dd');
                 return bookings
-                    .filter((b: any) => b.start_time.startsWith(dateStr) && b.payment_status === 'paid')
+                    .filter((b: any) => {
+                        return format(new Date(b.start_time), 'yyyy-MM-dd') === dateStr && b.payment_status === 'paid';
+                    })
                     .reduce((sum: number, b: any) => sum + b.price, 0);
             });
             setDailyIncomeData(dailyData);
@@ -84,7 +88,9 @@ export default function ClubDashboard() {
             const monthlyData = months.map(month => {
                 const monthStr = format(month, 'yyyy-MM');
                 return bookings
-                    .filter((b: any) => b.start_time.startsWith(monthStr) && b.payment_status === 'paid')
+                    .filter((b: any) => {
+                        return format(new Date(b.start_time), 'yyyy-MM') === monthStr && b.payment_status === 'paid';
+                    })
                     .reduce((sum: number, b: any) => sum + b.price, 0);
             });
             setMonthlyIncomeData(monthlyData);
@@ -117,7 +123,8 @@ export default function ClubDashboard() {
 
             // 5. Hourly Occupancy (Average for current month)
             const hoursMap: { [key: number]: number } = {};
-            const currentMonthBookings = bookings.filter((b: any) => b.start_time.startsWith(format(now, 'yyyy-MM')));
+            const currentMonthStr = format(now, 'yyyy-MM');
+            const currentMonthBookings = bookings.filter((b: any) => format(new Date(b.start_time), 'yyyy-MM') === currentMonthStr);
 
             currentMonthBookings.forEach((b: any) => {
                 const hour = getHours(new Date(b.start_time));
