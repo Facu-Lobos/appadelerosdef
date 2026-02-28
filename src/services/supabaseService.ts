@@ -1713,5 +1713,14 @@ export const supabaseService = {
             }
         }
         return true;
+    },
+
+    async deleteClub(clubId: string) {
+        const { error } = await supabase.rpc('delete_user_by_admin', { user_id: clubId });
+        if (error) {
+            console.error('Error deleting club:', error);
+            return false;
+        }
+        return true;
     }
 };

@@ -6,6 +6,7 @@ export interface User {
     role: UserRole;
     name: string;
     avatar_url?: string;
+    created_at?: string;
 }
 
 export interface PlayerProfile extends User {

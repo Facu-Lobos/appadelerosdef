@@ -5,10 +5,12 @@ import type { ClubProfile } from '../../types';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { createClient } from '@supabase/supabase-js';
-import { Users, Plus, Save } from 'lucide-react';
+import { Users, Plus, Save, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Modal } from '../../components/ui/Modal';
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 const ADMIN_EMAIL = 'facundo.lobos90@gmail.com';
 
@@ -29,6 +31,7 @@ export default function AdminDashboard() {
 
     // Confirmation Modal State
     const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; clubId: string; clubName: string } | null>(null);
+    const [deleteConfirmModal, setDeleteConfirmModal] = useState<{ isOpen: boolean; clubId: string; clubName: string } | null>(null);
 
     useEffect(() => {
         if (user?.email !== ADMIN_EMAIL) {
@@ -146,6 +149,22 @@ export default function AdminDashboard() {
         }
     };
 
+    const handleDeleteClub = async () => {
+        if (!deleteConfirmModal) return;
+        try {
+            const success = await supabaseService.deleteClub(deleteConfirmModal.clubId);
+            if (success) {
+                alert('Club eliminado exitosamente');
+                setDeleteConfirmModal(null);
+                fetchClubs();
+            } else {
+                alert('Error al eliminar el club');
+            }
+        } catch (error: any) {
+            alert('Error: ' + error.message);
+        }
+    };
+
     const handleCreateClub = async (e: React.FormEvent) => {
         e.preventDefault();
         setCreateLoading(true);
@@ -238,6 +257,7 @@ export default function AdminDashboard() {
                             <tr>
                                 <th className="p-4">Club</th>
                                 <th className="p-4">Ubicación</th>
+                                <th className="p-4">Antigüedad</th>
                                 <th className="p-4">Precio Cancha</th>
                                 <th className="p-4">Comisión Acumulada</th>
                                 <th className="p-4">Comisión %</th>
@@ -249,6 +269,9 @@ export default function AdminDashboard() {
                                 <tr key={club.id} className="hover:bg-white/5 transition-colors">
                                     <td className="p-4 font-bold">{club.name}</td>
                                     <td className="p-4 text-gray-400">{club.location}</td>
+                                    <td className="p-4 text-gray-400 whitespace-nowrap">
+                                        {club.created_at ? formatDistanceToNow(new Date(club.created_at), { addSuffix: true, locale: es }) : 'N/A'}
+                                    </td>
                                     <td className="p-4 text-gray-300">
                                         {clubStats[club.id]?.priceDisplay || '-'}
                                     </td>
@@ -287,6 +310,15 @@ export default function AdminDashboard() {
                                                 onClick={() => setConfirmModal({ isOpen: true, clubId: club.id, clubName: club.name })}
                                             >
                                                 Reiniciar
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="secondary"
+                                                className="!bg-red-500/20 !text-red-500 hover:!bg-red-500/30"
+                                                onClick={() => setDeleteConfirmModal({ isOpen: true, clubId: club.id, clubName: club.name })}
+                                                icon={Trash2}
+                                            >
+                                                Eliminar
                                             </Button>
                                         </div>
                                     </td>
@@ -354,6 +386,29 @@ export default function AdminDashboard() {
                         </Button>
                         <Button onClick={handleResetCommission}>
                             Confirmar Reinicio
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
+
+            <Modal
+                isOpen={!!deleteConfirmModal}
+                onClose={() => setDeleteConfirmModal(null)}
+                title="Confirmar Eliminación"
+            >
+                <div className="space-y-4">
+                    <p>
+                        ¿Estás seguro que deseas eliminar el club <strong>{deleteConfirmModal?.clubName}</strong>?
+                    </p>
+                    <p className="text-sm text-red-500 font-bold bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                        ⚠️ ADVERTENCIA: Esta acción es irreversible. Se eliminará el usuario y todos sus datos asociados (canchas, reservas, torneos).
+                    </p>
+                    <div className="flex justify-end gap-2 mt-4">
+                        <Button variant="ghost" onClick={() => setDeleteConfirmModal(null)}>
+                            Cancelar
+                        </Button>
+                        <Button onClick={handleDeleteClub} className="!bg-red-500 hover:!bg-red-600 !text-white border-0">
+                            Eliminar Permanentemente
                         </Button>
                     </div>
                 </div>
