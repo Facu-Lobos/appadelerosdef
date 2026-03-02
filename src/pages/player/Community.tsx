@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, UserPlus, MessageCircle, UserCheck, Loader2, Users, Calendar, MapPin, Plus, Trophy, CheckCircle, XCircle } from 'lucide-react';
+import { Search, UserPlus, MessageCircle, UserCheck, Loader2, Users, Calendar, MapPin, Plus, Trophy, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { supabaseService } from '../../services/supabaseService';
@@ -198,6 +198,21 @@ export default function PlayerCommunity() {
         } catch (error) {
             console.error(error);
             showToast('Error al responder', 'error');
+        }
+    };
+
+    const handleDeleteMatch = async () => {
+        if (!showManageMatch) return;
+        if (!confirm('¿Estás seguro de que quieres eliminar esta publicación? Esto rechazará todas las solicitudes pendientes.')) return;
+
+        try {
+            await matchService.deleteMatchRequest(showManageMatch.id);
+            showToast('Publicación eliminada exitosamente', 'success');
+            setShowManageMatch(null);
+            loadMatches();
+        } catch (error) {
+            console.error(error);
+            showToast('Error al eliminar la publicación', 'error');
         }
     };
 
@@ -576,6 +591,18 @@ export default function PlayerCommunity() {
                                 </div>
                             </div>
                         ))}
+                    </div>
+
+                    {/* Delete Match Button */}
+                    <div className="pt-4 mt-6 border-t border-white/10 flex justify-end">
+                        <Button
+                            variant="secondary"
+                            className="!bg-red-500/20 !text-red-500 hover:!bg-red-500/30 w-full sm:w-auto flex items-center justify-center"
+                            onClick={handleDeleteMatch}
+                        >
+                            <Trash2 size={18} className="mr-2" />
+                            Eliminar Publicación
+                        </Button>
                     </div>
                 </div>
             </Modal>
