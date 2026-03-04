@@ -8,7 +8,6 @@ import { es } from 'date-fns/locale';
 export default function PlayerBookings() {
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(true);
-    const [actionLoading, setActionLoading] = useState<string | null>(null);
 
     useEffect(() => {
         fetchBookings();
@@ -21,20 +20,6 @@ export default function PlayerBookings() {
             setBookings(data);
         }
         setLoading(false);
-    };
-
-    const handleCancelBooking = async (bookingId: string) => {
-        if (!confirm('¿Estás seguro de que quieres cancelar esta reserva?')) return;
-
-        setActionLoading(bookingId);
-        const success = await supabaseService.cancelBooking(bookingId);
-        if (success) {
-            // Refresh list
-            fetchBookings();
-        } else {
-            alert('Error al cancelar la reserva');
-        }
-        setActionLoading(null);
     };
 
     if (loading) return <div>Cargando reservas...</div>;
@@ -91,13 +76,9 @@ export default function PlayerBookings() {
                                 </div>
 
                                 {booking.status !== 'cancelled' && (
-                                    <button
-                                        disabled={actionLoading === booking.id}
-                                        onClick={() => handleCancelBooking(booking.id)}
-                                        className="text-xs text-red-400 hover:text-red-300 underline disabled:opacity-50"
-                                    >
-                                        {actionLoading === booking.id ? 'Cancelando...' : 'Cancelar Reserva'}
-                                    </button>
+                                    <div className="text-xs text-gray-400 mt-2 text-right max-w-[150px]">
+                                        Para cancelación comunicarse por chat con el club
+                                    </div>
                                 )}
                             </div>
                         </div>
