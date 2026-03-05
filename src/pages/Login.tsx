@@ -113,8 +113,8 @@ export default function Login() {
 
     if (view === 'landing') {
         return (
-            <div className="relative flex w-full h-[100dvh] flex-col bg-dark-primary justify-between overflow-x-hidden">
-                <div className="flex-1 flex flex-col justify-end pb-2">
+            <div className="relative flex w-full min-h-[100dvh] flex-col bg-dark-primary justify-between overflow-x-hidden">
+                <div>
                     <div className="@container">
                         <div className="px-0 py-0 sm:px-4 sm:py-3">
                             <div
@@ -196,8 +196,9 @@ export default function Login() {
                         </div>
                     </div>
                 </div>
-                <div className="pb-3 pt-3">
-                    <p className="text-light-secondary text-[11px] font-normal leading-normal px-4 text-center">Al continuar, aceptas nuestros Términos de Servicio y Política de Privacidad.</p>
+                <div>
+                    <p className="text-light-secondary text-sm font-normal leading-normal pb-3 pt-1 px-4 text-center">Al continuar, aceptas nuestros Términos de Servicio y Política de Privacidad.</p>
+                    <div className="h-5"></div>
                 </div>
             </div>
         );
