@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Mail, Lock, ArrowLeft, Key } from 'lucide-react';
+import { Mail, Lock, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import Logo from '../components/Logo';
 import { PadelBallIcon, PadelRacketIcon } from '../components/icons';
 
@@ -31,6 +31,7 @@ export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     // Sync view with URL if it changes later (optional but good for history navigation)
     useEffect(() => {
@@ -266,8 +267,10 @@ export default function Login() {
                         {view !== 'forgot_password' && (
                             <Input
                                 label={view === 'update_password' ? "Nueva Contraseña" : "Contraseña"}
-                                type="password"
+                                type={showPassword ? "text" : "password"}
                                 icon={Lock}
+                                rightIcon={showPassword ? EyeOff : Eye}
+                                onRightIconClick={() => setShowPassword(!showPassword)}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
@@ -279,8 +282,10 @@ export default function Login() {
                         {view === 'update_password' && (
                             <Input
                                 label="Confirmar Contraseña"
-                                type="password"
+                                type={showPassword ? "text" : "password"}
                                 icon={Lock}
+                                rightIcon={showPassword ? EyeOff : Eye}
+                                onRightIconClick={() => setShowPassword(!showPassword)}
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 required

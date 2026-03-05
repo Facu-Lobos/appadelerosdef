@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import imageCompression from 'browser-image-compression';
 import { supabaseService } from '../../services/supabaseService';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
@@ -7,8 +9,11 @@ import { Trophy, Activity, MapPin, Edit } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 
 export default function PlayerProfilePage() {
-    const [isEditing, setIsEditing] = useState(false);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const isEditingParams = searchParams.get('edit') === 'true';
+    const [isEditing, setIsEditing] = useState(isEditingParams);
     const [profile, setProfile] = useState<PlayerProfile | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         location: '',
@@ -40,6 +45,17 @@ export default function PlayerProfilePage() {
         fetchProfile();
     }, []);
 
+    useEffect(() => {
+        // Sync URL with state changes
+        if (isEditing !== (searchParams.get('edit') === 'true')) {
+            if (isEditing) {
+                setSearchParams({ edit: 'true' });
+            } else {
+                setSearchParams({});
+            }
+        }
+    }, [isEditing, setSearchParams, searchParams]);
+
     const handleSave = async () => {
         if (!profile) return;
 
@@ -56,7 +72,7 @@ export default function PlayerProfilePage() {
         const success = await supabaseService.updateProfile(updatedData);
         if (success) {
             setProfile(updatedData);
-            setIsEditing(false);
+            setIsEditing(false); // This will clear the URL param because of the useEffect
             await refreshProfile();
         } else {
             alert('Error al actualizar el perfil');
@@ -136,18 +152,35 @@ export default function PlayerProfilePage() {
                                         <input
                                             type="file"
                                             accept="image/*"
+                                            disabled={isUploading}
                                             onChange={async (e) => {
                                                 const file = e.target.files?.[0];
                                                 if (file && profile) {
-                                                    const url = await supabaseService.uploadProfileImage(profile.id, file);
-                                                    if (url) {
-                                                        setFormData({ ...formData, avatar_url: url });
-                                                    } else {
-                                                        alert('Error al subir la imagen. Asegúrate de que el bucket "avatars" exista en Supabase.');
+                                                    try {
+                                                        setIsUploading(true);
+                                                        // Compress the image before uploading to avoid memory issues on mobile
+                                                        const options = {
+                                                            maxSizeMB: 0.5,
+                                                            maxWidthOrHeight: 800,
+                                                            useWebWorker: true
+                                                        };
+                                                        const compressedFile = await imageCompression(file, options);
+
+                                                        const url = await supabaseService.uploadProfileImage(profile.id, compressedFile);
+                                                        if (url) {
+                                                            setFormData({ ...formData, avatar_url: url });
+                                                        } else {
+                                                            alert('Error al subir la imagen. Asegúrate de que el bucket "avatars" exista en Supabase.');
+                                                        }
+                                                    } catch (error) {
+                                                        console.error("Error compressing/uploading:", error);
+                                                        alert("Ocurrió un error al procesar la imagen");
+                                                    } finally {
+                                                        setIsUploading(false);
                                                     }
                                                 }
                                             }}
-                                            className="w-full bg-background/50 border border-white/10 rounded px-3 py-2 text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                                            className="w-full bg-background/50 border border-white/10 rounded px-3 py-2 text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 disabled:opacity-50"
                                         />
                                     </div>
                                     {formData.avatar_url && (
