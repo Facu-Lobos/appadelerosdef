@@ -541,7 +541,78 @@ export const supabaseService = {
             price: data.price,
             payment_status: data.payment_status,
             guest_name: data.guest_name
+            // ...
         } as Booking;
+    },
+
+    async createRecurringBookings(
+        bookingTemplate: Omit<Booking, 'id' | 'status' | 'price'> & { price?: number, duration?: number },
+        endDateStr: string // 'YYYY-MM-DD'
+    ) {
+        let price = bookingTemplate.price || 0;
+        if (!bookingTemplate.price) {
+            const { data: court } = await supabase
+                .from('courts')
+                .select('hourly_rate')
+                .eq('id', bookingTemplate.court_id)
+                .single();
+            price = court?.hourly_rate || 0;
+        }
+
+        const durationMinutes = bookingTemplate.duration || 60;
+
+        // Parse dates safely in local time
+        const [sy, sm, sd] = bookingTemplate.date.split('-').map(Number);
+        const [ey, em, ed] = endDateStr.split('-').map(Number);
+        const startDate = new Date(sy, sm - 1, sd);
+        const endDateObj = new Date(ey, em - 1, ed, 23, 59, 59);
+
+        let currentDate = new Date(startDate);
+        const bookingDates: string[] = [];
+
+        // Loop purely over dates to avoid time changes (DST issues)
+        while (currentDate <= endDateObj) {
+            const y = currentDate.getFullYear();
+            const m = String(currentDate.getMonth() + 1).padStart(2, '0');
+            const d = String(currentDate.getDate()).padStart(2, '0');
+            bookingDates.push(`${y}-${m}-${d}`);
+            currentDate.setDate(currentDate.getDate() + 7);
+        }
+
+        if (bookingDates.length === 0) return [];
+
+        // Generate UUID for the series
+        const seriesId = crypto.randomUUID();
+        const bookingsToInsert = [];
+
+        for (const bDateStr of bookingDates) {
+            const calculatedStartTime = new Date(`${bDateStr}T${bookingTemplate.time}:00`);
+            const endTime = new Date(calculatedStartTime.getTime() + durationMinutes * 60000);
+
+            const bookingData: any = {
+                court_id: bookingTemplate.court_id,
+                start_time: calculatedStartTime.toISOString(),
+                end_time: endTime.toISOString(),
+                status: 'confirmed',
+                payment_status: 'unpaid',
+                price: price,
+                recurring_series_id: seriesId
+            };
+
+            if (bookingTemplate.user_id) bookingData.player_id = bookingTemplate.user_id;
+            if (bookingTemplate.guest_name) bookingData.guest_name = bookingTemplate.guest_name;
+
+            bookingsToInsert.push(bookingData);
+        }
+
+        // Insert all at once
+        const { data, error } = await supabase
+            .from('bookings')
+            .insert(bookingsToInsert)
+            .select();
+
+        if (error) throw error;
+        return data;
     },
 
     async getBookings(userId: string) {

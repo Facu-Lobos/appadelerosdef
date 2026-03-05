@@ -26,6 +26,8 @@ export default function ManualBookingModal({ isOpen, onClose, court, date, time,
     const [searching, setSearching] = useState(false);
     const [bookingType, setBookingType] = useState<'registered' | 'guest'>('registered');
     const [guestName, setGuestName] = useState('');
+    const [isRecurring, setIsRecurring] = useState(false);
+    const [recurringMonths, setRecurringMonths] = useState(1);
 
     const handleSearch = async () => {
         if (!searchTerm) return;
@@ -41,14 +43,27 @@ export default function ManualBookingModal({ isOpen, onClose, court, date, time,
 
         setLoading(true);
         try {
-            await supabaseService.createBooking({
-                court_id: court.id,
-                user_id: bookingType === 'registered' ? selectedPlayer!.id : '',
-                guest_name: bookingType === 'guest' ? guestName : undefined,
-                date: format(date, 'yyyy-MM-dd'),
-                time: time,
-                duration: duration
-            });
+            if (isRecurring) {
+                const endDate = new Date(date);
+                endDate.setMonth(endDate.getMonth() + recurringMonths);
+                await supabaseService.createRecurringBookings({
+                    court_id: court.id,
+                    user_id: bookingType === 'registered' ? selectedPlayer!.id : '',
+                    guest_name: bookingType === 'guest' ? guestName : undefined,
+                    date: format(date, 'yyyy-MM-dd'),
+                    time: time,
+                    duration: duration
+                }, format(endDate, 'yyyy-MM-dd'));
+            } else {
+                await supabaseService.createBooking({
+                    court_id: court.id,
+                    user_id: bookingType === 'registered' ? selectedPlayer!.id : '',
+                    guest_name: bookingType === 'guest' ? guestName : undefined,
+                    date: format(date, 'yyyy-MM-dd'),
+                    time: time,
+                    duration: duration
+                });
+            }
             onBookingCreated();
             onClose();
         } catch (error: any) {
@@ -148,6 +163,38 @@ export default function ManualBookingModal({ isOpen, onClose, court, date, time,
                             />
                         </div>
                     )}
+
+                    <div className="mt-6 pt-4 border-t border-white/10">
+                        <label className="flex items-center gap-3 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={isRecurring}
+                                onChange={(e) => setIsRecurring(e.target.checked)}
+                                className="w-5 h-5 rounded border-white/10 bg-white/5 text-primary focus:ring-primary focus:ring-offset-background"
+                            />
+                            <span className="text-sm font-medium text-white">Repetir como Turno Fijo</span>
+                        </label>
+
+                        {isRecurring && (
+                            <div className="mt-4 pl-8">
+                                <label className="block text-sm text-gray-400 mb-2">¿Mantener este turno por cuánto tiempo?</label>
+                                <select
+                                    value={recurringMonths}
+                                    onChange={(e) => setRecurringMonths(Number(e.target.value))}
+                                    className="w-full bg-background/50 border border-white/10 rounded px-3 py-2 text-white"
+                                >
+                                    <option value={1}>1 mes (4-5 repeticiones)</option>
+                                    <option value={2}>2 meses</option>
+                                    <option value={3}>3 meses</option>
+                                    <option value={6}>6 meses (Medio año)</option>
+                                    <option value={12}>12 meses (Un año)</option>
+                                </select>
+                                <p className="text-xs text-primary/80 mt-2">
+                                    Se crearán reservas individuales para cada semana en este mismo horario.
+                                </p>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <div className="flex justify-end pt-4 border-t border-white/10">

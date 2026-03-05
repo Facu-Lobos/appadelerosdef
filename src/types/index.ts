@@ -64,6 +64,7 @@ export interface Booking {
     guest_name?: string;
     club_name?: string;
     court_name?: string;
+    recurring_series_id?: string;
 }
 
 export interface Tournament {
