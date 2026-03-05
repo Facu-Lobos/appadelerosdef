@@ -79,10 +79,10 @@ export default function ClubDashboard() {
             });
             setDailyIncomeData(dailyData);
 
-            // 4. Monthly Income (Last 6 Months)
+            // 4. Monthly Income (This Year - 12 Months)
             const months = [];
-            for (let i = 5; i >= 0; i--) {
-                months.push(subMonths(now, i));
+            for (let i = 0; i < 12; i++) {
+                months.push(new Date(now.getFullYear(), i, 1));
             }
 
             const monthlyData = months.map(month => {
@@ -331,18 +331,20 @@ export default function ClubDashboard() {
                     </div>
                     <div className="h-64 flex items-end justify-between gap-2">
                         {dailyIncomeData.map((value, i) => (
-                            <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
-                                <div className="w-full relative flex items-end justify-center h-full">
+                            <div key={i} className="flex-1 flex flex-col items-center gap-2 group h-full">
+                                <div className="w-full relative flex items-end justify-center flex-1">
                                     <div
-                                        className="w-full bg-primary/20 rounded-t-sm group-hover:bg-primary/40 transition-all relative"
-                                        style={{ height: `${(value / maxDaily) * 100}%` }}
+                                        className="w-full bg-primary/40 rounded-t-sm group-hover:bg-primary transition-all relative"
+                                        style={{ height: `${(value / maxDaily) * 100}%`, minHeight: value > 0 ? '4px' : '0' }}
                                     >
-                                        <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap transition-opacity z-10">
-                                            ${value}
-                                        </div>
+                                        {value > 0 && (
+                                            <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap transition-opacity z-10 hidden sm:block">
+                                                ${value}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                                <span className="text-xs text-gray-500">{['L', 'M', 'M', 'J', 'V', 'S', 'D'][i]}</span>
+                                <span className="text-xs text-gray-400 font-medium">{['L', 'M', 'M', 'J', 'V', 'S', 'D'][i]}</span>
                             </div>
                         ))}
                     </div>
@@ -351,22 +353,24 @@ export default function ClubDashboard() {
                 {/* Monthly Income Chart */}
                 <div className="bg-surface rounded-xl p-4 md:p-6 border border-white/5">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-lg font-bold text-white">Ingresos Mensuales</h3>
+                        <h3 className="text-lg font-bold text-white">Ingresos Mensuales ({new Date().getFullYear()})</h3>
                     </div>
-                    <div className="h-64 flex items-end justify-between gap-4">
+                    <div className="h-64 flex items-end justify-between gap-1 sm:gap-2">
                         {monthlyIncomeData.map((value, i) => (
-                            <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
-                                <div className="w-full relative flex items-end justify-center h-full">
+                            <div key={i} className="flex-1 flex flex-col items-center gap-2 group h-full">
+                                <div className="w-full relative flex items-end justify-center flex-1">
                                     <div
-                                        className="w-full bg-blue-500/20 rounded-t-sm group-hover:bg-blue-500/40 transition-all relative"
-                                        style={{ height: `${(value / maxMonthly) * 100}%` }}
+                                        className="w-full bg-blue-500/40 rounded-t-sm group-hover:bg-blue-500 transition-all relative"
+                                        style={{ height: `${(value / maxMonthly) * 100}%`, minHeight: value > 0 ? '4px' : '0' }}
                                     >
-                                        <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap transition-opacity z-10">
-                                            ${value}
-                                        </div>
+                                        {value > 0 && (
+                                            <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap transition-opacity z-10 hidden sm:block">
+                                                ${value}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                                <span className="text-xs text-gray-500">{['Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'][i]}</span>
+                                <span className="text-[10px] sm:text-xs text-gray-400 font-medium">{['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'][i]}</span>
                             </div>
                         ))}
                     </div>
