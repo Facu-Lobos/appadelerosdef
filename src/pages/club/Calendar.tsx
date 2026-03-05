@@ -231,9 +231,23 @@ export default function ClubCalendar() {
                                                             <button
                                                                 onClick={async (e) => {
                                                                     e.stopPropagation();
-                                                                    if (confirm('¿Cancelar esta reserva?')) {
-                                                                        await supabaseService.cancelBooking(booking.id);
-                                                                        loadBookings();
+                                                                    if (booking.recurring_series_id) {
+                                                                        const isSeriesCancel = window.confirm('Este turno es fijo.\n[Aceptar]: Cancelar todos los turnos futuros de esta serie.\n[Cancelar]: Solo borrar este día en particular.');
+                                                                        if (isSeriesCancel) {
+                                                                            await supabaseService.cancelRecurringBookings(booking.recurring_series_id, booking.start_time);
+                                                                            loadBookings();
+                                                                            return;
+                                                                        }
+                                                                        // Si cancela la alerta, preguntamos si quiere cancelar solo uno
+                                                                        if (confirm('¿Deseas cancelar SÓLO esta reserva puntual?')) {
+                                                                            await supabaseService.cancelBooking(booking.id);
+                                                                            loadBookings();
+                                                                        }
+                                                                    } else {
+                                                                        if (confirm('¿Cancelar esta reserva?')) {
+                                                                            await supabaseService.cancelBooking(booking.id);
+                                                                            loadBookings();
+                                                                        }
                                                                     }
                                                                 }}
                                                                 className="bg-red-500/20 hover:bg-red-500/40 text-red-400 border border-red-500/50 text-xs font-bold py-1 px-3 rounded-full shadow-lg transform hover:scale-105 transition-all cursor-pointer relative z-20"
@@ -321,6 +335,25 @@ export default function ClubCalendar() {
                         price: booking.price,
                         playerName: booking.player_name || booking.guest_name || 'Sin nombre'
                     });
+                }}
+                onCancelClick={async (booking) => {
+                    if (booking.recurring_series_id) {
+                        const isSeriesCancel = window.confirm('Este turno es fijo.\n[Aceptar]: Cancelar todos los turnos futuros de esta serie.\n[Cancelar]: Solo borrar este día en particular.');
+                        if (isSeriesCancel) {
+                            await supabaseService.cancelRecurringBookings(booking.recurring_series_id, booking.start_time);
+                            loadBookings();
+                            return;
+                        }
+                        if (confirm('¿Deseas cancelar SÓLO esta reserva puntual?')) {
+                            await supabaseService.cancelBooking(booking.id);
+                            loadBookings();
+                        }
+                    } else {
+                        if (confirm('¿Cancelar esta reserva?')) {
+                            await supabaseService.cancelBooking(booking.id);
+                            loadBookings();
+                        }
+                    }
                 }}
             />
 

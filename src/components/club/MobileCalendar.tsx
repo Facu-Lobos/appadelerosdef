@@ -10,9 +10,10 @@ interface MobileCalendarProps {
     bookings: any[];
     onSlotClick: (court: Court, time: string) => void;
     onPaymentClick: (booking: any) => void;
+    onCancelClick: (booking: any) => void;
 }
 
-export function MobileCalendar({ timeSlots, courts, bookings, onSlotClick, onPaymentClick }: MobileCalendarProps) {
+export function MobileCalendar({ timeSlots, courts, bookings, onSlotClick, onPaymentClick, onCancelClick }: MobileCalendarProps) {
     // State to toggle open time slots
     const [expandedSlot, setExpandedSlot] = useState<string | null>(null);
 
@@ -84,19 +85,29 @@ export function MobileCalendar({ timeSlots, courts, bookings, onSlotClick, onPay
                                                         <div className="font-bold text-white text-sm">{booking.player_name || 'Reservado'}</div>
                                                         <div className="text-xs text-green-400 font-mono mt-1">${booking.price}</div>
                                                     </div>
-                                                    {booking.payment_status === 'paid' ? (
-                                                        <div className="bg-green-500/10 text-green-500 p-1.5 rounded-full">
-                                                            <Check size={16} />
-                                                        </div>
-                                                    ) : (
+                                                    <div className="flex gap-2">
+                                                        {booking.payment_status === 'paid' ? (
+                                                            <div className="bg-green-500/10 text-green-500 p-1.5 rounded-full">
+                                                                <Check size={16} />
+                                                            </div>
+                                                        ) : (
+                                                            <Button
+                                                                size="sm"
+                                                                className="h-8 text-xs bg-green-600 hover:bg-green-700"
+                                                                onClick={() => onPaymentClick(booking)}
+                                                            >
+                                                                Cobrar
+                                                            </Button>
+                                                        )}
                                                         <Button
                                                             size="sm"
-                                                            className="h-8 text-xs bg-green-600 hover:bg-green-700"
-                                                            onClick={() => onPaymentClick(booking)}
+                                                            variant="outline"
+                                                            className="h-8 text-xs border-red-500/30 text-red-400 hover:bg-red-500/10 px-2"
+                                                            onClick={() => onCancelClick(booking)}
                                                         >
-                                                            Cobrar
+                                                            Cancelar
                                                         </Button>
-                                                    )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         );

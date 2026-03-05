@@ -712,7 +712,8 @@ export const supabaseService = {
                 player_name: b.profiles?.name || b.guest_name || 'Reservado',
                 id: b.id,
                 price: b.price,
-                payment_status: b.payment_status
+                payment_status: b.payment_status,
+                recurring_series_id: b.recurring_series_id
             }));
     },
 
@@ -783,6 +784,20 @@ export const supabaseService = {
 
         if (error) {
             console.error('Error cancelling booking:', error);
+            return false;
+        }
+        return true;
+    },
+
+    async cancelRecurringBookings(seriesId: string, fromDateStr: string) {
+        const { error } = await supabase
+            .from('bookings')
+            .update({ status: 'cancelled' })
+            .eq('recurring_series_id', seriesId)
+            .gte('start_time', fromDateStr);
+
+        if (error) {
+            console.error('Error cancelling recurring bookings:', error);
             return false;
         }
         return true;
