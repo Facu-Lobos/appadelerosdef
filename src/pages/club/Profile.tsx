@@ -6,6 +6,7 @@ import { Input } from '../../components/ui/Input';
 import { Save, Plus, Trash2, Clock, MapPin, Edit2, Camera, Upload, LogOut } from 'lucide-react';
 import type { ClubProfile, Court, ClubSchedule } from '../../types';
 import { CourtPriceEditor } from '../../components/club/CourtPriceEditor';
+import { ConfirmModal } from '../../components/ui/ConfirmModal';
 
 export default function ClubProfilePage() {
     const { user, refreshProfile, logout } = useAuth();
@@ -40,6 +41,21 @@ export default function ClubProfilePage() {
         is_indoor: false,
         hourly_rate: 0
     });
+
+    const [confirmDialog, setConfirmDialog] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: React.ReactNode;
+        onConfirm: () => void;
+        type?: 'danger' | 'warning' | 'info' | 'success';    
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => {}
+    });
+
+    const closeConfirmDialog = () => setConfirmDialog(prev => ({ ...prev, isOpen: false }));
 
     useEffect(() => {
         loadData();
@@ -144,13 +160,21 @@ export default function ClubProfilePage() {
     };
 
     const handleDeleteCourt = async (courtId: string) => {
-        if (!confirm('¿Estás seguro de eliminar esta cancha?')) return;
-        const success = await supabaseService.deleteCourt(courtId);
-        if (success) {
-            loadData();
-        } else {
-            alert('No se pudo eliminar la cancha. Es posible que tenga reservas o partidos asociados. Intenta cancelar las reservas futuras primero.');
-        }
+        setConfirmDialog({
+            isOpen: true,
+            title: 'Eliminar Cancha',
+            message: '¿Estás seguro de eliminar esta cancha?',
+            type: 'danger',
+            onConfirm: async () => {
+                closeConfirmDialog();
+                const success = await supabaseService.deleteCourt(courtId);
+                if (success) {
+                    loadData();
+                } else {
+                    alert('No se pudo eliminar la cancha. Es posible que tenga reservas o partidos asociados. Intenta cancelar las reservas futuras primero.');
+                }
+            }
+        });
     };
 
     const handleUpdateCourtPrice = async (courtId: string, price: number) => {
@@ -188,9 +212,16 @@ export default function ClubProfilePage() {
                     size="sm"
                     className="md:hidden text-red-400 border-red-500/30 hover:bg-red-500/10"
                     onClick={() => {
-                        if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
-                            logout();
-                        }
+                        setConfirmDialog({
+                            isOpen: true,
+                            title: 'Cerrar Sesión',
+                            message: '¿Estás seguro de que quieres cerrar sesión?',
+                            type: 'warning',
+                            onConfirm: () => {
+                                closeConfirmDialog();
+                                logout();
+                            }
+                        });
                     }}
                 >
                     <LogOut size={18} />
@@ -466,15 +497,27 @@ export default function ClubProfilePage() {
                     variant="outline"
                     className="text-red-500 hover:text-red-400 border-red-500/50 hover:bg-red-500/10 w-full md:w-auto justify-center"
                     onClick={() => {
-                        if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
-                            logout();
-                        }
+                        setConfirmDialog({
+                            isOpen: true,
+                            title: 'Cerrar Sesión',
+                            message: '¿Estás seguro de que quieres cerrar sesión?',
+                            type: 'warning',
+                            onConfirm: () => {
+                                closeConfirmDialog();
+                                logout();
+                            }
+                        });
                     }}
                 >
                     <LogOut size={18} className="mr-2" />
                     Cerrar Sesión
                 </Button>
             </div>
+
+            <ConfirmModal 
+                {...confirmDialog}
+                onClose={closeConfirmDialog}
+            />
         </div>
     );
 }

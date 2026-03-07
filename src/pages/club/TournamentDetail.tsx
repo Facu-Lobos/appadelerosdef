@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ShareTournamentModal } from '../../components/club/ShareTournamentModal';
-import { Plus, Trophy, Calendar, Users, ChevronLeft, Check, X, RefreshCw, Trash2, Clock, MapPin, Loader2, Share2, Download } from 'lucide-react';
+import { Plus, Trophy, Calendar, Users, ChevronLeft, Check, RefreshCw, Trash2, Clock, MapPin, Loader2, Share2, Download } from 'lucide-react';
 import { supabaseService } from '../../services/supabaseService';
 import type { Tournament } from '../../types';
 import { Button } from '../../components/ui/Button';
@@ -11,6 +11,7 @@ import { MatchScheduleModal } from '../../components/MatchScheduleModal';
 import { useToast } from '../../context/ToastContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { ConfirmModal } from '../../components/ui/ConfirmModal';
 
 const TournamentDetail = () => {
     const { id } = useParams<{ id: string }>();
@@ -38,6 +39,22 @@ const TournamentDetail = () => {
     // Match Schedule Modal State
     const [selectedMatchForSchedule, setSelectedMatchForSchedule] = useState<any>(null);
     const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+
+    // Dialog state
+    const [confirmDialog, setConfirmDialog] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: React.ReactNode;
+        onConfirm: () => void;
+        type?: 'danger' | 'warning' | 'info' | 'success';    
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => {}
+    });
+
+    const closeConfirmDialog = () => setConfirmDialog(prev => ({ ...prev, isOpen: false }));
 
     useEffect(() => {
         if (id) {
@@ -103,16 +120,23 @@ const TournamentDetail = () => {
 
     const handleResetFixture = async () => {
         if (!tournament) return;
-        if (!confirm('¿Estás seguro de que quieres reiniciar la fase de grupos? Se borrarán todos los partidos y resultados.')) return;
-
-        try {
-            await supabaseService.resetGroupStage(tournament.id);
-            showToast('Fase de grupos reiniciada.', 'info');
-            loadRegistrations(tournament.id);
-        } catch (error: any) {
-            console.error('Error resetting fixture:', error);
-            showToast('Error al reiniciar fixture: ' + error.message, 'error');
-        }
+        setConfirmDialog({
+            isOpen: true,
+            title: 'Reiniciar Fase de Grupos',
+            message: '¿Estás seguro de que quieres reiniciar la fase de grupos? Se borrarán todos los partidos y resultados.',
+            type: 'warning',
+            onConfirm: async () => {
+                closeConfirmDialog();
+                try {
+                    await supabaseService.resetGroupStage(tournament.id);
+                    showToast('Fase de grupos reiniciada.', 'info');
+                    loadRegistrations(tournament.id);
+                } catch (error: any) {
+                    console.error('Error resetting fixture:', error);
+                    showToast('Error al reiniciar fixture: ' + error.message, 'error');
+                }
+            }
+        });
     };
 
     const handleManualRegistration = async () => {
@@ -151,19 +175,27 @@ const TournamentDetail = () => {
     };
 
     const handleDeleteRegistration = async (registrationId: string) => {
-        if (!confirm('¿Estás seguro de eliminar este equipo del torneo?')) return;
-        try {
-            const success = await supabaseService.deleteTournamentRegistration(registrationId);
-            if (success) {
-                showToast('Equipo eliminado correctamente', 'success');
-                loadRegistrations(tournament!.id);
-            } else {
-                showToast('Error al eliminar equipo', 'error');
+        setConfirmDialog({
+            isOpen: true,
+            title: 'Eliminar Equipo',
+            message: '¿Estás seguro de eliminar este equipo del torneo?',
+            type: 'danger',
+            onConfirm: async () => {
+                closeConfirmDialog();
+                try {
+                    const success = await supabaseService.deleteTournamentRegistration(registrationId);
+                    if (success) {
+                        showToast('Equipo eliminado correctamente', 'success');
+                        loadRegistrations(tournament!.id);
+                    } else {
+                        showToast('Error al eliminar equipo', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error deleting registration:', error);
+                    showToast('Error al eliminar equipo', 'error');
+                }
             }
-        } catch (error) {
-            console.error('Error deleting registration:', error);
-            showToast('Error al eliminar equipo', 'error');
-        }
+        });
     };
 
     const handleEditScore = (match: any) => {
@@ -190,16 +222,23 @@ const TournamentDetail = () => {
 
     const handleFinishTournament = async () => {
         if (!tournament) return;
-        if (!confirm('¿Estás seguro de que quieres finalizar el torneo? Se calcularán los puntos para el ranking y no se podrán hacer más cambios.')) return;
-
-        try {
-            await supabaseService.calculateTournamentPoints(tournament.id);
-            showToast('Torneo finalizado y puntos calculados correctamente.', 'success');
-            loadTournamentData(tournament.id);
-        } catch (error: any) {
-            console.error('Error finishing tournament:', error);
-            showToast('Error al finalizar torneo: ' + error.message, 'error');
-        }
+        setConfirmDialog({
+            isOpen: true,
+            title: 'Finalizar Torneo',
+            message: '¿Estás seguro de que quieres finalizar el torneo? Se calcularán los puntos para el ranking y no se podrán hacer más cambios.',
+            type: 'warning',
+            onConfirm: async () => {
+                closeConfirmDialog();
+                try {
+                    await supabaseService.calculateTournamentPoints(tournament.id);
+                    showToast('Torneo finalizado y puntos calculados correctamente.', 'success');
+                    loadTournamentData(tournament.id);
+                } catch (error: any) {
+                    console.error('Error finishing tournament:', error);
+                    showToast('Error al finalizar torneo: ' + error.message, 'error');
+                }
+            }
+        });
     };
 
     if (loading) {
@@ -475,18 +514,26 @@ const TournamentDetail = () => {
                                         className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 cursor-pointer"
                                         onClick={async () => {
                                             if (!tournament) return;
-                                            if (!confirm('¿Simular resultados aleatorios para todos los partidos de grupo? Esto sobrescribirá los resultados existentes.')) return;
-                                            try {
-                                                setIsGenerating(true);
-                                                await supabaseService.simulateGroupStageResults(tournament.id);
-                                                showToast('Resultados simulados correctamente.', 'success');
-                                                loadRegistrations(tournament.id);
-                                            } catch (error: any) {
-                                                console.error('Error simulating results:', error);
-                                                showToast('Error: ' + error.message, 'error');
-                                            } finally {
-                                                setIsGenerating(false);
-                                            }
+                                            setConfirmDialog({
+                                                isOpen: true,
+                                                title: 'Simular Resultados',
+                                                message: '¿Simular resultados aleatorios para todos los partidos de grupo? Esto sobrescribirá los resultados existentes.',
+                                                type: 'warning',
+                                                onConfirm: async () => {
+                                                    closeConfirmDialog();
+                                                    try {
+                                                        setIsGenerating(true);
+                                                        await supabaseService.simulateGroupStageResults(tournament.id);
+                                                        showToast('Resultados simulados correctamente.', 'success');
+                                                        loadRegistrations(tournament.id);
+                                                    } catch (error: any) {
+                                                        console.error('Error simulating results:', error);
+                                                        showToast('Error: ' + error.message, 'error');
+                                                    } finally {
+                                                        setIsGenerating(false);
+                                                    }
+                                                }
+                                            });
                                         }}
                                         disabled={isGenerating}
                                     >
@@ -667,18 +714,26 @@ const TournamentDetail = () => {
                                         className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 cursor-pointer"
                                         onClick={async () => {
                                             if (!tournament) return;
-                                            if (!confirm('¿Simular resultados para la Llave Final?')) return;
-                                            try {
-                                                setIsGenerating(true);
-                                                await supabaseService.simulatePlayoffResults(tournament.id);
-                                                showToast('Resultados simulados correctamente.', 'success');
-                                                loadRegistrations(tournament.id);
-                                            } catch (error: any) {
-                                                console.error('Error simulating results:', error);
-                                                showToast('Error: ' + error.message, 'error');
-                                            } finally {
-                                                setIsGenerating(false);
-                                            }
+                                            setConfirmDialog({
+                                                isOpen: true,
+                                                title: 'Simular Llave Final',
+                                                message: '¿Simular resultados para la Llave Final?',
+                                                type: 'info',
+                                                onConfirm: async () => {
+                                                    closeConfirmDialog();
+                                                    try {
+                                                        setIsGenerating(true);
+                                                        await supabaseService.simulatePlayoffResults(tournament.id);
+                                                        showToast('Resultados simulados correctamente.', 'success');
+                                                        loadRegistrations(tournament.id);
+                                                    } catch (error: any) {
+                                                        console.error('Error simulating results:', error);
+                                                        showToast('Error: ' + error.message, 'error');
+                                                    } finally {
+                                                        setIsGenerating(false);
+                                                    }
+                                                }
+                                            });
                                         }}
                                         disabled={isGenerating}
                                     >
@@ -827,6 +882,11 @@ const TournamentDetail = () => {
                     clubLogoUrl={user.avatar_url}
                 />
             )}
+
+            <ConfirmModal 
+                {...confirmDialog}
+                onClose={closeConfirmDialog}
+            />
         </div >
     );
 };

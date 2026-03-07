@@ -8,6 +8,7 @@ import type { PlayerProfile, MatchRequest, MatchApplication } from '../../types'
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { Modal } from '../../components/ui/Modal';
+import { ConfirmModal } from '../../components/ui/ConfirmModal';
 import ChatWindow from '../../components/ChatWindow';
 import { useCommunityRealtime } from '../../hooks/useCommunityRealtime';
 
@@ -45,6 +46,22 @@ export default function PlayerCommunity() {
         description: '',
         players_needed: 1
     });
+
+    // Confirm Modal
+    const [confirmDialog, setConfirmDialog] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: React.ReactNode;
+        onConfirm: () => void;
+        type?: 'danger' | 'warning' | 'info' | 'success';    
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => {}
+    });
+
+    const closeConfirmDialog = () => setConfirmDialog(prev => ({ ...prev, isOpen: false }));
 
     const loadData = async () => {
         if (!user) return;
@@ -203,17 +220,25 @@ export default function PlayerCommunity() {
 
     const handleDeleteMatch = async () => {
         if (!showManageMatch) return;
-        if (!confirm('¿Estás seguro de que quieres eliminar esta publicación? Esto rechazará todas las solicitudes pendientes.')) return;
-
-        try {
-            await matchService.deleteMatchRequest(showManageMatch.id);
-            showToast('Publicación eliminada exitosamente', 'success');
-            setShowManageMatch(null);
-            loadMatches();
-        } catch (error) {
-            console.error(error);
-            showToast('Error al eliminar la publicación', 'error');
-        }
+        
+        setConfirmDialog({
+            isOpen: true,
+            title: 'Eliminar Publicación',
+            message: '¿Estás seguro de que quieres eliminar esta publicación? Esto rechazará todas las solicitudes pendientes.',
+            type: 'danger',
+            onConfirm: async () => {
+                closeConfirmDialog();
+                try {
+                    await matchService.deleteMatchRequest(showManageMatch.id);
+                    showToast('Publicación eliminada exitosamente', 'success');
+                    setShowManageMatch(null);
+                    loadMatches();
+                } catch (error) {
+                    console.error(error);
+                    showToast('Error al eliminar la publicación', 'error');
+                }
+            }
+        });
     };
 
     // Initial load & Deep Link Handling
@@ -260,17 +285,25 @@ export default function PlayerCommunity() {
     };
 
     const handleRemoveFriend = async (friendId: string) => {
-        if (!confirm('¿Estás seguro de que quieres eliminar a este amigo?')) return;
-        const success = await supabaseService.removeFriend(friendId);
-        if (success) {
-            showToast('Amigo eliminado', 'success');
-            // Optimistic update
-            setFriends(prev => prev.filter(id => id !== friendId));
-            setMyFriends(prev => prev.filter(f => f.id !== friendId));
-            loadData(); // Background refresh
-        } else {
-            showToast('Error al eliminar amigo', 'error');
-        }
+        setConfirmDialog({
+            isOpen: true,
+            title: 'Eliminar Amigo',
+            message: '¿Estás seguro de que quieres eliminar a este amigo?',
+            type: 'danger',
+            onConfirm: async () => {
+                closeConfirmDialog();
+                const success = await supabaseService.removeFriend(friendId);
+                if (success) {
+                    showToast('Amigo eliminado', 'success');
+                    // Optimistic update
+                    setFriends(prev => prev.filter(id => id !== friendId));
+                    setMyFriends(prev => prev.filter(f => f.id !== friendId));
+                    loadData(); // Background refresh
+                } else {
+                    showToast('Error al eliminar amigo', 'error');
+                }
+            }
+        });
     };
 
     return (
@@ -607,7 +640,6 @@ export default function PlayerCommunity() {
                 </div>
             </Modal>
 
-            {/* Chat Window */}
             {activeChat && (
                 <ChatWindow
                     otherUserId={activeChat.id}
@@ -616,6 +648,11 @@ export default function PlayerCommunity() {
                     onClose={() => setActiveChat(null)}
                 />
             )}
+
+            <ConfirmModal 
+                {...confirmDialog}
+                onClose={closeConfirmDialog}
+            />
         </div>
     );
 }

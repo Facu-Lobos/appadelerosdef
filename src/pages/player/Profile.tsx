@@ -5,8 +5,9 @@ import { supabaseService } from '../../services/supabaseService';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import type { PlayerProfile } from '../../types';
-import { Trophy, Activity, MapPin, Edit } from 'lucide-react';
+import { MapPin, Edit } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
+import { ConfirmModal } from '../../components/ui/ConfirmModal';
 
 export default function PlayerProfilePage() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -22,6 +23,21 @@ export default function PlayerProfilePage() {
         avatar_url: '',
         availability: ''
     });
+
+    const [confirmDialog, setConfirmDialog] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: React.ReactNode;
+        onConfirm: () => void;
+        type?: 'danger' | 'warning' | 'info' | 'success';    
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => {}
+    });
+
+    const closeConfirmDialog = () => setConfirmDialog(prev => ({ ...prev, isOpen: false }));
 
     const { refreshProfile, logout } = useAuth();
     const { isSoundEnabled, toggleSound } = useNotifications();
@@ -272,9 +288,16 @@ export default function PlayerProfilePage() {
                 <div className="pt-4 border-t border-white/5">
                     <button
                         onClick={() => {
-                            if (window.confirm('¿Seguro que quieres cerrar sesión?')) {
-                                logout();
-                            }
+                            setConfirmDialog({
+                                isOpen: true,
+                                title: 'Cerrar Sesión',
+                                message: '¿Seguro que quieres cerrar sesión?',
+                                type: 'warning',
+                                onConfirm: () => {
+                                    closeConfirmDialog();
+                                    logout();
+                                }
+                            });
                         }}
                         className="w-full py-3 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 font-medium transition-colors flex items-center justify-center gap-2"
                     >
@@ -284,6 +307,11 @@ export default function PlayerProfilePage() {
                     <p className="text-center text-xs text-gray-500 mt-2">Versión 1.2.0 (PWA)</p>
                 </div>
             </div>
+
+            <ConfirmModal 
+                {...confirmDialog}
+                onClose={closeConfirmDialog}
+            />
         </div >
     );
 }

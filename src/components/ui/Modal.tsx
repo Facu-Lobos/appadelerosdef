@@ -5,12 +5,14 @@ import clsx from 'clsx';
 interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
-    title: string;
+    title?: string; // Made optional if hideHeader is used
     children: React.ReactNode;
     size?: 'sm' | 'md' | 'lg' | 'xl';
+    hideHeader?: boolean;
+    showCloseButton?: boolean;
 }
 
-export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalProps) {
+export function Modal({ isOpen, onClose, title, children, size = 'md', hideHeader = false, showCloseButton = true }: ModalProps) {
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
@@ -39,15 +41,19 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
                     sizes[size]
                 )}
             >
-                <div className="flex items-center justify-between p-4 border-b border-white/5">
-                    <h3 className="text-lg font-bold text-white">{title}</h3>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-white transition-colors"
-                    >
-                        <X size={20} />
-                    </button>
-                </div>
+                {!hideHeader && (
+                    <div className="flex items-center justify-between p-4 border-b border-white/5">
+                        <h3 className="text-lg font-bold text-white">{title}</h3>
+                        {showCloseButton && (
+                            <button
+                                onClick={onClose}
+                                className="text-gray-400 hover:text-white transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        )}
+                    </div>
+                )}
 
                 <div className="p-4 overflow-y-auto custom-scrollbar">
                     {children}

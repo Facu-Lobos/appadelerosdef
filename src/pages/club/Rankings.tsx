@@ -1,12 +1,28 @@
 import { useState, useEffect } from 'react';
 import { Trophy, Medal, RefreshCw, Trash2 } from 'lucide-react';
 import { supabaseService } from '../../services/supabaseService';
+import { ConfirmModal } from '../../components/ui/ConfirmModal';
 
 export default function ClubRankings() {
     const [category, setCategory] = useState('6ta');
     const [gender, setGender] = useState('Masculino');
     const [rankings, setRankings] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+
+    const [confirmDialog, setConfirmDialog] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: React.ReactNode;
+        onConfirm: () => void;
+        type?: 'danger' | 'warning' | 'info' | 'success';    
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => {}
+    });
+
+    const closeConfirmDialog = () => setConfirmDialog(prev => ({ ...prev, isOpen: false }));
 
     useEffect(() => {
         loadRankings();
@@ -28,23 +44,28 @@ export default function ClubRankings() {
     };
 
     const handleResetRanking = async () => {
-        if (!window.confirm(`¿Estás seguro de que quieres reiniciar el ranking de la categoría ${category} (${gender})? Esta acción borrará todos los puntos acumulados.`)) {
-            return;
-        }
+        setConfirmDialog({
+            isOpen: true,
+            title: 'Reiniciar Ranking',
+            message: `¿Estás seguro de que quieres reiniciar el ranking de la categoría ${category} (${gender})? Esta acción borrará todos los puntos acumulados.`,
+            type: 'warning',
+            onConfirm: async () => {
+                closeConfirmDialog();
+                try {
+                    setLoading(true);
+                    const user = await supabaseService.getCurrentUser();
+                    if (!user) return;
 
-        try {
-            setLoading(true);
-            const user = await supabaseService.getCurrentUser();
-            if (!user) return;
-
-            await supabaseService.resetClubRankings(user.id, category, gender);
-            await loadRankings();
-        } catch (error) {
-            console.error('Error resetting ranking:', error);
-            alert('Error al reiniciar el ranking');
-        } finally {
-            setLoading(false);
-        }
+                    await supabaseService.resetClubRankings(user.id, category, gender);
+                    await loadRankings();
+                } catch (error) {
+                    console.error('Error resetting ranking:', error);
+                    alert('Error al reiniciar el ranking');
+                } finally {
+                    setLoading(false);
+                }
+            }
+        });
     };
 
     return (
@@ -144,6 +165,11 @@ export default function ClubRankings() {
                     </table>
                 )}
             </div>
+
+            <ConfirmModal 
+                {...confirmDialog}
+                onClose={closeConfirmDialog}
+            />
         </div>
     );
 }

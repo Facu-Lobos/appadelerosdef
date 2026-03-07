@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { ConfirmModal } from '../../components/ui/ConfirmModal';
 
 export default function PlayerTournaments() {
     const { user } = useAuth();
@@ -23,6 +24,22 @@ export default function PlayerTournaments() {
     const [searchingPartner, setSearchingPartner] = useState(false);
     const [registrationStatus, setRegistrationStatus] = useState<{ [key: string]: string }>({}); // tournamentId -> status
     const [myRegistrations, setMyRegistrations] = useState<{ [key: string]: string }>({}); // tournamentId -> registrationId
+
+    // Estado para ConfirmModal
+    const [confirmDialog, setConfirmDialog] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: React.ReactNode;
+        onConfirm: () => void;
+        type?: 'danger' | 'warning' | 'info' | 'success';    
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => {}
+    });
+
+    const closeConfirmDialog = () => setConfirmDialog(prev => ({ ...prev, isOpen: false }));
 
     useEffect(() => {
         loadTournaments();
@@ -121,30 +138,37 @@ export default function PlayerTournaments() {
         const regId = myRegistrations[tournamentId];
         if (!regId) return; // Should not happen if button is shown
 
-        if (!confirm('¿Estás seguro de que deseas cancelar tu inscripción?')) return;
-
-        try {
-            const success = await supabaseService.deleteTournamentRegistration(regId);
-            if (success) {
-                showToast('Inscripción cancelada', 'success');
-                // Update local state
-                setRegistrationStatus(prev => {
-                    const next = { ...prev };
-                    delete next[tournamentId];
-                    return next;
-                });
-                setMyRegistrations(prev => {
-                    const next = { ...prev };
-                    delete next[tournamentId];
-                    return next;
-                });
-            } else {
-                showToast('Error al cancelar inscripción', 'error');
+        setConfirmDialog({
+            isOpen: true,
+            title: 'Cancelar Inscripción',
+            message: '¿Estás seguro de que deseas cancelar tu inscripción a este torneo?',
+            type: 'danger',
+            onConfirm: async () => {
+                closeConfirmDialog();
+                try {
+                    const success = await supabaseService.deleteTournamentRegistration(regId);
+                    if (success) {
+                        showToast('Inscripción cancelada', 'success');
+                        // Update local state
+                        setRegistrationStatus(prev => {
+                            const next = { ...prev };
+                            delete next[tournamentId];
+                            return next;
+                        });
+                        setMyRegistrations(prev => {
+                            const next = { ...prev };
+                            delete next[tournamentId];
+                            return next;
+                        });
+                    } else {
+                        showToast('Error al cancelar inscripción', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error cancelling registration:', error);
+                    showToast('Error al cancelar inscripción', 'error');
+                }
             }
-        } catch (error) {
-            console.error('Error cancelling registration:', error);
-            showToast('Error al cancelar inscripción', 'error');
-        }
+        });
     };
 
     const openRegisterModal = (tournament: Tournament) => {
@@ -297,6 +321,11 @@ export default function PlayerTournaments() {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal 
+                {...confirmDialog}
+                onClose={closeConfirmDialog}
+            />
         </div>
     );
 }

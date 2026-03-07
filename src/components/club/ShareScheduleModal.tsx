@@ -11,6 +11,7 @@ interface ShareScheduleModalProps {
     onClose: () => void;
     clubName: string;
     clubLogoUrl?: string;
+    clubCoverUrl?: string;
     date: Date;
     schedule: {
         time: string;
@@ -19,7 +20,7 @@ interface ShareScheduleModalProps {
     }[];
 }
 
-export function ShareScheduleModal({ isOpen, onClose, clubName, clubLogoUrl, date, schedule }: ShareScheduleModalProps) {
+export function ShareScheduleModal({ isOpen, onClose, clubName, clubLogoUrl, clubCoverUrl, date, schedule }: ShareScheduleModalProps) {
     const cardRef = useRef<HTMLDivElement>(null);
     const [generating, setGenerating] = useState(false);
 
@@ -105,23 +106,28 @@ export function ShareScheduleModal({ isOpen, onClose, clubName, clubLogoUrl, dat
                             {/* Card Content */}
                             <div className="relative z-10 flex flex-col h-full w-full">
                                 {/* Header: Logo + Name + Date */}
-                                <div className="flex items-center gap-4 w-full mb-6 px-1">
-                                    {clubLogoUrl && (
+                                {/* Header: Banner with Cover + Name + Date */}
+                                <div className="relative h-32 -mx-6 -mt-6 mb-6 overflow-hidden border-b border-white/10 shrink-0 bg-surface">
+                                    {(clubCoverUrl || clubLogoUrl) ? (
                                         <img
-                                            src={clubLogoUrl}
+                                            src={clubCoverUrl || clubLogoUrl}
                                             alt={clubName}
-                                            className="w-16 h-16 rounded-full object-cover border-2 border-white/10 shadow-md bg-white/5 shrink-0"
+                                            className="w-full h-full object-cover"
                                             crossOrigin="anonymous"
                                         />
+                                    ) : (
+                                        <div className="absolute inset-0 bg-gradient-to-tr from-primary to-secondary opacity-50" />
                                     )}
-                                    <div className="flex flex-col items-start">
-                                        <h2 className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary uppercase tracking-wider leading-tight text-left">
+                                    <div className="absolute inset-0 bg-black/20" /> {/* Leve oscurecimiento general para que el texto siga siendo legible si la foto es muy blanca, pero sin gradientes notorios */}
+                                    
+                                    <div className="absolute inset-0 flex flex-col justify-end p-5">
+                                        <h2 className="text-2xl font-black text-white uppercase tracking-wider leading-tight text-left drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] truncate w-full">
                                             {clubName}
                                         </h2>
-                                        <div className="bg-white/5 px-3 py-0.5 rounded-full border border-white/10 mt-1">
-                                            <p className="text-xs font-medium text-white/90 capitalize">
-                                                {format(date, 'EEEE d MMMM', { locale: es })}
-                                            </p>
+                                        <div className="mt-1">
+                                            <span className="bg-black/50 backdrop-blur-sm text-white px-2.5 py-1 rounded text-xs font-semibold capitalize shadow-sm border border-white/20 inline-block">
+                                                {format(date, "EEEE d 'de' MMMM", { locale: es })}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -138,7 +144,7 @@ export function ShareScheduleModal({ isOpen, onClose, clubName, clubLogoUrl, dat
                                                     <div className="text-[10px] font-bold text-white/70 uppercase tracking-wider text-center border-b border-white/5 pb-1 truncate w-full" title={courtName}>
                                                         {courtName}
                                                     </div>
-                                                    <div className="flex flex-col gap-1.5 w-full">
+                                                    <div className={`grid gap-1.5 w-full ${courtNames.length === 1 ? 'grid-cols-3 sm:grid-cols-4' : courtNames.length === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
                                                         {slotsByCourt[courtName].map((time, idx) => (
                                                             <div key={idx} className="bg-primary/10 border border-primary/20 rounded text-center py-0.5 w-full">
                                                                 <span className="text-sm font-bold text-primary block">{time}</span>

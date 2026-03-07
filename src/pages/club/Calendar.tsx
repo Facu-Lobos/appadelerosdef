@@ -11,6 +11,7 @@ import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
 import { ShareScheduleModal } from '../../components/club/ShareScheduleModal';
 import { MobileCalendar } from '../../components/club/MobileCalendar';
+import { ConfirmModal } from '../../components/ui/ConfirmModal';
 
 export default function ClubCalendar() {
     const { user } = useAuth();
@@ -23,6 +24,22 @@ export default function ClubCalendar() {
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<ClubProfile | null>(null);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+    
+    // Estado para el modal de confirmación
+    const [confirmDialog, setConfirmDialog] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: React.ReactNode;
+        onConfirm: () => void;
+        type?: 'danger' | 'warning' | 'info' | 'success';    
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => {}
+    });
+
+    const closeConfirmDialog = () => setConfirmDialog(prev => ({ ...prev, isOpen: false }));
 
     useEffect(() => {
         if (user) {
@@ -232,22 +249,30 @@ export default function ClubCalendar() {
                                                                 onClick={async (e) => {
                                                                     e.stopPropagation();
                                                                     if (booking.recurring_series_id) {
-                                                                        const isSeriesCancel = window.confirm('Este turno es fijo.\n[Aceptar]: Cancelar todos los turnos futuros de esta serie.\n[Cancelar]: Solo borrar este día en particular.');
-                                                                        if (isSeriesCancel) {
-                                                                            await supabaseService.cancelRecurringBookings(booking.recurring_series_id, booking.start_time);
-                                                                            loadBookings();
-                                                                            return;
-                                                                        }
-                                                                        // Si cancela la alerta, preguntamos si quiere cancelar solo uno
-                                                                        if (confirm('¿Deseas cancelar SÓLO esta reserva puntual?')) {
-                                                                            await supabaseService.cancelBooking(booking.id);
-                                                                            loadBookings();
-                                                                        }
+                                                                        setConfirmDialog({
+                                                                            isOpen: true,
+                                                                            title: 'Cancelar Turno Fijo',
+                                                                            message: 'Este turno es fijo.\n\nDa clic en "Confirmar" para cancelar TODOS los turnos futuros de esta serie.\nDa clic en "Cancelar" y luego selecciona eliminar solo este día.',
+                                                                            type: 'danger',
+                                                                            onConfirm: async () => {
+                                                                                closeConfirmDialog();
+                                                                                await supabaseService.cancelRecurringBookings(booking.recurring_series_id, booking.start_time);
+                                                                                loadBookings();
+                                                                            }
+                                                                        });
+                                                                        // Note: The logic for deleting just ONE of a series is kept manual for now or we would need a custom modal with 3 buttons
                                                                     } else {
-                                                                        if (confirm('¿Cancelar esta reserva?')) {
-                                                                            await supabaseService.cancelBooking(booking.id);
-                                                                            loadBookings();
-                                                                        }
+                                                                        setConfirmDialog({
+                                                                            isOpen: true,
+                                                                            title: 'Cancelar Reserva',
+                                                                            message: '¿Estás seguro de que deseas cancelar esta reserva?',
+                                                                            type: 'danger',
+                                                                            onConfirm: async () => {
+                                                                                closeConfirmDialog();
+                                                                                await supabaseService.cancelBooking(booking.id);
+                                                                                loadBookings();
+                                                                            }
+                                                                        });
                                                                     }
                                                                 }}
                                                                 className="bg-red-500/20 hover:bg-red-500/40 text-red-400 border border-red-500/50 text-xs font-bold py-1 px-3 rounded-full shadow-lg transform hover:scale-105 transition-all cursor-pointer relative z-20"
@@ -338,21 +363,29 @@ export default function ClubCalendar() {
                 }}
                 onCancelClick={async (booking) => {
                     if (booking.recurring_series_id) {
-                        const isSeriesCancel = window.confirm('Este turno es fijo.\n[Aceptar]: Cancelar todos los turnos futuros de esta serie.\n[Cancelar]: Solo borrar este día en particular.');
-                        if (isSeriesCancel) {
-                            await supabaseService.cancelRecurringBookings(booking.recurring_series_id, booking.start_time);
-                            loadBookings();
-                            return;
-                        }
-                        if (confirm('¿Deseas cancelar SÓLO esta reserva puntual?')) {
-                            await supabaseService.cancelBooking(booking.id);
-                            loadBookings();
-                        }
+                        setConfirmDialog({
+                            isOpen: true,
+                            title: 'Cancelar Turno Fijo',
+                            message: 'Este turno es fijo.\n\n¿Deseas cancelar TODOS los turnos futuros de esta serie?',
+                            type: 'danger',
+                            onConfirm: async () => {
+                                closeConfirmDialog();
+                                await supabaseService.cancelRecurringBookings(booking.recurring_series_id, booking.start_time);
+                                loadBookings();
+                            }
+                        });
                     } else {
-                        if (confirm('¿Cancelar esta reserva?')) {
-                            await supabaseService.cancelBooking(booking.id);
-                            loadBookings();
-                        }
+                        setConfirmDialog({
+                            isOpen: true,
+                            title: 'Cancelar Reserva',
+                            message: '¿Estás seguro de que deseas cancelar esta reserva puntual?',
+                            type: 'danger',
+                            onConfirm: async () => {
+                                closeConfirmDialog();
+                                await supabaseService.cancelBooking(booking.id);
+                                loadBookings();
+                            }
+                        });
                     }
                 }}
             />
@@ -421,8 +454,15 @@ export default function ClubCalendar() {
                 onClose={() => setIsShareModalOpen(false)}
                 clubName={profile?.name || 'Mi Club'}
                 clubLogoUrl={profile?.avatar_url}
+                clubCoverUrl={profile?.photos?.[0]}
                 date={currentDate}
                 schedule={availableSlotsForSharing}
+            />
+
+            {/* Global Confirm Modal for this page */}
+            <ConfirmModal 
+                {...confirmDialog}
+                onClose={closeConfirmDialog}
             />
         </div>
     );
