@@ -112,18 +112,23 @@ export function ShareTournamentModal({ isOpen, onClose, tournament, clubName, cl
 
                                 {/* Details Grid */}
                                 <div className="grid grid-cols-2 gap-3 w-full mb-6">
-                                    <div className="bg-white/5 rounded-lg p-3 border border-white/10">
-                                        <Calendar size={16} className="mx-auto mb-1 text-primary" />
+                                    <div className="bg-white/5 rounded-lg p-3 border border-white/10 text-center flex flex-col items-center justify-center">
+                                        <Calendar size={16} className="mb-1 text-primary" />
                                         <p className="text-[10px] text-gray-400 uppercase font-bold tracking-tight">Fecha</p>
-                                        <p className="text-sm font-bold text-white">{format(new Date(tournament.start_date), 'd MMM', { locale: es })}</p>
+                                        <p className="text-[13px] font-bold text-white leading-tight">
+                                            {format(new Date(tournament.start_date), 'd MMM', { locale: es })}
+                                            {tournament.end_date && tournament.end_date !== tournament.start_date && (
+                                                <> - {format(new Date(tournament.end_date), 'd MMM', { locale: es })}</>
+                                            )}
+                                        </p>
                                     </div>
-                                    <div className="bg-white/5 rounded-lg p-3 border border-white/10">
-                                        <Users size={16} className="mx-auto mb-1 text-primary" />
+                                    <div className="bg-white/5 rounded-lg p-3 border border-white/10 text-center flex flex-col items-center justify-center">
+                                        <Users size={16} className="mb-1 text-primary" />
                                         <p className="text-[10px] text-gray-400 uppercase font-bold tracking-tight">Categoría</p>
                                         <p className="text-sm font-bold text-white">{tournament.category}</p>
                                     </div>
-                                    <div className="bg-white/5 rounded-lg p-3 border border-white/10 col-span-2">
-                                        <Trophy size={16} className="mx-auto mb-1 text-yellow-500" />
+                                    <div className="bg-white/5 rounded-lg p-3 border border-white/10 col-span-2 text-center flex flex-col items-center justify-center">
+                                        <Trophy size={16} className="mb-1 text-yellow-500" />
                                         <p className="text-[10px] text-gray-400 uppercase font-bold tracking-tight">Inscripción</p>
                                         <p className="text-sm font-bold text-white">
                                             {tournament.status === 'open' ? 'ABIERTA' :
