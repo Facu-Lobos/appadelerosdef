@@ -13,9 +13,10 @@ interface ShareTournamentModalProps {
     tournament: Tournament;
     clubName: string;
     clubLogoUrl?: string;
+    clubCoverUrl?: string;
 }
 
-export function ShareTournamentModal({ isOpen, onClose, tournament, clubName, clubLogoUrl }: ShareTournamentModalProps) {
+export function ShareTournamentModal({ isOpen, onClose, tournament, clubName, clubLogoUrl, clubCoverUrl }: ShareTournamentModalProps) {
     const cardRef = useRef<HTMLDivElement>(null);
     const [generating, setGenerating] = useState(false);
 
@@ -72,57 +73,70 @@ export function ShareTournamentModal({ isOpen, onClose, tournament, clubName, cl
                             <div className="absolute bottom-0 left-0 w-48 h-48 bg-secondary/20 rounded-full blur-[60px] translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
 
                             {/* Card Content */}
-                            <div className="relative z-10 flex flex-col h-full w-full items-center text-center">
-                                {/* Badge */}
-                                <div className="bg-primary/20 text-primary border border-primary/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4">
-                                    Torneo de Pádel
-                                </div>
-
-                                {/* Tournament Name */}
-                                <h2 className="text-2xl font-black text-white uppercase tracking-wide leading-tight mb-2">
-                                    {tournament.name}
-                                </h2>
-
-                                {/* Club Info */}
-                                <div className="flex items-center gap-2 mb-6">
-                                    {clubLogoUrl && (
+                            <div className="relative z-10 flex flex-col h-full w-full">
+                                {/* Header: Banner with Cover + Name + Date */}
+                                <div className="relative h-32 -mx-6 -mt-6 mb-6 overflow-hidden border-b border-white/10 shrink-0 bg-surface">
+                                    {(clubCoverUrl || clubLogoUrl) ? (
                                         <img
-                                            src={clubLogoUrl}
+                                            src={clubCoverUrl || clubLogoUrl}
                                             alt={clubName}
-                                            className="w-6 h-6 rounded-full object-cover border border-white/20"
+                                            className="w-full h-full object-cover"
                                             crossOrigin="anonymous"
                                         />
+                                    ) : (
+                                        <div className="absolute inset-0 bg-gradient-to-tr from-primary to-secondary opacity-50" />
                                     )}
-                                    <span className="text-white/80 font-medium text-sm">en {clubName}</span>
+                                    <div className="absolute inset-0 bg-black/20" />
+
+                                    <div className="absolute inset-0 flex flex-col justify-end p-5">
+                                        <h2 className="text-2xl font-black text-white uppercase tracking-wider leading-tight text-left drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] truncate w-full">
+                                            {clubName}
+                                        </h2>
+                                        <div className="mt-1">
+                                            <span className="bg-black/50 backdrop-blur-sm text-white px-2.5 py-1 rounded text-xs font-semibold capitalize shadow-sm border border-white/20 inline-block">
+                                                {format(new Date(tournament.start_date), "EEEE d 'de' MMMM", { locale: es })}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Tournament Info */}
+                                <div className="text-center mb-6">
+                                    <div className="bg-primary/20 text-primary border border-primary/30 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-3 inline-block">
+                                        Torneo de Pádel
+                                    </div>
+                                    <h2 className="text-2xl font-black text-white uppercase tracking-wide leading-tight px-2">
+                                        {tournament.name}
+                                    </h2>
                                 </div>
 
                                 {/* Details Grid */}
                                 <div className="grid grid-cols-2 gap-3 w-full mb-6">
                                     <div className="bg-white/5 rounded-lg p-3 border border-white/10">
                                         <Calendar size={16} className="mx-auto mb-1 text-primary" />
-                                        <p className="text-xs text-gray-400">Fecha</p>
+                                        <p className="text-[10px] text-gray-400 uppercase font-bold tracking-tight">Fecha</p>
                                         <p className="text-sm font-bold text-white">{format(new Date(tournament.start_date), 'd MMM', { locale: es })}</p>
                                     </div>
                                     <div className="bg-white/5 rounded-lg p-3 border border-white/10">
                                         <Users size={16} className="mx-auto mb-1 text-primary" />
-                                        <p className="text-xs text-gray-400">Categoría</p>
+                                        <p className="text-[10px] text-gray-400 uppercase font-bold tracking-tight">Categoría</p>
                                         <p className="text-sm font-bold text-white">{tournament.category}</p>
                                     </div>
                                     <div className="bg-white/5 rounded-lg p-3 border border-white/10 col-span-2">
                                         <Trophy size={16} className="mx-auto mb-1 text-yellow-500" />
-                                        <p className="text-xs text-gray-400">Estado</p>
+                                        <p className="text-[10px] text-gray-400 uppercase font-bold tracking-tight">Inscripción</p>
                                         <p className="text-sm font-bold text-white">
-                                            {tournament.status === 'open' ? 'Inscripción Abierta' :
-                                                tournament.status === 'ongoing' ? 'En Curso - Ver Resultados' : 'Finalizado'}
+                                            {tournament.status === 'open' ? 'ABIERTA' :
+                                                tournament.status === 'ongoing' ? 'EN CURSO' : 'FINALIZADO'}
                                         </p>
                                     </div>
                                 </div>
 
                                 {/* Footer CTA */}
-                                <div className="w-full pt-4 border-t border-white/10">
-                                    <div className="bg-gradient-to-r from-primary/20 to-secondary/20 border border-white/10 rounded-lg p-3">
-                                        <p className="text-[10px] uppercase tracking-widest text-white/50 font-bold mb-1">Inscribite / Ver Resultados en</p>
-                                        <p className="text-white font-bold text-sm tracking-wide">appadelerosdef.vercel.app</p>
+                                <div className="mt-auto w-full pt-4 border-t border-white/10">
+                                    <div className="bg-primary/20 border border-primary/30 rounded-lg p-3 text-center">
+                                        <p className="text-[10px] uppercase tracking-widest text-primary font-bold mb-1">Inscribite en</p>
+                                        <p className="text-white font-bold text-sm">APPadeleros.vercel.app</p>
                                     </div>
                                 </div>
                             </div>

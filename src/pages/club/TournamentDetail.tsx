@@ -12,6 +12,7 @@ import { useToast } from '../../context/ToastContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ConfirmModal } from '../../components/ui/ConfirmModal';
+import type { ClubProfile } from '../../types';
 
 const TournamentDetail = () => {
     const { id } = useParams<{ id: string }>();
@@ -23,6 +24,7 @@ const TournamentDetail = () => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'registrations' | 'groups' | 'playoffs'>('registrations');
+    const [profile, setProfile] = useState<ClubProfile | null>(null);
 
     // Data State
     const [registrations, setRegistrations] = useState<any[]>([]);
@@ -46,12 +48,12 @@ const TournamentDetail = () => {
         title: string;
         message: React.ReactNode;
         onConfirm: () => void;
-        type?: 'danger' | 'warning' | 'info' | 'success';    
+        type?: 'danger' | 'warning' | 'info' | 'success';
     }>({
         isOpen: false,
         title: '',
         message: '',
-        onConfirm: () => {}
+        onConfirm: () => { }
     });
 
     const closeConfirmDialog = () => setConfirmDialog(prev => ({ ...prev, isOpen: false }));
@@ -73,6 +75,8 @@ const TournamentDetail = () => {
 
             if (found) {
                 setTournament(found);
+                const profileData = await supabaseService.getProfile(user.id);
+                if (profileData) setProfile(profileData as ClubProfile);
                 await loadRegistrations(tournamentId);
             } else {
                 console.error('Tournament not found');
@@ -878,12 +882,13 @@ const TournamentDetail = () => {
                     isOpen={isShareModalOpen}
                     onClose={() => setIsShareModalOpen(false)}
                     tournament={tournament}
-                    clubName={user.name}
-                    clubLogoUrl={user.avatar_url}
+                    clubName={profile?.name || user.name}
+                    clubLogoUrl={profile?.avatar_url || user.avatar_url}
+                    clubCoverUrl={profile?.photos?.[0]}
                 />
             )}
 
-            <ConfirmModal 
+            <ConfirmModal
                 {...confirmDialog}
                 onClose={closeConfirmDialog}
             />
