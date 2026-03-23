@@ -28,7 +28,9 @@ export function ShareTournamentModal({ isOpen, onClose, tournament, clubName, cl
             return await toBlob(cardRef.current, { 
                 cacheBust: true, 
                 pixelRatio: 2,
-                backgroundColor: '#1e293b'
+                backgroundColor: '#1e293b',
+                // Evita que html-to-image crashee al intentar leer reglas CSS de OneSignal u otros scripts externos (CORS error)
+                fontEmbedCSS: ''
             });
         } catch (err) {
             console.error('Error generating image', err);

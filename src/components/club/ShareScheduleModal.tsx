@@ -32,7 +32,8 @@ export function ShareScheduleModal({ isOpen, onClose, clubName, clubLogoUrl, clu
             return await toBlob(cardRef.current, { 
                 cacheBust: true, 
                 pixelRatio: 2,
-                backgroundColor: '#1e293b'
+                backgroundColor: '#1e293b',
+                fontEmbedCSS: ''
             });
         } catch (err) {
             console.error('Error generating image', err);
