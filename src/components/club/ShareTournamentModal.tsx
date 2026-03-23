@@ -103,7 +103,8 @@ export function ShareTournamentModal({ isOpen, onClose, tournament, clubName, cl
                                 {/* Tournament Info */}
                                 <div className="text-center mb-6">
                                     <div className="bg-primary/20 text-primary border border-primary/30 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-3 inline-block">
-                                        Torneo de Pádel
+                                        {tournament.format === 'league' ? 'Liga de Pádel' :
+                                         tournament.format === 'americano' ? 'Torneo Americano' : 'Torneo de Pádel'}
                                     </div>
                                     <h2 className="text-2xl font-black text-white uppercase tracking-wide leading-tight px-2">
                                         {tournament.name}
