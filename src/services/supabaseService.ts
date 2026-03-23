@@ -1151,8 +1151,17 @@ export const supabaseService = {
         return true;
     },
 
-    async generateGroupStage(tournamentId: string, teamsPerGroup: number = 4) {
-        // 1. Get approved registrations
+    async generateGroupStage(tournamentId: string) {
+        // 1. Get tournament details
+        const { data: tournament, error: tError } = await supabase
+            .from('tournaments')
+            .select('*')
+            .eq('id', tournamentId)
+            .single();
+
+        if (tError) throw tError;
+
+        // 2. Get approved registrations
         const { data: registrations, error: regError } = await supabase
             .from('tournament_registrations')
             .select('*')
@@ -1161,7 +1170,7 @@ export const supabaseService = {
 
         if (regError) throw regError;
         if (!registrations || registrations.length < 3) {
-            throw new Error('Se necesitan al menos 3 equipos para generar grupos.');
+            throw new Error('Se necesitan al menos 3 equipos para generar la competencia.');
         }
 
         // 1.5 Clean up previous generation (if any)
@@ -1181,19 +1190,33 @@ export const supabaseService = {
 
         if (resetError) throw resetError;
 
-        // 2. Shuffle and Assign Groups
+        // 3. Shuffle and Assign Groups
         const shuffled = [...registrations].sort(() => Math.random() - 0.5);
         const groups: { [key: string]: typeof registrations } = {};
-        const groupNames = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+        const groupNames = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P'];
 
-        let currentGroupIndex = 0;
+        let numZones = 1;
+        if (tournament.format === 'league') {
+            numZones = tournament.zones_count || 1;
+        } else if (tournament.format === 'americano') {
+            numZones = 1;
+        } else {
+            // Default knockout format (usually 4 teams per group)
+            numZones = Math.max(1, Math.ceil(registrations.length / 4));
+        }
+
+        // Initialize zones
+        for (let i = 0; i < numZones; i++) {
+            groups[groupNames[i]] = [];
+        }
+
         const updates = [];
 
-        // Distribute teams
+        // Distribute teams evenly (round-robin assignment to groups)
         for (let i = 0; i < shuffled.length; i++) {
-            const groupName = groupNames[currentGroupIndex];
-            if (!groups[groupName]) groups[groupName] = [];
-
+            const zoneIndex = i % numZones;
+            const groupName = groupNames[zoneIndex];
+            
             groups[groupName].push(shuffled[i]);
 
             // Update team with group name and init stats
@@ -1202,11 +1225,6 @@ export const supabaseService = {
                 group_name: groupName,
                 stats: { points: 0, played: 0, won: 0, lost: 0, sets_won: 0, sets_lost: 0, games_won: 0, games_lost: 0 }
             });
-
-            // Move to next group if full
-            if (groups[groupName].length >= teamsPerGroup) {
-                currentGroupIndex++;
-            }
         }
 
         // Batch update registrations
@@ -1288,64 +1306,68 @@ export const supabaseService = {
             if (points > playerPoints[playerId]) playerPoints[playerId] = points;
         };
 
-        // Default: 25 points for participation (Group Stage)
-        registrations.forEach((reg: any) => {
-            if (reg.player1_id) addPoints(reg.player1_id, 25);
-            if (reg.player2_id) addPoints(reg.player2_id, 25);
-        });
+        if (tournament.format === 'americano') {
+            const sortedTeams = [...registrations].sort((a, b) => {
+                const pointsDiff = (b.stats?.points || 0) - (a.stats?.points || 0);
+                if (pointsDiff !== 0) return pointsDiff;
+                const setsDiff = ((b.stats?.sets_won || 0) - (b.stats?.sets_lost || 0)) - ((a.stats?.sets_won || 0) - (a.stats?.sets_lost || 0));
+                if (setsDiff !== 0) return setsDiff;
+                return ((b.stats?.games_won || 0) - (b.stats?.games_lost || 0)) - ((a.stats?.games_won || 0) - (a.stats?.games_lost || 0));
+            });
 
-        // Analyze matches to upgrade points
-        // We need to find who reached which round.
-        // Round of 16 losers -> 50 pts (implied they reached R16)
-        // Quarter losers -> 75 pts
-        // Semi losers -> 100 pts
-        // Final loser -> 150 pts
-        // Final winner -> 200 pts
+            sortedTeams.forEach((team, index) => {
+                let pts = 25;
+                if (index === 0) pts = 200;
+                else if (index === 1) pts = 150;
+                else if (index === 2) pts = 100;
+                
+                if (team.player1_id) addPoints(team.player1_id, pts);
+                if (team.player2_id) addPoints(team.player2_id, pts);
+            });
+        } else {
+            // Default: 25 points for participation (Group Stage)
+            registrations.forEach((reg: any) => {
+                if (reg.player1_id) addPoints(reg.player1_id, 25);
+                if (reg.player2_id) addPoints(reg.player2_id, 25);
+            });
 
-        // Filter valid matches (not group)
-        const playoffMatches = matches.filter((m: any) => m.stage === 'playoff' && m.winner_id);
+            // Analyze matches to upgrade points
+            const playoffMatches = matches.filter((m: any) => m.stage === 'playoff' && m.winner_id);
 
-        playoffMatches.forEach((match: any) => {
-            const winnerId = match.winner_id;
-            const loserId = match.team1_id === winnerId ? match.team2_id : match.team1_id;
+            playoffMatches.forEach((match: any) => {
+                const winnerId = match.winner_id;
+                const loserId = match.team1_id === winnerId ? match.team2_id : match.team1_id;
 
-            const winnerTeam = registrations.find((r: any) => r.id === winnerId);
-            const loserTeam = registrations.find((r: any) => r.id === loserId);
+                const winnerTeam = registrations.find((r: any) => r.id === winnerId);
+                const loserTeam = registrations.find((r: any) => r.id === loserId);
 
-            if (!winnerTeam || !loserTeam) return;
+                if (!winnerTeam || !loserTeam) return;
 
-            // Points for the LOSER of this round (they reached this stage but didn't advance)
-            let loserPoints = 0;
-            if (match.round === 'round_16') loserPoints = 50;
-            else if (match.round === 'quarter') loserPoints = 75;
-            else if (match.round === 'semi') loserPoints = 100;
-            else if (match.round === 'final') loserPoints = 150;
+                // Points for the LOSER of this round (they reached this stage but didn't advance)
+                let loserPoints = 0;
+                if (match.round === 'round_16') loserPoints = 50;
+                else if (match.round === 'quarter') loserPoints = 75;
+                else if (match.round === 'semi') loserPoints = 100;
+                else if (match.round === 'final') loserPoints = 150;
 
-            if (loserTeam.player1_id) addPoints(loserTeam.player1_id, loserPoints);
-            if (loserTeam.player2_id) addPoints(loserTeam.player2_id, loserPoints);
+                if (loserTeam.player1_id) addPoints(loserTeam.player1_id, loserPoints);
+                if (loserTeam.player2_id) addPoints(loserTeam.player2_id, loserPoints);
 
-            // Points for the WINNER (at least this much, will be overwritten if they win next round)
-            // If it's the FINAL, winner gets 200.
-            if (match.round === 'final') {
-                if (winnerTeam.player1_id) addPoints(winnerTeam.player1_id, 200);
-                if (winnerTeam.player2_id) addPoints(winnerTeam.player2_id, 200);
-            } else {
-                // For other rounds, winner is guaranteed at least the points of the NEXT round loser
-                // But we can just leave it as base 25 and let the next match update it, 
-                // OR assign the "winner of this round" points.
-                // Actually, simpler:
-                // R16 Winner -> Guaranteed 75 (reached QF)
-                // QF Winner -> Guaranteed 100 (reached SF)
-                // SF Winner -> Guaranteed 150 (reached Final)
-                let winnerGuaranteed = 0;
-                if (match.round === 'round_16') winnerGuaranteed = 75;
-                else if (match.round === 'quarter') winnerGuaranteed = 100;
-                else if (match.round === 'semi') winnerGuaranteed = 150;
+                // Points for the WINNER
+                if (match.round === 'final') {
+                    if (winnerTeam.player1_id) addPoints(winnerTeam.player1_id, 200);
+                    if (winnerTeam.player2_id) addPoints(winnerTeam.player2_id, 200);
+                } else {
+                    let winnerGuaranteed = 0;
+                    if (match.round === 'round_16') winnerGuaranteed = 75;
+                    else if (match.round === 'quarter') winnerGuaranteed = 100;
+                    else if (match.round === 'semi') winnerGuaranteed = 150;
 
-                if (winnerTeam.player1_id) addPoints(winnerTeam.player1_id, winnerGuaranteed);
-                if (winnerTeam.player2_id) addPoints(winnerTeam.player2_id, winnerGuaranteed);
-            }
-        });
+                    if (winnerTeam.player1_id) addPoints(winnerTeam.player1_id, winnerGuaranteed);
+                    if (winnerTeam.player2_id) addPoints(winnerTeam.player2_id, winnerGuaranteed);
+                }
+            });
+        }
 
         // 5. Save to DB
         const pointsEntries = Object.entries(playerPoints).map(([playerId, points]) => ({
@@ -1480,6 +1502,19 @@ export const supabaseService = {
     },
 
     async generatePlayoffs(tournamentId: string) {
+        // 0. Get tournament details
+        const { data: tournament, error: tError } = await supabase
+            .from('tournaments')
+            .select('*')
+            .eq('id', tournamentId)
+            .single();
+
+        if (tError) throw tError;
+
+        if (tournament.format === 'americano') {
+            throw new Error('El formato Americano no tiene fase de playoffs.');
+        }
+
         // 1. Get all registrations with stats
         const { data: registrations, error: regError } = await supabase
             .from('tournament_registrations')
@@ -1518,7 +1553,14 @@ export const supabaseService = {
                 return gameDiffB - gameDiffA;
             });
 
-            const qualifyCount = groupTeams.length >= 4 ? 3 : 2;
+            let qualifyCount = groupTeams.length >= 4 ? 3 : 2;
+            if (tournament.format === 'league' && tournament.teams_advancing_per_zone) {
+                qualifyCount = tournament.teams_advancing_per_zone;
+            }
+
+            // Ensure we don't try to qualify more teams than exist in the group
+            qualifyCount = Math.min(qualifyCount, groupTeams.length);
+
             allQualifiers.push(...sorted.slice(0, qualifyCount));
         }
 

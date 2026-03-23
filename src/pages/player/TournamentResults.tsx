@@ -100,14 +100,16 @@ const TournamentResults = () => {
                     className={`pb-4 px-2 text-lg font-medium transition-colors ${activeTab === 'groups' ? 'text-primary border-b-2 border-primary' : 'text-gray-400 hover:text-white'}`}
                     onClick={() => setActiveTab('groups')}
                 >
-                    Fase de Grupos
+                    {tournament.format === 'americano' ? 'Posiciones Generales' : 'Fase de Grupos'}
                 </button>
-                <button
-                    className={`pb-4 px-2 text-lg font-medium transition-colors ${activeTab === 'playoffs' ? 'text-primary border-b-2 border-primary' : 'text-gray-400 hover:text-white'}`}
-                    onClick={() => setActiveTab('playoffs')}
-                >
-                    Llave Final
-                </button>
+                {tournament.format !== 'americano' && (
+                    <button
+                        className={`pb-4 px-2 text-lg font-medium transition-colors ${activeTab === 'playoffs' ? 'text-primary border-b-2 border-primary' : 'text-gray-400 hover:text-white'}`}
+                        onClick={() => setActiveTab('playoffs')}
+                    >
+                        Llave Final
+                    </button>
+                )}
             </div>
 
             {/* Content */}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Calendar, Users, Trophy } from 'lucide-react';
+import { X, Trophy } from 'lucide-react';
 import { supabaseService } from '../services/supabaseService';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
@@ -19,7 +19,10 @@ export const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({ is
         end_date: '',
         category: '6ta',
         gender: 'Masculino',
-        max_teams: 8
+        max_teams: 8,
+        format: 'knockout',
+        zones_count: 4,
+        teams_advancing_per_zone: 2
     });
 
     if (!isOpen) return null;
@@ -33,6 +36,7 @@ export const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({ is
             await supabaseService.createTournament({
                 ...formData,
                 gender: formData.gender as 'Masculino' | 'Femenino' | 'Mixto',
+                format: formData.format as 'knockout' | 'league' | 'americano',
                 club_id: clubId
             });
             onTournamentCreated();
@@ -43,8 +47,8 @@ export const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({ is
         } finally {
             setLoading(false);
         }
-    };
-
+    }
+    
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
             <div className="bg-surface border border-white/10 rounded-2xl w-full max-w-md p-6 relative animate-in fade-in zoom-in duration-200">
@@ -124,19 +128,77 @@ export const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({ is
                         </div>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-1">Equipos Máx.</label>
-                        <select
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all [&>option]:bg-gray-900 [&>option]:text-white"
-                            value={formData.max_teams}
-                            onChange={(e) => setFormData({ ...formData, max_teams: parseInt(e.target.value) })}
-                        >
-                            <option value={4}>4 Equipos</option>
-                            <option value={8}>8 Equipos</option>
-                            <option value={16}>16 Equipos</option>
-                            <option value={32}>32 Equipos</option>
-                        </select>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-400 mb-1">Formato</label>
+                            <select
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all [&>option]:bg-gray-900 [&>option]:text-white"
+                                value={formData.format}
+                                onChange={(e) => setFormData({ ...formData, format: e.target.value })}
+                            >
+                                <option value="knockout">Clásico (Grupos + Playoffs)</option>
+                                <option value="league">Liga</option>
+                                <option value="americano">Americano</option>
+                            </select>
+                        </div>
+                        {formData.format === 'knockout' && (
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-1">Equipos Máx.</label>
+                                <select
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all [&>option]:bg-gray-900 [&>option]:text-white"
+                                    value={formData.max_teams}
+                                    onChange={(e) => setFormData({ ...formData, max_teams: parseInt(e.target.value) })}
+                                >
+                                    <option value={4}>4 Equipos</option>
+                                    <option value={8}>8 Equipos</option>
+                                    <option value={16}>16 Equipos</option>
+                                    <option value={32}>32 Equipos</option>
+                                </select>
+                            </div>
+                        )}
+                        {formData.format === 'league' && (
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-1">Equipos Máx.</label>
+                                <Input
+                                    type="number"
+                                    min={4}
+                                    value={formData.max_teams}
+                                    onChange={(e) => setFormData({ ...formData, max_teams: parseInt(e.target.value) })}
+                                />
+                            </div>
+                        )}
+                        {formData.format === 'americano' && (
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-1">Equipos Máx.</label>
+                                <div className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-gray-400 text-sm">
+                                    Flexible (Sin límite)
+                                </div>
+                            </div>
+                        )}
                     </div>
+
+                    {formData.format === 'league' && (
+                        <div className="grid grid-cols-2 gap-4 bg-white/5 p-4 rounded-xl border border-white/10">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-1">Cant. Zonas</label>
+                                <Input
+                                    type="number"
+                                    min={1}
+                                    value={formData.zones_count}
+                                    onChange={(e) => setFormData({ ...formData, zones_count: parseInt(e.target.value) })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-1">Clasificados x Zona</label>
+                                <Input
+                                    type="number"
+                                    min={1}
+                                    value={formData.teams_advancing_per_zone}
+                                    onChange={(e) => setFormData({ ...formData, teams_advancing_per_zone: parseInt(e.target.value) })}
+                                />
+                            </div>
+                        </div>
+                    )}
 
                     <div className="pt-4">
                         <Button type="submit" isLoading={loading} className="w-full">

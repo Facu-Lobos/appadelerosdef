@@ -323,14 +323,16 @@ const TournamentDetail = () => {
                         loadRegistrations(tournament.id);
                     }}
                 >
-                    Fase de Grupos
+                    {tournament.format === 'americano' ? 'Posiciones Generales' : 'Fase de Grupos'}
                 </button>
-                <button
-                    className={`pb-4 px-2 text-lg font-medium transition-colors ${activeTab === 'playoffs' ? 'text-primary border-b-2 border-primary' : 'text-gray-400 hover:text-white'}`}
-                    onClick={() => setActiveTab('playoffs')}
-                >
-                    Llave Final
-                </button>
+                {tournament.format !== 'americano' && (
+                    <button
+                        className={`pb-4 px-2 text-lg font-medium transition-colors ${activeTab === 'playoffs' ? 'text-primary border-b-2 border-primary' : 'text-gray-400 hover:text-white'}`}
+                        onClick={() => setActiveTab('playoffs')}
+                    >
+                        Llave Final
+                    </button>
+                )}
             </div>
 
             {/* Content */}
@@ -439,7 +441,7 @@ const TournamentDetail = () => {
                                                     Generando...
                                                 </>
                                             ) : (
-                                                'Generar Fase de Grupos'
+                                                tournament.format === 'americano' ? 'Generar Fixture' : 'Generar Fase de Grupos'
                                             )}
                                         </Button>
                                     </div>
@@ -470,7 +472,7 @@ const TournamentDetail = () => {
                                             }}
                                             variant="secondary"
                                         >
-                                            Ver Fase de Grupos
+                                            {tournament.format === 'americano' ? 'Ver Fixture' : 'Ver Fase de Grupos'}
                                         </Button>
                                         <Button
                                             onClick={handleResetFixture}
