@@ -71,7 +71,29 @@ export function ShareTournamentModal({ isOpen, onClose, tournament, clubName, cl
         triggerDownload(blob, filename);
     };
 
-    const triggerDownload = (blob: Blob, filename: string) => {
+    const triggerDownload = async (blob: Blob, filename: string) => {
+        // Fallback robusto usando File System Access API para forzar 'Guardar Como' nativo sin intermediarios
+        if ('showSaveFilePicker' in window) {
+            try {
+                const handle = await (window as any).showSaveFilePicker({
+                    suggestedName: filename,
+                    types: [{
+                        description: 'PNG Image',
+                        accept: { 'image/png': ['.png'] }
+                    }]
+                });
+                const writable = await handle.createWritable();
+                await writable.write(blob);
+                await writable.close();
+                return;
+            } catch (err: any) {
+                // Si el usuario cancela (AbortError), no hacemos fallback
+                if (err.name === 'AbortError') return;
+                console.error('File Picker falló, usando fallback tradicional:', err);
+            }
+        }
+
+        // Fallback básico para navegadores sin showSaveFilePicker
         const blobUrl = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.download = filename;
