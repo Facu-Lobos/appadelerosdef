@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { toPng } from 'html-to-image';
+import { toBlob } from 'html-to-image';
 import { X, Download, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -25,11 +25,11 @@ export function ShareScheduleModal({ isOpen, onClose, clubName, clubLogoUrl, clu
 
     if (!isOpen) return null;
 
-    const generateImage = async () => {
+    const generateBlob = async (): Promise<Blob | null> => {
         if (cardRef.current === null) return null;
         setGenerating(true);
         try {
-            return await toPng(cardRef.current, { 
+            return await toBlob(cardRef.current, { 
                 cacheBust: true, 
                 pixelRatio: 2,
                 backgroundColor: '#1e293b'
@@ -44,13 +44,11 @@ export function ShareScheduleModal({ isOpen, onClose, clubName, clubLogoUrl, clu
     };
 
     const handleShare = async () => {
-        const dataUrl = await generateImage();
-        if (!dataUrl) return;
+        const blob = await generateBlob();
+        if (!blob) return;
         
         const filename = `turnos-${format(date, 'yyyy-MM-dd')}.png`;
         try {
-            const res = await fetch(dataUrl);
-            const blob = await res.blob();
             const file = new File([blob], filename, { type: 'image/png' });
 
             if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -59,12 +57,7 @@ export function ShareScheduleModal({ isOpen, onClose, clubName, clubLogoUrl, clu
                     files: [file]
                 });
             } else {
-                const link = document.createElement('a');
-                link.download = filename;
-                link.href = dataUrl;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                triggerDownload(blob, filename);
             }
         } catch (shareError) {
             console.log('Native share failed or user cancelled, falling back to download', shareError);
@@ -72,17 +65,22 @@ export function ShareScheduleModal({ isOpen, onClose, clubName, clubLogoUrl, clu
     };
 
     const handleDownload = async () => {
-        const dataUrl = await generateImage();
-        if (!dataUrl) return;
+        const blob = await generateBlob();
+        if (!blob) return;
         
         const filename = `turnos-${format(date, 'yyyy-MM-dd')}.png`;
-        
+        triggerDownload(blob, filename);
+    };
+
+    const triggerDownload = (blob: Blob, filename: string) => {
+        const blobUrl = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.download = filename;
-        link.href = dataUrl;
+        link.href = blobUrl;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
     };
 
     // Filter only available slots and filter past slots if today

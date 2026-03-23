@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { toPng } from 'html-to-image';
+import { toBlob } from 'html-to-image';
 import { X, Download, Share2, Trophy, Calendar, Users } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -21,11 +21,11 @@ export function ShareTournamentModal({ isOpen, onClose, tournament, clubName, cl
 
     if (!isOpen) return null;
 
-    const generateImage = async () => {
+    const generateBlob = async (): Promise<Blob | null> => {
         if (cardRef.current === null) return null;
         setGenerating(true);
         try {
-            return await toPng(cardRef.current, { 
+            return await toBlob(cardRef.current, { 
                 cacheBust: true, 
                 pixelRatio: 2,
                 backgroundColor: '#1e293b'
@@ -40,13 +40,11 @@ export function ShareTournamentModal({ isOpen, onClose, tournament, clubName, cl
     };
 
     const handleShare = async () => {
-        const dataUrl = await generateImage();
-        if (!dataUrl) return;
+        const blob = await generateBlob();
+        if (!blob) return;
         
         const filename = `torneo-${tournament.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`;
         try {
-            const res = await fetch(dataUrl);
-            const blob = await res.blob();
             const file = new File([blob], filename, { type: 'image/png' });
 
             if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -55,13 +53,8 @@ export function ShareTournamentModal({ isOpen, onClose, tournament, clubName, cl
                     files: [file]
                 });
             } else {
-                // Fallback si no soporta share
-                const link = document.createElement('a');
-                link.download = filename;
-                link.href = dataUrl;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                // Fallback si no soporta share o falla silencioso
+                triggerDownload(blob, filename);
             }
         } catch (shareError) {
             console.log('Native share failed or user cancelled', shareError);
@@ -69,18 +62,22 @@ export function ShareTournamentModal({ isOpen, onClose, tournament, clubName, cl
     };
 
     const handleDownload = async () => {
-        const dataUrl = await generateImage();
-        if (!dataUrl) return;
+        const blob = await generateBlob();
+        if (!blob) return;
         
         const filename = `torneo-${tournament.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`;
-        
-        // Native HTML5 download approach to guarantee .png format
+        triggerDownload(blob, filename);
+    };
+
+    const triggerDownload = (blob: Blob, filename: string) => {
+        const blobUrl = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.download = filename;
-        link.href = dataUrl;
+        link.href = blobUrl;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
     };
 
     return (
