@@ -22,49 +22,54 @@ export function ShareTournamentModal({ isOpen, onClose, tournament, clubName, cl
 
     if (!isOpen) return null;
 
-    const handleDownload = async () => {
-        if (cardRef.current === null) {
-            return;
-        }
-
+    const generateImage = async () => {
+        if (cardRef.current === null) return null;
         setGenerating(true);
-
         try {
-            // Generar imagen con resolución doble
-            const dataUrl = await toPng(cardRef.current, { 
+            return await toPng(cardRef.current, { 
                 cacheBust: true, 
                 pixelRatio: 2,
-                backgroundColor: '#1e293b' // Fallback bg color if transparent
+                backgroundColor: '#1e293b'
             });
-            
-            const filename = `torneo-${tournament.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`;
-
-            // Intentar usar la API nativa de compartir (Ideal para móviles: WhatsApp, Instagram)
-            try {
-                const res = await fetch(dataUrl);
-                const blob = await res.blob();
-                const file = new File([blob], filename, { type: 'image/png' });
-
-                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        title: tournament.name,
-                        files: [file]
-                    });
-                    return; // Si funcionó el share nativo, salimos
-                }
-            } catch (shareError) {
-                console.log('Native share failed or user cancelled, falling back to download', shareError);
-            }
-
-            // Fallback: Descargar el archivo de forma tradicional
-            download(dataUrl, filename);
-            
         } catch (err) {
             console.error('Error generating image', err);
             alert('Error al generar la imagen. Por favor intenta de nuevo.');
+            return null;
         } finally {
             setGenerating(false);
         }
+    };
+
+    const handleShare = async () => {
+        const dataUrl = await generateImage();
+        if (!dataUrl) return;
+        
+        const filename = `torneo-${tournament.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`;
+        try {
+            const res = await fetch(dataUrl);
+            const blob = await res.blob();
+            const file = new File([blob], filename, { type: 'image/png' });
+
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    title: tournament.name,
+                    files: [file]
+                });
+            } else {
+                // Fallback si no soporta share
+                download(dataUrl, filename);
+            }
+        } catch (shareError) {
+            console.log('Native share failed or user cancelled', shareError);
+        }
+    };
+
+    const handleDownload = async () => {
+        const dataUrl = await generateImage();
+        if (!dataUrl) return;
+        
+        const filename = `torneo-${tournament.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`;
+        download(dataUrl, filename);
     };
 
     return (
@@ -180,20 +185,36 @@ export function ShareTournamentModal({ isOpen, onClose, tournament, clubName, cl
                         Descarga esta imagen para compartirla en tus historias de Instagram, estados de WhatsApp y grupos.
                     </p>
 
-                    <Button
-                        onClick={handleDownload}
-                        disabled={generating}
-                        className="w-full flex items-center justify-center gap-2 py-3 text-base"
-                    >
-                        {generating ? (
-                            <>Generando...</>
-                        ) : (
-                            <>
-                                <Download size={20} />
-                                Descargar Flyer
-                            </>
-                        )}
-                    </Button>
+                    <div className="flex gap-3 w-full">
+                        <Button
+                            onClick={handleShare}
+                            disabled={generating}
+                            className="flex-1 flex items-center justify-center gap-2 py-3 text-base"
+                        >
+                            {generating ? (
+                                <>Cargando...</>
+                            ) : (
+                                <>
+                                    <Share2 size={20} />
+                                    Compartir
+                                </>
+                            )}
+                        </Button>
+                        <Button
+                            onClick={handleDownload}
+                            disabled={generating}
+                            className="flex-1 flex items-center justify-center gap-2 py-3 text-base bg-dark-secondary hover:bg-dark-tertiary text-white"
+                        >
+                            {generating ? (
+                                <>Cargando...</>
+                            ) : (
+                                <>
+                                    <Download size={20} />
+                                    Descargar
+                                </>
+                            )}
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>
