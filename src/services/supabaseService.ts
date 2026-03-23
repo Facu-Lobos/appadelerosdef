@@ -1651,6 +1651,66 @@ export const supabaseService = {
             matches.push(match);
         }
 
+        // Anti-Same-Group Logic for First Round
+        // We iterate through firstRoundMatches and if team1 and team2 share the same group_name,
+        // we try to swap team2 with another match's team2 where doing so doesn't create new conflicts.
+        for (let i = 0; i < firstRoundMatches.length; i++) {
+            const m1 = firstRoundMatches[i];
+            
+            // Only consider matches where both teams exist and share a group
+            const t1 = allQualifiers.find(q => q.id === m1.team1_id);
+            const t2 = allQualifiers.find(q => q.id === m1.team2_id);
+            
+            if (t1 && t2 && t1.group_name === t2.group_name) {
+                // Find a swap partner
+                for (let j = 0; j < firstRoundMatches.length; j++) {
+                    if (i === j) continue;
+                    const m2 = firstRoundMatches[j];
+                    
+                    const m2_t1 = allQualifiers.find(q => q.id === m2.team1_id);
+                    const m2_t2 = allQualifiers.find(q => q.id === m2.team2_id);
+                    
+                    // We need m2_t2 to exist to swap (or we can swap with a BYE as well)
+                    // Let's enforce that m2 has a team2 to keep the bracket balanced,
+                    // or if it's a BYE, that's fine too.
+                    
+                    const new_m1_t2_group = m2_t2?.group_name;
+                    const new_m2_t2_group = t2?.group_name;
+                    
+                    // Check if swapping resolves the conflict without creating a new one
+                    if (t1.group_name !== new_m1_t2_group && (!m2_t1 || m2_t1.group_name !== new_m2_t2_group)) {
+                        // SWAP team2_id
+                        const tempTeam2Id = m1.team2_id;
+                        m1.team2_id = m2.team2_id;
+                        m2.team2_id = tempTeam2Id;
+                        
+                        // Fix byes if needed
+                        if (!m1.team2_id) {
+                            m1.winner_id = m1.team1_id;
+                            m1.score = 'BYE';
+                            m1.sets_score = [];
+                        } else {
+                            m1.winner_id = null;
+                            m1.score = null;
+                            m1.sets_score = null;
+                        }
+                        
+                        if (!m2.team2_id && m2.team1_id) {
+                            m2.winner_id = m2.team1_id;
+                            m2.score = 'BYE';
+                            m2.sets_score = [];
+                        } else {
+                            m2.winner_id = null;
+                            m2.score = null;
+                            m2.sets_score = null;
+                        }
+                        
+                        break; // Conflict resolved
+                    }
+                }
+            }
+        }
+
         // 7. Generate Subsequent Rounds (Placeholders)
         let currentSize = bracketSize / 2;
         let roundIndex = 1;
