@@ -34,8 +34,35 @@ export function ShareScheduleModal({ isOpen, onClose, clubName, clubLogoUrl, clu
         setGenerating(true);
 
         try {
-            const dataUrl = await toPng(cardRef.current, { cacheBust: true, pixelRatio: 2 });
-            download(dataUrl, `turnos-${format(date, 'yyyy-MM-dd')}.png`);
+            // Generar imagen con resolución doble
+            const dataUrl = await toPng(cardRef.current, { 
+                cacheBust: true, 
+                pixelRatio: 2,
+                backgroundColor: '#1e293b' // Fallback bg
+            });
+            
+            const filename = `turnos-${format(date, 'yyyy-MM-dd')}.png`;
+
+            // Intentar usar la API nativa de compartir (Ideal para móviles: WhatsApp, Instagram)
+            try {
+                const res = await fetch(dataUrl);
+                const blob = await res.blob();
+                const file = new File([blob], filename, { type: 'image/png' });
+
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        title: `Turnos ${clubName}`,
+                        files: [file]
+                    });
+                    return; // Si funcionó el share nativo, salimos
+                }
+            } catch (shareError) {
+                console.log('Native share failed or user cancelled, falling back to download', shareError);
+            }
+
+            // Fallback: Descargar el archivo de forma tradicional
+            download(dataUrl, filename);
+            
         } catch (err) {
             console.error('Error generating image', err);
             alert('Error al generar la imagen. Por favor intenta de nuevo.');
@@ -110,7 +137,7 @@ export function ShareScheduleModal({ isOpen, onClose, clubName, clubLogoUrl, clu
                                 <div className="relative h-32 -mx-6 -mt-6 mb-6 overflow-hidden border-b border-white/10 shrink-0 bg-surface">
                                     {(clubCoverUrl || clubLogoUrl) ? (
                                         <img
-                                            src={clubCoverUrl || clubLogoUrl}
+                                            src={`${clubCoverUrl || clubLogoUrl}?v=${Date.now()}`}
                                             alt={clubName}
                                             className="w-full h-full object-cover"
                                             crossOrigin="anonymous"
