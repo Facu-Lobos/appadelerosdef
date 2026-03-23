@@ -256,8 +256,8 @@ const TournamentDetail = () => {
     return (
         <div className="space-y-6 pb-20">
             {/* Header */}
-            <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-4">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-0 mb-8 w-full overflow-hidden">
+                <div className="flex items-center gap-4 w-full md:w-auto">
                     <Button variant="ghost" onClick={() => navigate('/club/tournaments')}>
                         <ChevronLeft size={24} />
                     </Button>
@@ -277,7 +277,7 @@ const TournamentDetail = () => {
                     </div>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2 w-full md:w-auto mt-2 md:mt-0">
                     <Button
                         variant="secondary"
                         onClick={() => {

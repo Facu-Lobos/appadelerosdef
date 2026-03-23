@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react';
 import { toPng } from 'html-to-image';
-import download from 'downloadjs';
 import { X, Download, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -60,7 +59,12 @@ export function ShareScheduleModal({ isOpen, onClose, clubName, clubLogoUrl, clu
                     files: [file]
                 });
             } else {
-                download(dataUrl, filename);
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
             }
         } catch (shareError) {
             console.log('Native share failed or user cancelled, falling back to download', shareError);
@@ -72,7 +76,13 @@ export function ShareScheduleModal({ isOpen, onClose, clubName, clubLogoUrl, clu
         if (!dataUrl) return;
         
         const filename = `turnos-${format(date, 'yyyy-MM-dd')}.png`;
-        download(dataUrl, filename);
+        
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     // Filter only available slots and filter past slots if today

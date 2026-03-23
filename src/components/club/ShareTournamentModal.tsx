@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react';
 import { toPng } from 'html-to-image';
-import download from 'downloadjs';
 import { X, Download, Share2, Trophy, Calendar, Users } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -57,7 +56,12 @@ export function ShareTournamentModal({ isOpen, onClose, tournament, clubName, cl
                 });
             } else {
                 // Fallback si no soporta share
-                download(dataUrl, filename);
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
             }
         } catch (shareError) {
             console.log('Native share failed or user cancelled', shareError);
@@ -69,7 +73,14 @@ export function ShareTournamentModal({ isOpen, onClose, tournament, clubName, cl
         if (!dataUrl) return;
         
         const filename = `torneo-${tournament.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`;
-        download(dataUrl, filename);
+        
+        // Native HTML5 download approach to guarantee .png format
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     return (
