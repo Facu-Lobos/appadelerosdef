@@ -42,6 +42,12 @@ const TournamentDetail = () => {
     const [selectedMatchForSchedule, setSelectedMatchForSchedule] = useState<any>(null);
     const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
+    // Manual Playoff State
+    const [showManualPlayoffForm, setShowManualPlayoffForm] = useState(false);
+    const [manualPlayoffRound, setManualPlayoffRound] = useState('quarter');
+    const [manualPlayoffTeam1, setManualPlayoffTeam1] = useState('');
+    const [manualPlayoffTeam2, setManualPlayoffTeam2] = useState('');
+
     // Dialog state
     const [confirmDialog, setConfirmDialog] = useState<{
         isOpen: boolean;
@@ -159,6 +165,54 @@ const TournamentDetail = () => {
                 } catch (error: any) {
                     console.error('Error resetting fixture:', error);
                     showToast('Error al reiniciar fixture: ' + error.message, 'error');
+                }
+            }
+        });
+    };
+
+    const handleAddManualPlayoffMatch = async () => {
+        if (!tournament) return;
+        if (!manualPlayoffRound) {
+            showToast('Selecciona una ronda', 'error');
+            return;
+        }
+        
+        try {
+            setIsGenerating(true);
+            await supabaseService.createTournamentMatch({
+                tournament_id: tournament.id,
+                stage: 'playoff',
+                round: manualPlayoffRound,
+                team1_id: manualPlayoffTeam1 || undefined,
+                team2_id: manualPlayoffTeam2 || undefined,
+                start_time: new Date().toISOString()
+            });
+            showToast('Partido añadido a la llave final', 'success');
+            setManualPlayoffTeam1('');
+            setManualPlayoffTeam2('');
+            loadRegistrations(tournament.id);
+        } catch (error: any) {
+             showToast('Error al añadir partido: ' + error.message, 'error');
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const handleClearPlayoffs = () => {
+        if (!tournament) return;
+        setConfirmDialog({
+            isOpen: true,
+            title: 'Limpiar Llave Final',
+            message: '¿Estás seguro? Se borrarán TODOS los partidos de la llave final actual.',
+            type: 'danger',
+            onConfirm: async () => {
+                closeConfirmDialog();
+                try {
+                    await supabaseService.clearPlayoffs(tournament.id);
+                    showToast('Llave final borrada', 'info');
+                    loadRegistrations(tournament.id);
+                } catch (e: any) {
+                    showToast('Error: ' + e.message, 'error');
                 }
             }
         });
@@ -743,6 +797,93 @@ const TournamentDetail = () => {
 
                 {activeTab === 'playoffs' && (
                     <div className="space-y-8">
+                        {/* MANUAL PLAYOFF CONTROLS */}
+                        <div className="flex justify-between items-center bg-black/20 p-4 rounded-xl border border-white/5">
+                            <div>
+                                <h3 className="text-lg font-bold text-white">Gestión de Llave Final</h3>
+                                <p className="text-sm text-gray-400">Puedes generar la llave automáticamente o armarla partido por partido de forma manual.</p>
+                            </div>
+                            <div className="flex flex-wrap gap-2 justify-end">
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => setShowManualPlayoffForm(!showManualPlayoffForm)}
+                                >
+                                    {showManualPlayoffForm ? 'Cerrar Plantilla Manual' : 'Añadir Partido Manual'}
+                                </Button>
+                                {matches.filter(m => m.stage === 'playoff').length > 0 && (
+                                    <Button
+                                        variant="ghost"
+                                        className="text-red-400 hover:text-red-300 hover:bg-red-400/10 cursor-pointer"
+                                        onClick={handleClearPlayoffs}
+                                    >
+                                        <Trash2 size={16} className="mr-2" />
+                                        Limpiar Llave
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* MANUAL MATCH FORM */}
+                        {showManualPlayoffForm && (
+                            <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+                                <h4 className="font-bold text-primary mb-4 flex items-center gap-2">
+                                    <Plus size={18} /> Crear Nuevo Partido
+                                </h4>
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                                    <div>
+                                        <label className="text-sm text-gray-400 block mb-1">Ronda</label>
+                                        <select
+                                            className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary transition-colors"
+                                            value={manualPlayoffRound}
+                                            onChange={(e) => setManualPlayoffRound(e.target.value)}
+                                        >
+                                            <option value="round_16">Octavos de Final</option>
+                                            <option value="quarter">Cuartos de Final</option>
+                                            <option value="semi">Semifinal</option>
+                                            <option value="final">Final</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm text-gray-400 block mb-1">Equipo 1</label>
+                                        <select
+                                            className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary transition-colors"
+                                            value={manualPlayoffTeam1}
+                                            onChange={(e) => setManualPlayoffTeam1(e.target.value)}
+                                        >
+                                            <option value="">-- Por definir / TBD --</option>
+                                            {registrations.filter(r => r.status === 'approved').map(team => (
+                                                <option key={team.id} value={team.id}>{team.team_name} ({team.group_name || 'Sin Z.'})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="text-center font-bold text-gray-500 pb-3 md:hidden">VS</div>
+                                    <div>
+                                        <label className="text-sm text-gray-400 block mb-1">Equipo 2</label>
+                                        <select
+                                            className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary transition-colors"
+                                            value={manualPlayoffTeam2}
+                                            onChange={(e) => setManualPlayoffTeam2(e.target.value)}
+                                        >
+                                            <option value="">-- Por definir / TBD --</option>
+                                            {registrations.filter(r => r.status === 'approved').map(team => (
+                                                <option key={team.id} value={team.id}>{team.team_name} ({team.group_name || 'Sin Z.'})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <Button
+                                            className="w-full"
+                                            onClick={handleAddManualPlayoffMatch}
+                                            disabled={isGenerating}
+                                        >
+                                            {isGenerating ? <Loader2 size={18} className="animate-spin mr-2" /> : <Check size={18} className="mr-2" />}
+                                            Guardar
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {matches.filter(m => m.stage === 'playoff').length === 0 ? (
                             <div className="text-center py-20 text-gray-400">
                                 <Trophy className="mx-auto h-16 w-16 mb-6 opacity-50" />

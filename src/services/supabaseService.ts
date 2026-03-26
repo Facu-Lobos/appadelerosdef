@@ -1601,6 +1601,17 @@ export const supabaseService = {
         return true;
     },
 
+    async clearPlayoffs(tournamentId: string) {
+        const { error } = await supabase
+            .from('tournament_matches')
+            .delete()
+            .eq('tournament_id', tournamentId)
+            .eq('stage', 'playoff');
+
+        if (error) throw error;
+        return true;
+    },
+
     async generatePlayoffs(tournamentId: string) {
         // 0. Get tournament details
         const { data: tournament, error: tError } = await supabase
