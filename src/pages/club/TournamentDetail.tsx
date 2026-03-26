@@ -122,6 +122,27 @@ const TournamentDetail = () => {
         }
     };
 
+    const handleGenerateManualFixture = async () => {
+        if (!tournament) return;
+        if (registrations.length < 3) {
+            alert('Se necesitan al menos 3 equipos para generar la fase de grupos.');
+            return;
+        }
+
+        try {
+            setIsGenerating(true);
+            await supabaseService.generateManualGroupStage(tournament.id);
+            showToast('Fase de grupos manual generada correctamente!', 'success');
+            loadRegistrations(tournament.id);
+            setActiveTab('groups');
+        } catch (error: any) {
+            console.error('Error generating manual fixture:', error);
+            showToast('Error al generar fixture manual: ' + error.message, 'error');
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
     const handleResetFixture = async () => {
         if (!tournament) return;
         setConfirmDialog({
@@ -395,6 +416,28 @@ const TournamentDetail = () => {
                                                     }`}>
                                                     {reg.status === 'approved' ? 'Confirmado' : 'Pendiente'}
                                                 </div>
+                                                {reg.status === 'approved' && (
+                                                    <div className="mt-2 flex items-center gap-2">
+                                                        <label className="text-xs text-gray-400 uppercase tracking-wider">Zona/Grupo:</label>
+                                                        <input 
+                                                            className="bg-black/20 border border-white/10 rounded px-2 py-1 text-xs text-white max-w-[60px] focus:outline-none focus:border-primary transition-colors"
+                                                            defaultValue={reg.group_name || ''}
+                                                            onBlur={async (e) => {
+                                                                const newGroup = e.target.value.trim().toUpperCase();
+                                                                if (newGroup !== (reg.group_name || '')) {
+                                                                    try {
+                                                                        await supabaseService.updateRegistrationGroup(reg.id, newGroup || 'A'); // Default to A if cleared
+                                                                        showToast('Zona actualizada', 'success');
+                                                                        loadRegistrations(tournament!.id);
+                                                                    } catch (err) {
+                                                                        showToast('Error al actualizar zona', 'error');
+                                                                    }
+                                                                }
+                                                            }}
+                                                            placeholder="A, B..."
+                                                        />
+                                                    </div>
+                                                )}
                                             </div>
                                             {reg.status === 'pending' && (
                                                 <div className="flex gap-2">
@@ -433,15 +476,25 @@ const TournamentDetail = () => {
 
                             {tournament.status === 'open' ? (
                                 registrations.length >= 3 ? (
-                                    <div className="mt-8 pt-8 border-t border-white/10">
-                                        <Button onClick={handleGenerateFixture} className="w-full py-6 text-lg" variant="primary" disabled={isGenerating}>
+                                    <div className="mt-8 pt-8 border-t border-white/10 space-y-3">
+                                        <Button onClick={handleGenerateFixture} className="w-full py-4 text-lg" variant="primary" disabled={isGenerating}>
                                             {isGenerating ? (
                                                 <>
                                                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                                                     Generando...
                                                 </>
                                             ) : (
-                                                tournament.format === 'americano' ? 'Generar Fixture' : 'Generar Fase de Grupos'
+                                                tournament.format === 'americano' ? 'Generar Fixture (Automático)' : 'Generar Fase de Grupos (Automático)'
+                                            )}
+                                        </Button>
+                                        <Button onClick={handleGenerateManualFixture} className="w-full py-4 text-lg" variant="secondary" disabled={isGenerating}>
+                                            {isGenerating ? (
+                                                <>
+                                                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                                    Generando...
+                                                </>
+                                            ) : (
+                                                'Generar Fixture (Zonas Manuales)'
                                             )}
                                         </Button>
                                     </div>

@@ -1151,6 +1151,106 @@ export const supabaseService = {
         return true;
     },
 
+    async updateRegistrationGroup(registrationId: string, groupName: string) {
+        const { error } = await supabase
+            .from('tournament_registrations')
+            .update({ group_name: groupName })
+            .eq('id', registrationId);
+
+        if (error) throw error;
+        return true;
+    },
+
+    async generateManualGroupStage(tournamentId: string) {
+        // 1. Check tournament exists
+        const { error: tError } = await supabase
+            .from('tournaments')
+            .select('id')
+            .eq('id', tournamentId)
+            .single();
+
+        if (tError) throw tError;
+
+        // 2. Get approved registrations
+        const { data: registrations, error: regError } = await supabase
+            .from('tournament_registrations')
+            .select('*')
+            .eq('tournament_id', tournamentId)
+            .eq('status', 'approved');
+
+        if (regError) throw regError;
+        if (!registrations || registrations.length < 3) {
+            throw new Error('Se necesitan al menos 3 equipos para generar la competencia.');
+        }
+
+        // Clean up previous generation (if any)
+        const { error: deleteMatchError } = await supabase
+            .from('tournament_matches')
+            .delete()
+            .eq('tournament_id', tournamentId);
+        
+        if (deleteMatchError) throw deleteMatchError;
+
+        // Init stats, keep existing group_name but default to 'A' if empty
+        const updates = [];
+        const groups: { [key: string]: any[] } = {};
+
+        for (const reg of registrations) {
+            const gName = reg.group_name || 'A';
+            if (!groups[gName]) groups[gName] = [];
+            groups[gName].push(reg);
+
+            updates.push({
+                id: reg.id,
+                group_name: gName,
+                stats: { points: 0, played: 0, won: 0, lost: 0, sets_won: 0, sets_lost: 0, games_won: 0, games_lost: 0 }
+            });
+        }
+
+        // Batch update registrations stats
+        for (const update of updates) {
+            await supabase
+                .from('tournament_registrations')
+                .update({ group_name: update.group_name, stats: update.stats })
+                .eq('id', update.id);
+        }
+
+        // Generate matches
+        const matches = [];
+        for (const groupName in groups) {
+            const teams = groups[groupName];
+            for (let i = 0; i < teams.length; i++) {
+                for (let j = i + 1; j < teams.length; j++) {
+                    matches.push({
+                        tournament_id: tournamentId,
+                        round: 'group',
+                        stage: 'group',
+                        group_name: groupName,
+                        team1_id: teams[i].id,
+                        team2_id: teams[j].id,
+                        start_time: new Date().toISOString()
+                    });
+                }
+            }
+        }
+
+        if (matches.length > 0) {
+            const { error: matchError } = await supabase
+                .from('tournament_matches')
+                .insert(matches);
+            
+            if (matchError) throw matchError;
+        }
+
+        // Update tournament status
+        await supabase
+            .from('tournaments')
+            .update({ status: 'ongoing' })
+            .eq('id', tournamentId);
+
+        return true;
+    },
+
     async generateGroupStage(tournamentId: string) {
         // 1. Get tournament details
         const { data: tournament, error: tError } = await supabase
