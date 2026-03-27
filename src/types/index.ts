@@ -79,7 +79,7 @@ export interface Tournament {
     status: 'open' | 'ongoing' | 'finished';
     max_teams: number;
     created_at?: string;
-    format?: 'knockout' | 'league' | 'americano';
+    format?: 'knockout' | 'league' | 'americano' | 'largo_12';
     zones_count?: number;
     teams_advancing_per_zone?: number;
 }

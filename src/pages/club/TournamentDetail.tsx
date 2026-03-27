@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ShareTournamentModal } from '../../components/club/ShareTournamentModal';
-import { Plus, Trophy, Calendar, Users, ChevronLeft, Check, RefreshCw, Trash2, Clock, MapPin, Loader2, Share2, Download } from 'lucide-react';
+import { EditRegistrationModal } from '../../components/club/EditRegistrationModal';
+import { Plus, Trophy, Calendar, Users, ChevronLeft, Check, RefreshCw, Trash2, Clock, MapPin, Loader2, Share2, Download, Edit2 } from 'lucide-react';
 import { supabaseService } from '../../services/supabaseService';
 import type { Tournament } from '../../types';
 import { Button } from '../../components/ui/Button';
@@ -33,6 +34,10 @@ const TournamentDetail = () => {
     // Manual Registration State
     const [manualPlayer1, setManualPlayer1] = useState('');
     const [manualPlayer2, setManualPlayer2] = useState('');
+
+    // Edit Registration State
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [selectedRegistration, setSelectedRegistration] = useState<any>(null);
 
     // Match Score Modal State
     const [selectedMatch, setSelectedMatch] = useState<any>(null);
@@ -340,7 +345,7 @@ const TournamentDetail = () => {
                         <h1 className="text-2xl font-bold text-white">{tournament.name}</h1>
                         <div className="flex items-center gap-4 text-sm text-gray-400 mt-1">
                             <span className="flex items-center gap-1"><Calendar size={14} /> {format(new Date(tournament.start_date), "d 'de' MMMM", { locale: es })}</span>
-                            <span className="flex items-center gap-1"><Users size={14} /> {tournament.category} • {tournament.max_teams} Equipos</span>
+                            <span className="flex items-center gap-1"><Users size={14} /> {tournament.format === 'largo_12' ? 'Torneo Largo' : tournament.format === 'americano' ? 'Americano' : 'Torneo'} • {tournament.category} • {tournament.max_teams} Equipos</span>
                             <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${tournament.status === 'open' ? 'bg-green-500/20 text-green-400' :
                                 tournament.status === 'ongoing' ? 'bg-blue-500/20 text-blue-400' :
                                     'bg-gray-500/20 text-gray-400'
@@ -463,7 +468,7 @@ const TournamentDetail = () => {
                                                 <div className="font-bold text-white mb-1">{reg.team_name}</div>
                                                 <div className="text-sm text-gray-400 flex gap-2">
                                                     <span>{reg.player1?.name || reg.player1_name || 'Jugador 1'}</span>
-                                                    <span className="text-gray-600">&</span>
+                                                    <span className="text-gray-600">/</span>
                                                     <span>{reg.player2?.name || reg.player2_name || 'Jugador 2'}</span>
                                                 </div>
                                                 <div className={`text-xs mt-2 uppercase tracking-wider font-bold ${reg.status === 'approved' ? 'text-green-400' : 'text-yellow-400'
@@ -514,14 +519,27 @@ const TournamentDetail = () => {
                                                 </div>
                                             )}
                                             {reg.status === 'approved' && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="ghost"
-                                                    className="text-gray-500 hover:text-red-400 hover:bg-red-400/10"
-                                                    onClick={() => handleDeleteRegistration(reg.id)}
-                                                >
-                                                    <Trash2 size={18} />
-                                                </Button>
+                                                <div className="flex gap-2">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        className="text-gray-500 hover:text-primary hover:bg-primary/10"
+                                                        onClick={() => {
+                                                            setSelectedRegistration(reg);
+                                                            setIsEditModalOpen(true);
+                                                        }}
+                                                    >
+                                                        <Edit2 size={18} />
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        className="text-gray-500 hover:text-red-400 hover:bg-red-400/10"
+                                                        onClick={() => handleDeleteRegistration(reg.id)}
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </Button>
+                                                </div>
                                             )}
                                         </div>
                                     ))
@@ -715,9 +733,26 @@ const TournamentDetail = () => {
 
                                                                 return (
                                                                     <tr key={team.id} className="border-b border-white/5 last:border-0 hover:bg-white/5">
-                                                                        <td className="px-4 py-3 font-medium flex items-center gap-3">
+                                                                        <td className="px-4 py-3 font-medium flex items-center gap-3 group">
                                                                             <span className="text-gray-500 w-4 font-mono">{idx + 1}</span>
-                                                                            {team.team_name}
+                                                                            <div className="flex flex-col">
+                                                                                <span className="flex items-center gap-2">
+                                                                                    {team.team_name}
+                                                                                    <button 
+                                                                                        onClick={() => {
+                                                                                            setSelectedRegistration(team);
+                                                                                            setIsEditModalOpen(true);
+                                                                                        }}
+                                                                                        className="text-gray-500 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                                        title="Editar equipo"
+                                                                                    >
+                                                                                        <Edit2 size={14} />
+                                                                                    </button>
+                                                                                </span>
+                                                                                <span className="text-xs text-gray-500 font-normal mt-0.5 flex gap-1">
+                                                                                    {team.player1?.name || team.player1_name || 'Jugador 1'} <span className="text-gray-600">/</span> {team.player2?.name || team.player2_name || 'Jugador 2'}
+                                                                                </span>
+                                                                            </div>
                                                                         </td>
                                                                         <td className="px-2 py-3 text-center font-bold text-white">{team.stats?.points || 0}</td>
                                                                         <td className="px-2 py-3 text-center text-gray-400">{team.stats?.played || 0}</td>
@@ -1087,6 +1122,16 @@ const TournamentDetail = () => {
             <ConfirmModal
                 {...confirmDialog}
                 onClose={closeConfirmDialog}
+            />
+
+            <EditRegistrationModal
+                isOpen={isEditModalOpen}
+                onClose={() => {
+                    setIsEditModalOpen(false);
+                    setSelectedRegistration(null);
+                }}
+                registration={selectedRegistration}
+                onRegistrationUpdated={() => loadRegistrations(tournament!.id)}
             />
         </div >
     );

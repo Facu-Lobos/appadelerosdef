@@ -36,7 +36,8 @@ export const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({ is
             await supabaseService.createTournament({
                 ...formData,
                 gender: formData.gender as 'Masculino' | 'Femenino' | 'Mixto',
-                format: formData.format as 'knockout' | 'league' | 'americano',
+                format: formData.format as 'knockout' | 'league' | 'americano' | 'largo_12',
+                max_teams: formData.format === 'largo_12' ? 12 : formData.max_teams,
                 club_id: clubId
             });
             onTournamentCreated();
@@ -139,6 +140,7 @@ export const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({ is
                                 <option value="knockout">Clásico (Grupos + Playoffs)</option>
                                 <option value="league">Liga</option>
                                 <option value="americano">Americano</option>
+                                <option value="largo_12">Largo (12 Parejas - 4 Zonas de 3)</option>
                             </select>
                         </div>
                         {formData.format === 'knockout' && (
@@ -172,6 +174,14 @@ export const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({ is
                                 <label className="block text-sm font-medium text-gray-400 mb-1">Equipos Máx.</label>
                                 <div className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-gray-400 text-sm">
                                     Flexible (Sin límite)
+                                </div>
+                            </div>
+                        )}
+                        {formData.format === 'largo_12' && (
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-1">Equipos Máx.</label>
+                                <div className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-gray-400 text-sm">
+                                    Fijo: 12 Equipos (4 zonas de 3)
                                 </div>
                             </div>
                         )}

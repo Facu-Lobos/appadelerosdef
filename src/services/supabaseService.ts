@@ -1161,6 +1161,19 @@ export const supabaseService = {
         return true;
     },
 
+    async updateTournamentRegistration(registrationId: string, updates: Partial<TournamentRegistration>) {
+        const { error } = await supabase
+            .from('tournament_registrations')
+            .update(updates)
+            .eq('id', registrationId);
+
+        if (error) {
+            console.error('Error updating registration:', error);
+            throw error;
+        }
+        return true;
+    },
+
     async generateManualGroupStage(tournamentId: string) {
         // 1. Check tournament exists
         const { error: tError } = await supabase
@@ -1300,6 +1313,8 @@ export const supabaseService = {
             numZones = tournament.zones_count || 1;
         } else if (tournament.format === 'americano') {
             numZones = 1;
+        } else if (tournament.format === 'largo_12') {
+            numZones = 4;
         } else {
             // Default knockout format (usually 4 teams per group)
             numZones = Math.max(1, Math.ceil(registrations.length / 4));
@@ -1643,6 +1658,7 @@ export const supabaseService = {
         });
 
         let allQualifiers: typeof registrations = [];
+        const zoneQualifiers: { [key: string]: typeof registrations } = {};
 
         // Qualification Logic:
         // Group size >= 4: Top 3 qualify
@@ -1667,12 +1683,16 @@ export const supabaseService = {
             let qualifyCount = groupTeams.length >= 4 ? 3 : 2;
             if (tournament.format === 'league' && tournament.teams_advancing_per_zone) {
                 qualifyCount = tournament.teams_advancing_per_zone;
+            } else if (tournament.format === 'largo_12') {
+                qualifyCount = 2;
             }
 
             // Ensure we don't try to qualify more teams than exist in the group
             qualifyCount = Math.min(qualifyCount, groupTeams.length);
 
-            allQualifiers.push(...sorted.slice(0, qualifyCount));
+            const qualifiers = sorted.slice(0, qualifyCount);
+            allQualifiers.push(...qualifiers);
+            zoneQualifiers[groupName] = qualifiers;
         }
 
         if (allQualifiers.length < 2) {
@@ -1702,121 +1722,152 @@ export const supabaseService = {
             bracketSize *= 2;
         }
 
-        // 5. Generate Seeding Order
-        // Helper to generate standard bracket seeding (1 vs 8, 4 vs 5, etc.)
-        const getSeedingOrder = (size: number): number[] => {
-            if (size === 2) return [1, 2];
-            const prev = getSeedingOrder(size / 2);
-            const next: number[] = [];
-            for (const p of prev) {
-                next.push(p);
-                next.push(size - p + 1);
-            }
-            return next;
-        };
-
-        const seeds = getSeedingOrder(bracketSize);
-        const matches = [];
+        // 5. Generate Seeding Order & First Round Matches
+        const matches: any[] = [];
+        const firstRoundMatches: any[] = [];
         const timestamp = new Date().getTime(); // Use timestamp for ordering
 
-        // 6. Generate First Round Matches
-        // We generate matches for the full bracketSize.
-        // If a seed > totalQualifiers, it's a BYE.
+        if (tournament.format === 'largo_12' && zoneQualifiers['A'] && zoneQualifiers['B'] && zoneQualifiers['C'] && zoneQualifiers['D']) {
+            bracketSize = 8;
+            
+            // Fixed crossing: 1A vs 2D, 1B vs 2C, 1C vs 2B, 1D vs 2A
+            const predefinedMatches = [
+                { t1: zoneQualifiers['A'][0], t2: zoneQualifiers['D'][1] },
+                { t1: zoneQualifiers['B'][0], t2: zoneQualifiers['C'][1] },
+                { t1: zoneQualifiers['C'][0], t2: zoneQualifiers['B'][1] },
+                { t1: zoneQualifiers['D'][0], t2: zoneQualifiers['A'][1] }
+            ];
 
-        const firstRoundName = bracketSize === 16 ? 'round_16' :
-            bracketSize === 8 ? 'quarter' :
-                bracketSize === 4 ? 'semi' : 'final';
+            for (let i = 0; i < 4; i++) {
+                const team1 = predefinedMatches[i].t1;
+                const team2 = predefinedMatches[i].t2;
 
-        const firstRoundMatches = [];
-        for (let i = 0; i < bracketSize / 2; i++) {
-            const seed1 = seeds[i * 2];
-            const seed2 = seeds[i * 2 + 1];
+                const match: any = {
+                    tournament_id: tournamentId,
+                    round: 'quarter',
+                    stage: 'playoff',
+                    start_time: new Date(timestamp + i * 1000).toISOString(),
+                    group_name: `M${i + 1}`
+                };
 
-            const team1 = allQualifiers[seed1 - 1];
-            const team2 = allQualifiers[seed2 - 1]; // Might be undefined if seed > totalQualifiers (Bye)
+                if (team1) match.team1_id = team1.id;
+                if (team2) match.team2_id = team2.id;
 
-            const match: any = {
-                tournament_id: tournamentId,
-                round: firstRoundName,
-                stage: 'playoff',
-                start_time: new Date(timestamp + i * 1000).toISOString(), // Increment time to preserve order
-                group_name: `M${i + 1}` // Store match number in group_name for linking
+                if (team1 && !team2) {
+                    match.winner_id = team1.id;
+                    match.score = 'BYE';
+                    match.sets_score = [];
+                } else if (!team1 && team2) {
+                    match.winner_id = team2.id;
+                    match.score = 'BYE';
+                    match.sets_score = [];
+                }
+
+                firstRoundMatches.push(match);
+                matches.push(match);
+            }
+        } else {
+            // Helper to generate standard bracket seeding (1 vs 8, 4 vs 5, etc.)
+            const getSeedingOrder = (size: number): number[] => {
+                if (size === 2) return [1, 2];
+                const prev = getSeedingOrder(size / 2);
+                const next: number[] = [];
+                for (const p of prev) {
+                    next.push(p);
+                    next.push(size - p + 1);
+                }
+                return next;
             };
 
-            if (team1) match.team1_id = team1.id;
-            if (team2) match.team2_id = team2.id;
+            const seeds = getSeedingOrder(bracketSize);
 
-            if (team1 && !team2) {
-                // BYE for Team 1
-                match.winner_id = team1.id;
-                match.score = 'BYE';
-                match.sets_score = [];
-            } else if (!team1 && team2) {
-                // BYE for Team 2 (Shouldn't happen with standard seeding if sorted correctly)
-                match.winner_id = team2.id;
-                match.score = 'BYE';
-                match.sets_score = [];
+            // 6. Generate First Round Matches
+            const firstRoundName = bracketSize === 16 ? 'round_16' :
+                bracketSize === 8 ? 'quarter' :
+                    bracketSize === 4 ? 'semi' : 'final';
+
+            for (let i = 0; i < bracketSize / 2; i++) {
+                const seed1 = seeds[i * 2];
+                const seed2 = seeds[i * 2 + 1];
+
+                const team1 = allQualifiers[seed1 - 1];
+                const team2 = allQualifiers[seed2 - 1]; // Might be undefined if seed > totalQualifiers (Bye)
+
+                const match: any = {
+                    tournament_id: tournamentId,
+                    round: firstRoundName,
+                    stage: 'playoff',
+                    start_time: new Date(timestamp + i * 1000).toISOString(), // Increment time to preserve order
+                    group_name: `M${i + 1}` // Store match number in group_name for linking
+                };
+
+                if (team1) match.team1_id = team1.id;
+                if (team2) match.team2_id = team2.id;
+
+                if (team1 && !team2) {
+                    // BYE for Team 1
+                    match.winner_id = team1.id;
+                    match.score = 'BYE';
+                    match.sets_score = [];
+                } else if (!team1 && team2) {
+                    // BYE for Team 2 (Shouldn't happen with standard seeding if sorted correctly)
+                    match.winner_id = team2.id;
+                    match.score = 'BYE';
+                    match.sets_score = [];
+                }
+
+                firstRoundMatches.push(match);
+                matches.push(match);
             }
 
-            firstRoundMatches.push(match);
-            matches.push(match);
-        }
-
-        // Anti-Same-Group Logic for First Round
-        // We iterate through firstRoundMatches and if team1 and team2 share the same group_name,
-        // we try to swap team2 with another match's team2 where doing so doesn't create new conflicts.
-        for (let i = 0; i < firstRoundMatches.length; i++) {
-            const m1 = firstRoundMatches[i];
-            
-            // Only consider matches where both teams exist and share a group
-            const t1 = allQualifiers.find(q => q.id === m1.team1_id);
-            const t2 = allQualifiers.find(q => q.id === m1.team2_id);
-            
-            if (t1 && t2 && t1.group_name === t2.group_name) {
-                // Find a swap partner
-                for (let j = 0; j < firstRoundMatches.length; j++) {
-                    if (i === j) continue;
-                    const m2 = firstRoundMatches[j];
-                    
-                    const m2_t1 = allQualifiers.find(q => q.id === m2.team1_id);
-                    const m2_t2 = allQualifiers.find(q => q.id === m2.team2_id);
-                    
-                    // We need m2_t2 to exist to swap (or we can swap with a BYE as well)
-                    // Let's enforce that m2 has a team2 to keep the bracket balanced,
-                    // or if it's a BYE, that's fine too.
-                    
-                    const new_m1_t2_group = m2_t2?.group_name;
-                    const new_m2_t2_group = t2?.group_name;
-                    
-                    // Check if swapping resolves the conflict without creating a new one
-                    if (t1.group_name !== new_m1_t2_group && (!m2_t1 || m2_t1.group_name !== new_m2_t2_group)) {
-                        // SWAP team2_id
-                        const tempTeam2Id = m1.team2_id;
-                        m1.team2_id = m2.team2_id;
-                        m2.team2_id = tempTeam2Id;
+            // Anti-Same-Group Logic for First Round
+            for (let i = 0; i < firstRoundMatches.length; i++) {
+                const m1 = firstRoundMatches[i];
+                
+                const t1 = allQualifiers.find(q => q.id === m1.team1_id);
+                const t2 = allQualifiers.find(q => q.id === m1.team2_id);
+                
+                if (t1 && t2 && t1.group_name === t2.group_name) {
+                    // Find a swap partner
+                    for (let j = 0; j < firstRoundMatches.length; j++) {
+                        if (i === j) continue;
+                        const m2 = firstRoundMatches[j];
                         
-                        // Fix byes if needed
-                        if (!m1.team2_id) {
-                            m1.winner_id = m1.team1_id;
-                            m1.score = 'BYE';
-                            m1.sets_score = [];
-                        } else {
-                            m1.winner_id = null;
-                            m1.score = null;
-                            m1.sets_score = null;
+                        const m2_t1 = allQualifiers.find(q => q.id === m2.team1_id);
+                        const m2_t2 = allQualifiers.find(q => q.id === m2.team2_id);
+                        
+                        const new_m1_t2_group = m2_t2?.group_name;
+                        const new_m2_t2_group = t2?.group_name;
+                        
+                        if (t1.group_name !== new_m1_t2_group && (!m2_t1 || m2_t1.group_name !== new_m2_t2_group)) {
+                            // SWAP team2_id
+                            const tempTeam2Id = m1.team2_id;
+                            m1.team2_id = m2.team2_id;
+                            m2.team2_id = tempTeam2Id;
+                            
+                            // Fix byes if needed
+                            if (!m1.team2_id) {
+                                m1.winner_id = m1.team1_id;
+                                m1.score = 'BYE';
+                                m1.sets_score = [];
+                            } else {
+                                m1.winner_id = null;
+                                m1.score = null;
+                                m1.sets_score = null;
+                            }
+                            
+                            if (!m2.team2_id && m2.team1_id) {
+                                m2.winner_id = m2.team1_id;
+                                m2.score = 'BYE';
+                                m2.sets_score = [];
+                            } else {
+                                m2.winner_id = null;
+                                m2.score = null;
+                                m2.sets_score = null;
+                            }
+                            
+                            break; // Conflict resolved
                         }
-                        
-                        if (!m2.team2_id && m2.team1_id) {
-                            m2.winner_id = m2.team1_id;
-                            m2.score = 'BYE';
-                            m2.sets_score = [];
-                        } else {
-                            m2.winner_id = null;
-                            m2.score = null;
-                            m2.sets_score = null;
-                        }
-                        
-                        break; // Conflict resolved
                     }
                 }
             }
