@@ -922,6 +922,41 @@ export const supabaseService = {
         return data as Tournament;
     },
 
+    async deleteTournament(tournamentId: string) {
+        // First delete matches (though supabase cascade might handle it if set up, doing it manually is safer)
+        const { error: matchError } = await supabase
+            .from('tournament_matches')
+            .delete()
+            .eq('tournament_id', tournamentId);
+        
+        if (matchError) {
+            console.error('Error deleting matches:', matchError);
+        }
+
+        // Delete registrations
+        const { error: regsError } = await supabase
+            .from('tournament_registrations')
+            .delete()
+            .eq('tournament_id', tournamentId);
+        
+        if (regsError) {
+            console.error('Error deleting registrations:', regsError);
+        }
+
+        // Finally delete the tournament
+        const { error } = await supabase
+            .from('tournaments')
+            .delete()
+            .eq('id', tournamentId);
+
+        if (error) {
+            console.error('Error deleting tournament:', error);
+            throw error;
+        }
+
+        return true;
+    },
+
     async getTournaments(clubId?: string) {
         let query = supabase
             .from('tournaments')

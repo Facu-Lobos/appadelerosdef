@@ -325,6 +325,27 @@ const TournamentDetail = () => {
         });
     };
 
+    const handleDeleteTournament = () => {
+        if (!tournament) return;
+        setConfirmDialog({
+            isOpen: true,
+            title: 'Eliminar Torneo',
+            message: '¿Estás seguro de que quieres eliminar este torneo de forma permanente? Se perderán todas las inscripciones y los resultados de los partidos.',
+            type: 'warning', // using warning to preserve existing type styles
+            onConfirm: async () => {
+                closeConfirmDialog();
+                try {
+                    await supabaseService.deleteTournament(tournament.id);
+                    showToast('Torneo eliminado correctamente.', 'success');
+                    navigate('/club/tournaments');
+                } catch (error: any) {
+                    console.error('Error deleting tournament:', error);
+                    showToast('Error al eliminar torneo: ' + error.message, 'error');
+                }
+            }
+        });
+    };
+
     if (loading) {
         return <div className="p-8 text-center text-gray-400">Cargando torneo...</div>;
     }
@@ -373,7 +394,7 @@ const TournamentDetail = () => {
                         variant="secondary"
                         onClick={() => setIsShareModalOpen(true)}
                     >
-                        <Download size={18} className="mr-2" />
+                        <Share2 size={18} className="mr-2" />
                         Flyer
                     </Button>
                     {tournament.status === 'ongoing' && (
@@ -385,6 +406,14 @@ const TournamentDetail = () => {
                             Finalizar Torneo
                         </Button>
                     )}
+                    <Button
+                        variant="ghost"
+                        className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                        onClick={handleDeleteTournament}
+                        title="Eliminar Torneo"
+                    >
+                        <Trash2 size={18} />
+                    </Button>
                 </div>
             </div>
 
