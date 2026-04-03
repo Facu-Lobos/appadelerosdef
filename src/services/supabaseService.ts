@@ -1447,13 +1447,20 @@ export const supabaseService = {
         if (mError) throw mError;
 
         // 4. Determine player progress
-        const playerPoints: { [key: string]: number } = {};
+        const playerPoints: { [key: string]: { id?: string; name?: string; points: number } } = {};
 
         // Helper to add points
-        const addPoints = (playerId: string, points: number) => {
-            if (!playerPoints[playerId]) playerPoints[playerId] = 0;
+        const addPoints = (player: { id?: string; name?: string }, points: number) => {
+            if (!player.id && !player.name) return;
+            const key = player.id || `name:${player.name}`;
+            
+            if (!playerPoints[key]) {
+                playerPoints[key] = { id: player.id, name: player.name, points: 0 };
+            }
             // Keep the highest points (in case logic overlaps, though here we'll assign based on max stage reached)
-            if (points > playerPoints[playerId]) playerPoints[playerId] = points;
+            if (points > playerPoints[key].points) {
+                playerPoints[key].points = points;
+            }
         };
 
         if (tournament.format === 'americano') {
@@ -1471,14 +1478,14 @@ export const supabaseService = {
                 else if (index === 1) pts = 150;
                 else if (index === 2) pts = 100;
                 
-                if (team.player1_id) addPoints(team.player1_id, pts);
-                if (team.player2_id) addPoints(team.player2_id, pts);
+                addPoints({ id: team.player1_id, name: team.player1_name || team.player1?.name }, pts);
+                addPoints({ id: team.player2_id, name: team.player2_name || team.player2?.name }, pts);
             });
         } else {
             // Default: 25 points for participation (Group Stage)
             registrations.forEach((reg: any) => {
-                if (reg.player1_id) addPoints(reg.player1_id, 25);
-                if (reg.player2_id) addPoints(reg.player2_id, 25);
+                addPoints({ id: reg.player1_id, name: reg.player1_name || reg.player1?.name }, 25);
+                addPoints({ id: reg.player2_id, name: reg.player2_name || reg.player2?.name }, 25);
             });
 
             // Analyze matches to upgrade points
@@ -1500,30 +1507,31 @@ export const supabaseService = {
                 else if (match.round === 'semi') loserPoints = 100;
                 else if (match.round === 'final') loserPoints = 150;
 
-                if (loserTeam.player1_id) addPoints(loserTeam.player1_id, loserPoints);
-                if (loserTeam.player2_id) addPoints(loserTeam.player2_id, loserPoints);
+                addPoints({ id: loserTeam.player1_id, name: loserTeam.player1_name || loserTeam.player1?.name }, loserPoints);
+                addPoints({ id: loserTeam.player2_id, name: loserTeam.player2_name || loserTeam.player2?.name }, loserPoints);
 
                 // Points for the WINNER
                 if (match.round === 'final') {
-                    if (winnerTeam.player1_id) addPoints(winnerTeam.player1_id, 200);
-                    if (winnerTeam.player2_id) addPoints(winnerTeam.player2_id, 200);
+                    addPoints({ id: winnerTeam.player1_id, name: winnerTeam.player1_name || winnerTeam.player1?.name }, 200);
+                    addPoints({ id: winnerTeam.player2_id, name: winnerTeam.player2_name || winnerTeam.player2?.name }, 200);
                 } else {
                     let winnerGuaranteed = 0;
                     if (match.round === 'round_16') winnerGuaranteed = 75;
                     else if (match.round === 'quarter') winnerGuaranteed = 100;
                     else if (match.round === 'semi') winnerGuaranteed = 150;
 
-                    if (winnerTeam.player1_id) addPoints(winnerTeam.player1_id, winnerGuaranteed);
-                    if (winnerTeam.player2_id) addPoints(winnerTeam.player2_id, winnerGuaranteed);
+                    addPoints({ id: winnerTeam.player1_id, name: winnerTeam.player1_name || winnerTeam.player1?.name }, winnerGuaranteed);
+                    addPoints({ id: winnerTeam.player2_id, name: winnerTeam.player2_name || winnerTeam.player2?.name }, winnerGuaranteed);
                 }
             });
         }
 
         // 5. Save to DB
-        const pointsEntries = Object.entries(playerPoints).map(([playerId, points]) => ({
+        const pointsEntries = Object.values(playerPoints).map((p) => ({
             tournament_id: tournamentId,
-            player_id: playerId,
-            points: points,
+            player_id: p.id || null,
+            player_name: !p.id ? p.name : null,
+            points: p.points,
             category: tournament.category,
             gender: tournament.gender // Save gender to ranking points
         }));
@@ -1560,7 +1568,7 @@ export const supabaseService = {
         // 2. Get points for these tournaments
         let query = supabase
             .from('ranking_points')
-            .select('player_id, points, category, gender, profiles:player_id(name, avatar_url)')
+            .select('player_id, player_name, points, category, gender, profiles:player_id(name, avatar_url)')
             .in('tournament_id', tournamentIds);
 
         if (category) {
@@ -1579,11 +1587,11 @@ export const supabaseService = {
         const rankingMap: { [key: string]: any } = {};
 
         pointsData.forEach((entry: any) => {
-            const playerId = entry.player_id;
+            const playerId = entry.player_id || `name:${entry.player_name}`;
             if (!rankingMap[playerId]) {
                 rankingMap[playerId] = {
-                    id: playerId,
-                    name: entry.profiles?.name || 'Jugador',
+                    id: entry.player_id,
+                    name: entry.profiles?.name || entry.player_name || 'Jugador',
                     avatar_url: entry.profiles?.avatar_url,
                     points: 0,
                     category: entry.category,

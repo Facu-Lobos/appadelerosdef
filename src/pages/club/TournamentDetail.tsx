@@ -308,18 +308,20 @@ const TournamentDetail = () => {
         if (!tournament) return;
         setConfirmDialog({
             isOpen: true,
-            title: 'Finalizar Torneo',
-            message: '¿Estás seguro de que quieres finalizar el torneo? Se calcularán los puntos para el ranking y no se podrán hacer más cambios.',
+            title: tournament.status === 'finished' ? 'Recalcular Puntos' : 'Finalizar Torneo',
+            message: tournament.status === 'finished' 
+                ? '¿Estás seguro de que quieres volver a calcular y asignar los puntos del torneo? Esto sobrescribirá los puntos asignados anteriormente.'
+                : '¿Estás seguro de que quieres finalizar el torneo? Se calcularán los puntos para el ranking y no se podrán hacer más cambios.',
             type: 'warning',
             onConfirm: async () => {
                 closeConfirmDialog();
                 try {
                     await supabaseService.calculateTournamentPoints(tournament.id);
-                    showToast('Torneo finalizado y puntos calculados correctamente.', 'success');
+                    showToast(tournament.status === 'finished' ? 'Puntos recalculados correctamente.' : 'Torneo finalizado y puntos calculados correctamente.', 'success');
                     loadTournamentData(tournament.id);
                 } catch (error: any) {
                     console.error('Error finishing tournament:', error);
-                    showToast('Error al finalizar torneo: ' + error.message, 'error');
+                    showToast(`Error al ${tournament.status === 'finished' ? 'recalcular puntos' : 'finalizar torneo'}: ` + error.message, 'error');
                 }
             }
         });
@@ -397,13 +399,13 @@ const TournamentDetail = () => {
                         <Share2 size={18} className="mr-2" />
                         Flyer
                     </Button>
-                    {tournament.status === 'ongoing' && (
+                    {(tournament.status === 'ongoing' || tournament.status === 'finished') && (
                         <Button
                             className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold"
                             onClick={handleFinishTournament}
                         >
                             <Trophy size={18} className="mr-2" />
-                            Finalizar Torneo
+                            {tournament.status === 'finished' ? 'Recalcular Puntos' : 'Finalizar Torneo'}
                         </Button>
                     )}
                     <Button

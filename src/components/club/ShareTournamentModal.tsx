@@ -4,6 +4,7 @@ import { X, Download, Share2, Trophy, Calendar, Users } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from '../ui/Button';
+import { AppLogo } from '../AppLogo';
 import type { Tournament } from '../../types';
 
 interface ShareTournamentModalProps {
@@ -192,14 +193,17 @@ export function ShareTournamentModal({ isOpen, onClose, tournament, clubName, cl
                                         <p className="text-[10px] text-gray-400 uppercase font-bold tracking-tight">Categoría</p>
                                         <p className="text-sm font-bold text-white">{tournament.category}</p>
                                     </div>
-                                    <div className="bg-white/5 rounded-lg p-3 border border-white/10 col-span-2 text-center flex flex-col items-center justify-center">
-                                        <Trophy size={16} className="mb-1 text-yellow-500" />
-                                        <p className="text-[10px] text-gray-400 uppercase font-bold tracking-tight">Inscripción</p>
-                                        <p className="text-sm font-bold text-white">
-                                            {tournament.status === 'open' ? 'ABIERTA' :
-                                                tournament.status === 'ongoing' ? 'EN CURSO' : 'FINALIZADO'}
-                                        </p>
-                                    </div>
+                                    {tournament.status === 'open' ? (
+                                        <div className="bg-white/5 rounded-lg p-3 border border-white/10 col-span-2 text-center flex flex-col items-center justify-center">
+                                            <Trophy size={16} className="mb-1 text-yellow-500" />
+                                            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-tight">Inscripción</p>
+                                            <p className="text-sm font-bold text-white">ABIERTA</p>
+                                        </div>
+                                    ) : (
+                                        <div className="col-span-2 text-center flex flex-col items-center justify-center">
+                                            <AppLogo variant="small" />
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Footer CTA */}
