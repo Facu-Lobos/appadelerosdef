@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ShareTournamentModal } from '../../components/club/ShareTournamentModal';
 import { EditRegistrationModal } from '../../components/club/EditRegistrationModal';
+import { EditTournamentModal } from '../../components/club/EditTournamentModal';
 import { Plus, Trophy, Calendar, Users, ChevronLeft, Check, RefreshCw, Trash2, Clock, MapPin, Loader2, Share2, Download, Edit2 } from 'lucide-react';
 import { supabaseService } from '../../services/supabaseService';
 import type { Tournament } from '../../types';
@@ -26,6 +27,7 @@ const TournamentDetail = () => {
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'registrations' | 'groups' | 'playoffs'>('registrations');
     const [profile, setProfile] = useState<ClubProfile | null>(null);
+    const [isEditTournamentModalOpen, setIsEditTournamentModalOpen] = useState(false);
 
     // Data State
     const [registrations, setRegistrations] = useState<any[]>([]);
@@ -408,6 +410,14 @@ const TournamentDetail = () => {
                             {tournament.status === 'finished' ? 'Recalcular Puntos' : 'Finalizar Torneo'}
                         </Button>
                     )}
+                    <Button
+                        variant="ghost"
+                        className="text-gray-400 hover:text-white hover:bg-white/10"
+                        onClick={() => setIsEditTournamentModalOpen(true)}
+                        title="Editar Fechas"
+                    >
+                        <Edit2 size={18} />
+                    </Button>
                     <Button
                         variant="ghost"
                         className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
@@ -1164,6 +1174,15 @@ const TournamentDetail = () => {
                 registration={selectedRegistration}
                 onRegistrationUpdated={() => loadRegistrations(tournament!.id)}
             />
+
+            {tournament && isEditTournamentModalOpen && (
+                <EditTournamentModal
+                    isOpen={isEditTournamentModalOpen}
+                    onClose={() => setIsEditTournamentModalOpen(false)}
+                    onUpdated={() => loadTournamentData(tournament.id)}
+                    tournament={tournament}
+                />
+            )}
         </div >
     );
 };

@@ -922,6 +922,18 @@ export const supabaseService = {
         return data as Tournament;
     },
 
+    async updateTournament(tournamentId: string, updates: Partial<Tournament>) {
+        const { data, error } = await supabase
+            .from('tournaments')
+            .update(updates)
+            .eq('id', tournamentId)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Tournament;
+    },
+
     async deleteTournament(tournamentId: string) {
         // First delete matches (though supabase cascade might handle it if set up, doing it manually is safer)
         const { error: matchError } = await supabase
