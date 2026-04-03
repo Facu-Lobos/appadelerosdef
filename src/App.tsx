@@ -59,7 +59,6 @@ export default function App() {
                   <Route path="bookings" element={<PlayerBookings />} />
                   <Route path="tournaments" element={<PlayerTournaments />} />
                   <Route path="tournaments/:id" element={<TournamentResults />} />
-                  <Route path="tournament/match/:id" element={<MatchSharePage />} />
                   <Route path="community" element={<PlayerCommunity />} />
                   <Route path="profile" element={<PlayerProfilePage />} />
                   <Route path="club/:id" element={<ClubDetails />} />
@@ -85,6 +84,12 @@ export default function App() {
                   </ProtectedRoute>
                 }>
                   <Route path="/admin" element={<AdminDashboard />} />
+                </Route>
+
+                {/* Publicly accessible layout routes */}
+                <Route element={<MainLayout />}>
+                  <Route path="/public/torneo/:id" element={<TournamentResults />} />
+                  <Route path="/public/torneo/match/:id" element={<MatchSharePage />} />
                 </Route>
 
                 <Route path="/dev/seed" element={<SeederPage />} />

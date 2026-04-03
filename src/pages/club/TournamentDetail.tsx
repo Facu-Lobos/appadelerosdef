@@ -386,7 +386,7 @@ const TournamentDetail = () => {
                     <Button
                         variant="secondary"
                         onClick={() => {
-                            const url = `${window.location.origin}/player/tournaments/${tournament.id}`;
+                            const url = `${window.location.origin}/public/torneo/${tournament.id}`;
                             navigator.clipboard.writeText(url);
                             showToast('Enlace copiado al portapapeles', 'success');
                         }}

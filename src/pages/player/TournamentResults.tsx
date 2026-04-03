@@ -6,10 +6,12 @@ import type { Tournament } from '../../types';
 import { Button } from '../../components/ui/Button';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useAuth } from '../../context/AuthContext';
 
 const TournamentResults = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [tournament, setTournament] = useState<Tournament | null>(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'groups' | 'playoffs'>('groups');
@@ -71,6 +73,19 @@ const TournamentResults = () => {
 
     return (
         <div className="space-y-6 pb-20">
+            {/* Public Visitor Banner */}
+            {!user && (
+                <div className="bg-primary/10 border border-primary text-white p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 shadow-lg gap-4">
+                    <div>
+                        <p className="font-bold text-primary text-lg leading-tight mb-1">¡Registrate para participar!</p>
+                        <p className="text-sm opacity-90 text-gray-300">Creá tu cuenta gratis en APPadeleros para anotarte a torneos, guardar tus resultados y entrar al ranking.</p>
+                    </div>
+                    <Button onClick={() => navigate('/auth/login')} className="bg-primary hover:bg-primary/90 text-black font-bold shrink-0 w-full sm:w-auto justify-center">
+                        Crear Cuenta
+                    </Button>
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-4">
@@ -80,7 +95,7 @@ const TournamentResults = () => {
                     <div>
                         <h1 className="text-2xl font-bold text-white">{tournament.name}</h1>
                         <div className="flex items-center gap-4 text-sm text-gray-400 mt-1">
-                            <span className="flex items-center gap-1"><Calendar size={14} /> {format(new Date(tournament.start_date), "d 'de' MMMM", { locale: es })}</span>
+                            <span className="flex items-center gap-1"><Calendar size={14} /> {format(new Date(tournament.start_date + (!tournament.start_date.includes('T') ? 'T12:00:00' : '')), "d 'de' MMMM", { locale: es })}</span>
                             <span className="flex items-center gap-1"><Users size={14} /> {tournament.category} • {tournament.max_teams} Equipos</span>
                             <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${tournament.status === 'open' ? 'bg-green-500/20 text-green-400' :
                                 tournament.status === 'ongoing' ? 'bg-blue-500/20 text-blue-400' :
