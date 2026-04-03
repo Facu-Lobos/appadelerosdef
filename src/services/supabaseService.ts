@@ -1502,8 +1502,8 @@ export const supabaseService = {
 
                 // Points for the LOSER of this round (they reached this stage but didn't advance)
                 let loserPoints = 0;
-                if (match.round === 'round_16') loserPoints = 50;
-                else if (match.round === 'quarter') loserPoints = 75;
+                if (match.round === 'round_16') loserPoints = 35;
+                else if (match.round === 'quarter') loserPoints = 50;
                 else if (match.round === 'semi') loserPoints = 100;
                 else if (match.round === 'final') loserPoints = 150;
 
@@ -1516,7 +1516,7 @@ export const supabaseService = {
                     addPoints({ id: winnerTeam.player2_id, name: winnerTeam.player2_name || winnerTeam.player2?.name }, 200);
                 } else {
                     let winnerGuaranteed = 0;
-                    if (match.round === 'round_16') winnerGuaranteed = 75;
+                    if (match.round === 'round_16') winnerGuaranteed = 50;
                     else if (match.round === 'quarter') winnerGuaranteed = 100;
                     else if (match.round === 'semi') winnerGuaranteed = 150;
 

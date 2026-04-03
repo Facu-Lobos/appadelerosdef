@@ -29,7 +29,7 @@ export function ShareTournamentModal({ isOpen, onClose, tournament, clubName, cl
             return await toBlob(cardRef.current, { 
                 cacheBust: true, 
                 pixelRatio: 2,
-                backgroundColor: '#1e293b',
+                backgroundColor: '#0f172a',
                 // Evita que html-to-image crashee al intentar leer reglas CSS de OneSignal u otros scripts externos (CORS error)
                 fontEmbedCSS: ''
             });
@@ -130,7 +130,7 @@ export function ShareTournamentModal({ isOpen, onClose, tournament, clubName, cl
                         {/* The Shareable Card - This is what gets converted to image */}
                         <div
                             ref={cardRef}
-                            className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 rounded-xl border border-white/10 shadow-2xl relative overflow-hidden"
+                            className="bg-background p-6 rounded-xl border border-white/10 shadow-2xl relative overflow-hidden"
                             style={{ width: '100%' }}
                         >
                             {/* Decorative Background Elements */}
@@ -140,7 +140,7 @@ export function ShareTournamentModal({ isOpen, onClose, tournament, clubName, cl
                             {/* Card Content */}
                             <div className="relative z-10 flex flex-col h-full w-full">
                                 {/* Header: Banner with Cover + Name + Date */}
-                                <div className="relative h-32 -mx-6 -mt-6 mb-6 overflow-hidden border-b border-white/10 shrink-0 bg-surface">
+                                <div className="relative h-48 -mx-6 -mt-6 mb-6 overflow-hidden border-b border-white/10 shrink-0 bg-surface">
                                     {(clubCoverUrl || clubLogoUrl) ? (
                                         <img
                                             src={`${clubCoverUrl || clubLogoUrl}?v=${Date.now()}`}
