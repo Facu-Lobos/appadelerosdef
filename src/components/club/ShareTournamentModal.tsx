@@ -159,7 +159,10 @@ export function ShareTournamentModal({ isOpen, onClose, tournament, clubName, cl
                                         </h2>
                                         <div className="mt-1">
                                             <span className="bg-black/50 backdrop-blur-sm text-white px-2.5 py-1 rounded text-xs font-semibold capitalize shadow-sm border border-white/20 inline-block">
-                                                {format(new Date(tournament.start_date), "EEEE d 'de' MMMM", { locale: es })}
+                                                {format(new Date(tournament.start_date), "d 'de' MMMM", { locale: es })}
+                                                {tournament.end_date && tournament.end_date !== tournament.start_date && (
+                                                    <> al {format(new Date(tournament.end_date), "d 'de' MMMM", { locale: es })}</>
+                                                )}
                                             </span>
                                         </div>
                                     </div>
