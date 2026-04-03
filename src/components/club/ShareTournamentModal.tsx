@@ -159,9 +159,9 @@ export function ShareTournamentModal({ isOpen, onClose, tournament, clubName, cl
                                         </h2>
                                         <div className="mt-1">
                                             <span className="bg-black/50 backdrop-blur-sm text-white px-2.5 py-1 rounded text-xs font-semibold capitalize shadow-sm border border-white/20 inline-block">
-                                                {format(new Date(tournament.start_date), "d 'de' MMMM", { locale: es })}
+                                                {format(new Date(tournament.start_date + 'T12:00:00'), "d 'de' MMMM", { locale: es })}
                                                 {tournament.end_date && tournament.end_date !== tournament.start_date && (
-                                                    <> al {format(new Date(tournament.end_date), "d 'de' MMMM", { locale: es })}</>
+                                                    <> al {format(new Date(tournament.end_date + 'T12:00:00'), "d 'de' MMMM", { locale: es })}</>
                                                 )}
                                             </span>
                                         </div>
@@ -185,9 +185,9 @@ export function ShareTournamentModal({ isOpen, onClose, tournament, clubName, cl
                                         <Calendar size={16} className="mb-1 text-primary" />
                                         <p className="text-[10px] text-gray-400 uppercase font-bold tracking-tight">Fecha</p>
                                         <p className="text-[13px] font-bold text-white leading-tight">
-                                            {format(new Date(tournament.start_date), 'd MMM', { locale: es })}
+                                            {format(new Date(tournament.start_date + 'T12:00:00'), 'd MMM', { locale: es })}
                                             {tournament.end_date && tournament.end_date !== tournament.start_date && (
-                                                <> - {format(new Date(tournament.end_date), 'd MMM', { locale: es })}</>
+                                                <> - {format(new Date(tournament.end_date + 'T12:00:00'), 'd MMM', { locale: es })}</>
                                             )}
                                         </p>
                                     </div>
