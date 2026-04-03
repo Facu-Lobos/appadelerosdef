@@ -738,21 +738,21 @@ const TournamentDetail = () => {
                                         const groupMatches = matches.filter(m => m.group_name === groupName);
 
                                         return (
-                                            <div key={groupName} className="bg-white/5 rounded-xl p-6 border border-white/10">
-                                                <h3 className="text-xl font-bold text-primary mb-6">Grupo {groupName}</h3>
+                                            <div key={groupName} className="bg-white/5 rounded-xl p-3 sm:p-6 border border-white/10">
+                                                <h3 className="text-lg sm:text-xl font-bold text-primary mb-4 sm:mb-6">Grupo {groupName}</h3>
 
                                                 {/* Standings Table */}
-                                                <div className="overflow-x-auto mb-8">
-                                                    <table className="w-full text-sm text-left">
-                                                        <thead className="text-xs text-gray-400 uppercase bg-black/20">
+                                                <div className="overflow-x-auto mb-6 sm:mb-8 -mx-1 sm:mx-0">
+                                                    <table className="w-full text-xs sm:text-sm text-left">
+                                                        <thead className="text-[10px] sm:text-xs text-gray-400 uppercase bg-black/20">
                                                             <tr>
-                                                                <th className="px-4 py-3 rounded-l-lg">Equipo</th>
-                                                                <th className="px-2 py-3 text-center">PTS</th>
-                                                                <th className="px-2 py-3 text-center">PJ</th>
-                                                                <th className="px-2 py-3 text-center">PG</th>
-                                                                <th className="px-2 py-3 text-center">PP</th>
-                                                                <th className="px-2 py-3 text-center">DS</th>
-                                                                <th className="px-2 py-3 text-center rounded-r-lg">DG</th>
+                                                                <th className="px-2 sm:px-4 py-2 sm:py-3 rounded-l-lg">Equipo</th>
+                                                                <th className="px-1 sm:px-2 py-2 sm:py-3 text-center">PTS</th>
+                                                                <th className="px-1 sm:px-2 py-2 sm:py-3 text-center">PJ</th>
+                                                                <th className="px-1 sm:px-2 py-2 sm:py-3 text-center">PG</th>
+                                                                <th className="px-1 sm:px-2 py-2 sm:py-3 text-center">PP</th>
+                                                                <th className="px-1 sm:px-2 py-2 sm:py-3 text-center">DS</th>
+                                                                <th className="px-1 sm:px-2 py-2 sm:py-3 text-center rounded-r-lg">DG</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -762,35 +762,35 @@ const TournamentDetail = () => {
 
                                                                 return (
                                                                     <tr key={team.id} className="border-b border-white/5 last:border-0 hover:bg-white/5">
-                                                                        <td className="px-4 py-3 font-medium flex items-center gap-3 group">
-                                                                            <span className="text-gray-500 w-4 font-mono">{idx + 1}</span>
-                                                                            <div className="flex flex-col">
+                                                                        <td className="px-2 sm:px-4 py-2 sm:py-3 font-medium flex items-center gap-1 sm:gap-3 group">
+                                                                            <span className="text-gray-500 w-3 sm:w-4 font-mono text-[10px] sm:text-xs shrink-0">{idx + 1}</span>
+                                                                            <div className="flex flex-col min-w-0 flex-1">
                                                                                 <span className="flex items-center gap-2">
-                                                                                    {team.team_name}
+                                                                                    <span className="truncate max-w-[90px] sm:max-w-[200px]" title={team.team_name}>{team.team_name}</span>
                                                                                     <button 
                                                                                         onClick={() => {
                                                                                             setSelectedRegistration(team);
                                                                                             setIsEditModalOpen(true);
                                                                                         }}
-                                                                                        className="text-gray-500 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                                        className="text-gray-500 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                                                                                         title="Editar equipo"
                                                                                     >
                                                                                         <Edit2 size={14} />
                                                                                     </button>
                                                                                 </span>
-                                                                                <span className="text-xs text-gray-500 font-normal mt-0.5 flex gap-1">
+                                                                                <span className="text-[10px] sm:text-xs text-gray-500 font-normal mt-0.5 flex gap-1 truncate max-w-[100px] sm:max-w-none" title={`${team.player1?.name || team.player1_name || 'Jugador 1'} / ${team.player2?.name || team.player2_name || 'Jugador 2'}`}>
                                                                                     {team.player1?.name || team.player1_name || 'Jugador 1'} <span className="text-gray-600">/</span> {team.player2?.name || team.player2_name || 'Jugador 2'}
                                                                                 </span>
                                                                             </div>
                                                                         </td>
-                                                                        <td className="px-2 py-3 text-center font-bold text-white">{team.stats?.points || 0}</td>
-                                                                        <td className="px-2 py-3 text-center text-gray-400">{team.stats?.played || 0}</td>
-                                                                        <td className="px-2 py-3 text-center text-green-400">{team.stats?.won || 0}</td>
-                                                                        <td className="px-2 py-3 text-center text-red-400">{team.stats?.lost || 0}</td>
-                                                                        <td className={`px-2 py-3 text-center ${setsDiff > 0 ? 'text-green-400' : setsDiff < 0 ? 'text-red-400' : 'text-gray-500'}`}>
+                                                                        <td className="px-1 sm:px-2 py-2 sm:py-3 text-center font-bold text-white">{team.stats?.points || 0}</td>
+                                                                        <td className="px-1 sm:px-2 py-2 sm:py-3 text-center text-gray-400">{team.stats?.played || 0}</td>
+                                                                        <td className="px-1 sm:px-2 py-2 sm:py-3 text-center text-green-400">{team.stats?.won || 0}</td>
+                                                                        <td className="px-1 sm:px-2 py-2 sm:py-3 text-center text-red-400">{team.stats?.lost || 0}</td>
+                                                                        <td className={`px-1 sm:px-2 py-2 sm:py-3 text-center ${setsDiff > 0 ? 'text-green-400' : setsDiff < 0 ? 'text-red-400' : 'text-gray-500'}`}>
                                                                             {setsDiff > 0 ? `+${setsDiff}` : setsDiff}
                                                                         </td>
-                                                                        <td className={`px-2 py-3 text-center ${gamesDiff > 0 ? 'text-green-400' : gamesDiff < 0 ? 'text-red-400' : 'text-gray-500'}`}>
+                                                                        <td className={`px-1 sm:px-2 py-2 sm:py-3 text-center ${gamesDiff > 0 ? 'text-green-400' : gamesDiff < 0 ? 'text-red-400' : 'text-gray-500'}`}>
                                                                             {gamesDiff > 0 ? `+${gamesDiff}` : gamesDiff}
                                                                         </td>
                                                                     </tr>
