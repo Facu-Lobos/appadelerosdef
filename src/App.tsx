@@ -58,7 +58,6 @@ export default function App() {
                   <Route index element={<PlayerHome />} />
                   <Route path="bookings" element={<PlayerBookings />} />
                   <Route path="tournaments" element={<PlayerTournaments />} />
-                  <Route path="tournaments/:id" element={<TournamentResults />} />
                   <Route path="community" element={<PlayerCommunity />} />
                   <Route path="profile" element={<PlayerProfilePage />} />
                   <Route path="club/:id" element={<ClubDetails />} />
@@ -89,6 +88,7 @@ export default function App() {
                 {/* Publicly accessible layout routes */}
                 <Route element={<MainLayout />}>
                   <Route path="/public/torneo/:id" element={<TournamentResults />} />
+                  <Route path="/player/tournaments/:id" element={<TournamentResults />} />
                   <Route path="/public/torneo/match/:id" element={<MatchSharePage />} />
                 </Route>
 
