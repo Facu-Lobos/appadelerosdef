@@ -226,15 +226,17 @@ const TournamentResults = () => {
                                                         {/* Schedule Info */}
                                                         <div className="flex items-center justify-center border-t border-white/5 pt-2 mt-1">
                                                             <div className="text-xs text-gray-500 flex items-center gap-3">
-                                                                {match.court && (
-                                                                    <span className="flex items-center gap-1">
-                                                                        <MapPin size={12} /> {match.court.name}
-                                                                    </span>
-                                                                )}
-                                                                {match.start_time && (
-                                                                    <span className="flex items-center gap-1">
-                                                                        <Clock size={12} /> {format(new Date(match.start_time), "d MMM HH:mm", { locale: es })}
-                                                                    </span>
+                                                                {match.court ? (
+                                                                    <>
+                                                                        <span className="flex items-center gap-1">
+                                                                            <MapPin size={12} /> {match.court.name}
+                                                                        </span>
+                                                                        <span className="flex items-center gap-1">
+                                                                            <Clock size={12} /> {format(new Date(match.start_time), "d MMM HH:mm", { locale: es })}
+                                                                        </span>
+                                                                    </>
+                                                                ) : (
+                                                                    <span className="italic opacity-50 flex items-center gap-1"><Clock size={12} /> Por definir</span>
                                                                 )}
                                                             </div>
                                                         </div>
