@@ -963,23 +963,68 @@ const TournamentDetail = () => {
                         {matches.filter(m => m.stage === 'playoff').length === 0 ? (
                             <div className="text-center py-20 text-gray-400">
                                 <Trophy className="mx-auto h-16 w-16 mb-6 opacity-50" />
-                                <p className="text-xl mb-8">La Llave Final se generará al finalizar la fase de grupos.</p>
-                                <Button
-                                    onClick={async () => {
-                                        if (!tournament) return;
-                                        try {
-                                            await supabaseService.generatePlayoffs(tournament.id);
-                                            alert('Llave Final generada correctamente!');
-                                            loadRegistrations(tournament.id);
-                                        } catch (error: any) {
-                                            console.error('Error generating playoffs:', error);
-                                            alert('Error: ' + error.message);
-                                        }
-                                    }}
-                                    className="cursor-pointer text-lg px-8 py-3"
-                                >
-                                    Generar Llave Final
-                                </Button>
+                                {tournament?.format === 'flexible' ? (
+                                    <>
+                                        <p className="text-xl mb-6">Generar nueva Llave Final en Blanco</p>
+                                        <div className="flex flex-col items-center gap-4 max-w-sm mx-auto">
+                                            <select
+                                                id="startingRoundSelect"
+                                                className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary transition-colors"
+                                            >
+                                                <option value="round_16">Arranca en Octavos de Final (16 equipos)</option>
+                                                <option value="quarter">Arranca en Cuartos de Final (8 equipos)</option>
+                                                <option value="semi">Arranca en Semifinal (4 equipos)</option>
+                                                <option value="final">Arranca en Final (2 equipos)</option>
+                                            </select>
+                                            <Button
+                                                onClick={async () => {
+                                                    const selectEl = document.getElementById('startingRoundSelect') as HTMLSelectElement;
+                                                    if (!selectEl || !tournament) return;
+                                                    try {
+                                                        setIsGenerating(true);
+                                                        await supabaseService.generateEmptyBracket(tournament.id, selectEl.value as any);
+                                                        alert('Llave en blanco generada correctamente.');
+                                                        loadRegistrations(tournament.id);
+                                                    } catch (error: any) {
+                                                        console.error('Error generating empty bracket:', error);
+                                                        alert('Error: ' + error.message);
+                                                    } finally {
+                                                        setIsGenerating(false);
+                                                    }
+                                                }}
+                                                className="cursor-pointer text-lg px-8 py-3 w-full"
+                                                disabled={isGenerating}
+                                            >
+                                                {isGenerating ? <Loader2 className="animate-spin" /> : 'Generar Llave en Blanco'}
+                                            </Button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <p className="text-xl mb-8">La Llave Final se generará al finalizar la fase de grupos.</p>
+                                        <Button
+                                            onClick={async () => {
+                                                if (!tournament) return;
+                                                try {
+                                                    setIsGenerating(true);
+                                                    await supabaseService.generatePlayoffs(tournament.id);
+                                                    alert('Llave Final generada correctamente!');
+                                                    loadRegistrations(tournament.id);
+                                                } catch (error: any) {
+                                                    console.error('Error generating playoffs:', error);
+                                                    alert('Error: ' + error.message);
+                                                } finally {
+                                                    setIsGenerating(false);
+                                                }
+                                            }}
+                                            className="cursor-pointer text-lg px-8 py-3"
+                                            disabled={isGenerating}
+                                        >
+                                            {isGenerating ? <Loader2 className="animate-spin mr-2" /> : null}
+                                            Generar Llave Final
+                                        </Button>
+                                    </>
+                                )}
                             </div>
                         ) : (
                             <div className="space-y-6">
@@ -1066,9 +1111,30 @@ const TournamentDetail = () => {
                                                             <div className="space-y-1.5">
                                                                 {/* Team 1 */}
                                                                 <div className={`flex justify-between items-center p-1.5 rounded ${match.winner_id === match.team1_id ? (isFinal ? 'bg-yellow-500/20 text-yellow-400 font-bold' : 'bg-green-500/10 text-green-400 font-bold') : 'bg-black/20'}`}>
-                                                                    <span className={`text-xs truncate max-w-[140px] ${!match.team1_id ? 'text-gray-600 italic' : ''}`}>
-                                                                        {match.team1?.team_name || (match.score === 'BYE' ? 'BYE' : 'TBD')}
-                                                                    </span>
+                                                                    {tournament?.format === 'flexible' && !match.winner_id ? (
+                                                                        <select
+                                                                            className={`text-[10px] bg-transparent border border-white/5 rounded px-1 min-w-[100px] focus:outline-none focus:border-primary truncate max-w-[140px] cursor-pointer ${!match.team1_id ? 'text-gray-500 italic' : 'text-white'}`}
+                                                                            value={match.team1_id || ''}
+                                                                            onChange={async (e) => {
+                                                                                const val = e.target.value;
+                                                                                try {
+                                                                                    await supabaseService.updateMatchTeamAssignment(match.id, 1, val || null);
+                                                                                    loadRegistrations(tournament!.id);
+                                                                                } catch (error: any) {
+                                                                                    alert('Error: ' + error.message);
+                                                                                }
+                                                                            }}
+                                                                        >
+                                                                            <option value="">-- TBD --</option>
+                                                                            {registrations.filter(r => r.status === 'approved').map(team => (
+                                                                                <option key={team.id} value={team.id}>{team.team_name} ({team.group_name || '-'})</option>
+                                                                            ))}
+                                                                        </select>
+                                                                    ) : (
+                                                                        <span className={`text-xs truncate max-w-[140px] ${!match.team1_id ? 'text-gray-600 italic' : ''}`}>
+                                                                            {match.team1?.team_name || (match.score === 'BYE' ? 'BYE' : 'TBD')}
+                                                                        </span>
+                                                                    )}
                                                                     {(match.sets_score || (match.score && match.score !== 'BYE' && !match.score.includes('TBD'))) && (
                                                                         <span className="text-xs font-mono font-bold">
                                                                             {match.sets_score
@@ -1081,9 +1147,30 @@ const TournamentDetail = () => {
 
                                                                 {/* Team 2 */}
                                                                 <div className={`flex justify-between items-center p-1.5 rounded ${match.winner_id === match.team2_id ? (isFinal ? 'bg-yellow-500/20 text-yellow-400 font-bold' : 'bg-green-500/10 text-green-400 font-bold') : 'bg-black/20'}`}>
-                                                                    <span className={`text-xs truncate max-w-[140px] ${!match.team2_id ? 'text-gray-600 italic' : ''}`}>
-                                                                        {match.team2?.team_name || (match.score === 'BYE' ? 'BYE' : 'TBD')}
-                                                                    </span>
+                                                                    {tournament?.format === 'flexible' && !match.winner_id ? (
+                                                                        <select
+                                                                            className={`text-[10px] bg-transparent border border-white/5 rounded px-1 min-w-[100px] focus:outline-none focus:border-primary truncate max-w-[140px] cursor-pointer ${!match.team2_id ? 'text-gray-500 italic' : 'text-white'}`}
+                                                                            value={match.team2_id || ''}
+                                                                            onChange={async (e) => {
+                                                                                const val = e.target.value;
+                                                                                try {
+                                                                                    await supabaseService.updateMatchTeamAssignment(match.id, 2, val || null);
+                                                                                    loadRegistrations(tournament!.id);
+                                                                                } catch (error: any) {
+                                                                                    alert('Error: ' + error.message);
+                                                                                }
+                                                                            }}
+                                                                        >
+                                                                            <option value="">-- TBD --</option>
+                                                                            {registrations.filter(r => r.status === 'approved').map(team => (
+                                                                                <option key={team.id} value={team.id}>{team.team_name} ({team.group_name || '-'})</option>
+                                                                            ))}
+                                                                        </select>
+                                                                    ) : (
+                                                                        <span className={`text-xs truncate max-w-[140px] ${!match.team2_id ? 'text-gray-600 italic' : ''}`}>
+                                                                            {match.team2?.team_name || (match.score === 'BYE' ? 'BYE' : 'TBD')}
+                                                                        </span>
+                                                                    )}
                                                                     {(match.sets_score || (match.score && match.score !== 'BYE' && !match.score.includes('TBD'))) && (
                                                                         <span className="text-xs font-mono font-bold">
                                                                             {match.sets_score

@@ -1106,11 +1106,11 @@ export const supabaseService = {
 
             if (statsMap[winner]) {
                 statsMap[winner].won++;
-                statsMap[winner].points += 3; // 3 points for win
+                statsMap[winner].points += 2; // 2 points for win
             }
             if (statsMap[loser]) {
                 statsMap[loser].lost++;
-                // 0 points for loss
+                statsMap[loser].points += 1; // 1 point for loss
             }
 
             // Sets and Games
@@ -1431,6 +1431,16 @@ export const supabaseService = {
         return true;
     },
 
+    async updateMatchTeamAssignment(matchId: string, teamNum: 1 | 2, teamId: string | null) {
+        const update = teamNum === 1 ? { team1_id: teamId } : { team2_id: teamId };
+        const { error } = await supabase
+            .from('tournament_matches')
+            .update(update)
+            .eq('id', matchId);
+        if (error) throw error;
+        return true;
+    },
+
     async calculateTournamentPoints(tournamentId: string) {
         // 1. Get tournament details
         const { data: tournament, error: tError } = await supabase
@@ -1694,6 +1704,10 @@ export const supabaseService = {
 
         if (tournament.format === 'americano') {
             throw new Error('El formato Americano no tiene fase de playoffs.');
+        }
+
+        if (tournament.format === 'flexible') {
+            throw new Error('En el formato Flexible las llaves se arman de manera manual usando la opción "Generar Llave en Blanco".');
         }
 
         // 1. Get all registrations with stats
@@ -1963,6 +1977,45 @@ export const supabaseService = {
             await this.advancePlayoffWinner(match, match.winner_id);
         }
 
+        return true;
+    },
+
+    async generateEmptyBracket(tournamentId: string, startingRound: 'round_16' | 'quarter' | 'semi' | 'final') {
+        const timestamp = Date.now();
+        const matches = [];
+
+        let currentSize = startingRound === 'round_16' ? 16 :
+                          startingRound === 'quarter' ? 8 :
+                          startingRound === 'semi' ? 4 : 2;
+        
+        // Delete existing playoffs if we are generating a new empty bracket
+        await this.clearPlayoffs(tournamentId);
+
+        let roundIndex = 0;
+        while (currentSize >= 2) {
+            const roundName = currentSize === 16 ? 'round_16' :
+                              currentSize === 8 ? 'quarter' :
+                              currentSize === 4 ? 'semi' : 'final';
+
+            for (let i = 0; i < currentSize / 2; i++) {
+                matches.push({
+                    tournament_id: tournamentId,
+                    round: roundName,
+                    stage: 'playoff',
+                    start_time: new Date(timestamp + (10000 * roundIndex) + (i * 1000)).toISOString(),
+                    group_name: `M${i + 1}`
+                });
+            }
+            currentSize /= 2;
+            roundIndex++;
+        }
+
+        const { error: insertError } = await supabase
+            .from('tournament_matches')
+            .insert(matches)
+            .select();
+
+        if (insertError) throw insertError;
         return true;
     },
 

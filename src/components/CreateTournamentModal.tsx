@@ -36,7 +36,7 @@ export const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({ is
             await supabaseService.createTournament({
                 ...formData,
                 gender: formData.gender as 'Masculino' | 'Femenino' | 'Mixto',
-                format: formData.format as 'knockout' | 'league' | 'americano' | 'largo_12',
+                format: formData.format as 'knockout' | 'league' | 'americano' | 'largo_12' | 'flexible',
                 max_teams: formData.format === 'largo_12' ? 12 : formData.max_teams,
                 club_id: clubId
             });
@@ -141,6 +141,7 @@ export const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({ is
                                 <option value="league">Liga</option>
                                 <option value="americano">Americano</option>
                                 <option value="largo_12">Largo (12 Parejas - 4 Zonas de 3)</option>
+                                <option value="flexible">100% Flexible (Grupos libres + Llave Manual)</option>
                             </select>
                         </div>
                         {formData.format === 'knockout' && (
@@ -158,7 +159,7 @@ export const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({ is
                                 </select>
                             </div>
                         )}
-                        {formData.format === 'league' && (
+                        {(formData.format === 'league' || formData.format === 'flexible') && (
                             <div>
                                 <label className="block text-sm font-medium text-gray-400 mb-1">Equipos Máx.</label>
                                 <Input
@@ -187,7 +188,7 @@ export const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({ is
                         )}
                     </div>
 
-                    {formData.format === 'league' && (
+                    {(formData.format === 'league' || formData.format === 'flexible') && (
                         <div className="grid grid-cols-2 gap-4 bg-white/5 p-4 rounded-xl border border-white/10">
                             <div>
                                 <label className="block text-sm font-medium text-gray-400 mb-1">Cant. Zonas</label>
