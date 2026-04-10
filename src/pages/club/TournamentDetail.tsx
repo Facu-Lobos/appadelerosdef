@@ -1094,14 +1094,19 @@ const TournamentDetail = () => {
                                                                     <span className={`text-[10px] uppercase font-bold tracking-wider ${isFinal ? 'text-yellow-500/70' : 'text-gray-500'}`}>
                                                                         {match.group_name ? `P. ${match.group_name}` : 'Match'}
                                                                     </span>
-                                                                    {(match.court || match.start_time) && (
+                                                                    {match.court ? (
                                                                         <div className="flex items-center gap-1 text-[9px] text-blue-400 mt-0.5">
                                                                             <Clock size={8} />
                                                                             <span>
                                                                                 {match.start_time ? format(new Date(match.start_time), "dd/MM HH:mm", { locale: es }) : ''}
                                                                                 {match.court && match.start_time ? ' - ' : ''}
-                                                                                {match.court?.name}
+                                                                                {match.court.name}
                                                                             </span>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="flex items-center gap-1 text-[9px] text-gray-500 mt-0.5 italic">
+                                                                            <Clock size={8} />
+                                                                            <span>Por definir</span>
                                                                         </div>
                                                                     )}
                                                                 </div>

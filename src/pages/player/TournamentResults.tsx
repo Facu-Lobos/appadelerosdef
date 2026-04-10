@@ -289,14 +289,19 @@ const TournamentResults = () => {
                                                                     <span className={`text-[10px] uppercase font-bold tracking-wider ${isFinal ? 'text-yellow-500/70' : 'text-gray-500'}`}>
                                                                         {match.group_name ? `P. ${match.group_name}` : 'Match'}
                                                                     </span>
-                                                                    {(match.court || match.start_time) && (
+                                                                    {match.court ? (
                                                                         <div className="flex items-center gap-1 text-[9px] text-blue-400 mt-0.5">
                                                                             <Clock size={8} />
                                                                             <span>
                                                                                 {match.start_time ? format(new Date(match.start_time), "dd/MM HH:mm", { locale: es }) : ''}
                                                                                 {match.court && match.start_time ? ' - ' : ''}
-                                                                                {match.court?.name}
+                                                                                {match.court.name}
                                                                             </span>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="flex items-center gap-1 text-[9px] text-gray-500 mt-0.5 italic">
+                                                                            <Clock size={8} />
+                                                                            <span>Por definir</span>
                                                                         </div>
                                                                     )}
                                                                 </div>
@@ -309,9 +314,14 @@ const TournamentResults = () => {
                                                                     <span className={`text-xs truncate max-w-[140px] ${!match.team1_id ? 'text-gray-600 italic' : ''}`}>
                                                                         {match.team1?.team_name || (match.score === 'BYE' ? 'BYE' : 'TBD')}
                                                                     </span>
-                                                                    {match.sets_score && <span className="text-xs font-mono font-bold">
-                                                                        {match.sets_score.map((s: any) => match.winner_id === match.team1_id ? s.w : s.l).join('-')}
-                                                                    </span>}
+                                                                    {(match.sets_score || (match.score && match.score !== 'BYE' && !match.score.includes('TBD'))) && (
+                                                                        <span className="text-xs font-mono font-bold">
+                                                                            {match.sets_score
+                                                                                ? match.sets_score.map((s: any) => match.winner_id === match.team1_id ? s.w : s.l).join('-')
+                                                                                : match.score?.split(',').map((s: string) => s.trim().split('-')[0]).join('-')
+                                                                            }
+                                                                        </span>
+                                                                    )}
                                                                 </div>
 
                                                                 {/* Team 2 */}
@@ -319,9 +329,14 @@ const TournamentResults = () => {
                                                                     <span className={`text-xs truncate max-w-[140px] ${!match.team2_id ? 'text-gray-600 italic' : ''}`}>
                                                                         {match.team2?.team_name || (match.score === 'BYE' ? 'BYE' : 'TBD')}
                                                                     </span>
-                                                                    {match.sets_score && <span className="text-xs font-mono font-bold">
-                                                                        {match.sets_score.map((s: any) => match.winner_id === match.team2_id ? s.w : s.l).join('-')}
-                                                                    </span>}
+                                                                    {(match.sets_score || (match.score && match.score !== 'BYE' && !match.score.includes('TBD'))) && (
+                                                                        <span className="text-xs font-mono font-bold">
+                                                                            {match.sets_score
+                                                                                ? match.sets_score.map((s: any) => match.winner_id === match.team2_id ? s.w : s.l).join('-')
+                                                                                : match.score?.split(',').map((s: string) => s.trim().split('-')[1]).join('-')
+                                                                            }
+                                                                        </span>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         </div>
