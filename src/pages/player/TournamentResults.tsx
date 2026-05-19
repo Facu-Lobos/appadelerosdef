@@ -212,19 +212,19 @@ const TournamentResults = () => {
                                             <h4 className="font-bold text-white mb-4 text-sm uppercase tracking-wider">Partidos</h4>
                                             <div className="grid gap-3">
                                                 {groupMatches.map(match => (
-                                                    <div key={match.id} className="bg-black/20 p-4 rounded-lg flex flex-col gap-3 hover:bg-black/30 transition-colors">
-                                                        <div className="flex items-center justify-between gap-1 sm:gap-4">
-                                                            <div className="flex-1 text-right text-xs sm:text-sm font-medium text-gray-300 break-words line-clamp-2">
+                                                    <div key={match.id} className="bg-black/20 p-3 sm:p-4 rounded-lg flex flex-col gap-3 hover:bg-black/30 transition-colors w-full overflow-hidden">
+                                                        <div className="flex items-center justify-between gap-2 sm:gap-4 w-full">
+                                                            <div className="flex-1 min-w-0 text-right text-[11px] sm:text-sm font-medium text-gray-300 break-words">
                                                                 {tournament.format === 'liga_paternidad' && match.team1_partner
                                                                     ? `${match.team1?.team_name?.split(' ')[0] || '?'}/${match.team1_partner?.team_name?.split(' ')[0] || '?'}`
                                                                     : match.team1?.team_name}
                                                             </div>
                                                             <div className="px-1 sm:px-4 flex flex-col items-center shrink-0">
-                                                                <div className="bg-white/10 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-mono font-bold text-white min-w-[50px] sm:min-w-[60px] text-center whitespace-nowrap">
-                                                                    {match.score || 'vs'}
+                                                                <div className="bg-white/10 px-2 sm:px-3 py-1 rounded text-[11px] sm:text-sm font-mono font-bold text-white text-center max-w-[80px] sm:max-w-none break-words">
+                                                                    {match.score ? match.score.replace(/,\s*/g, ' ') : 'vs'}
                                                                 </div>
                                                             </div>
-                                                            <div className="flex-1 text-left text-xs sm:text-sm font-medium text-gray-300 break-words line-clamp-2">
+                                                            <div className="flex-1 min-w-0 text-left text-[11px] sm:text-sm font-medium text-gray-300 break-words">
                                                                 {tournament.format === 'liga_paternidad' && match.team2_partner
                                                                     ? `${match.team2?.team_name?.split(' ')[0] || '?'}/${match.team2_partner?.team_name?.split(' ')[0] || '?'}`
                                                                     : match.team2?.team_name}
