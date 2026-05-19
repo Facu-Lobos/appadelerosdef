@@ -855,7 +855,7 @@ const TournamentDetail = () => {
                                             </div>
                                             {tournament.format === 'liga_paternidad' && (
                                                 <div>
-                                                    <label className="text-sm text-gray-400 block mb-1">Compañero 1</label>
+                                                    <label className="text-sm text-gray-400 block mb-1">Jugador 2</label>
                                                     <select
                                                         className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary transition-colors"
                                                         value={manualGroupTeam1Partner}
@@ -869,7 +869,7 @@ const TournamentDetail = () => {
                                                 </div>
                                             )}
                                             <div>
-                                                <label className="text-sm text-gray-400 block mb-1">{tournament.format === 'liga_paternidad' ? 'Jugador 2' : 'Equipo 2'}</label>
+                                                <label className="text-sm text-gray-400 block mb-1">{tournament.format === 'liga_paternidad' ? 'Jugador 3' : 'Equipo 2'}</label>
                                                 <select
                                                     className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary transition-colors"
                                                     value={manualGroupTeam2}
@@ -883,7 +883,7 @@ const TournamentDetail = () => {
                                             </div>
                                             {tournament.format === 'liga_paternidad' && (
                                                 <div>
-                                                    <label className="text-sm text-gray-400 block mb-1">Compañero 2</label>
+                                                    <label className="text-sm text-gray-400 block mb-1">Jugador 4</label>
                                                     <select
                                                         className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary transition-colors"
                                                         value={manualGroupTeam2Partner}
