@@ -684,7 +684,7 @@ const TournamentDetail = () => {
                                                 </>
                                             ) : (
                                                 tournament.format === 'liga_paternidad' 
-                                                    ? `Sortear / Completar Fecha`
+                                                    ? `Sortear Siguiente Partido`
                                                     : tournament.format === 'americano' ? 'Generar Fixture (Automático)' : 'Generar Fase de Grupos (Automático)'
                                             )}
                                         </Button>
@@ -779,10 +779,10 @@ const TournamentDetail = () => {
                                             <Button
                                                 variant="primary"
                                                 onClick={handleGenerateLigaPaternidadDate}
-                                                disabled={isGenerating || (tournament.current_round || 0) >= (tournament.total_dates || 1)}
+                                                disabled={isGenerating}
                                             >
                                                 {isGenerating ? <Loader2 size={16} className="mr-2 animate-spin" /> : null}
-                                                Sortear / Completar Fecha
+                                                Sortear Siguiente Partido
                                             </Button>
                                         )}
                                         <Button

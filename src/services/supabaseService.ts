@@ -1340,65 +1340,55 @@ export const supabaseService = {
 
         if (registrations.length < 4) throw new Error('Se necesitan al menos 4 jugadores');
 
-        let currentRound = tournament.current_round || 1;
-
-        // Fetch matches to see who already played in currentRound
-        const { data: existingMatches, error: matchFetchError } = await supabase
+        // Fetch ALL matches to count how many matches each player has played
+        const { data: allMatches, error: matchFetchError } = await supabase
             .from('tournament_matches')
             .select('*')
-            .eq('tournament_id', tournamentId)
-            .eq('match_date', currentRound);
+            .eq('tournament_id', tournamentId);
 
         if (matchFetchError) throw matchFetchError;
 
-        let playersInCurrentRound = new Set<string>();
-        existingMatches?.forEach(m => {
-            if (m.team1_id) playersInCurrentRound.add(m.team1_id);
-            if (m.team1_partner_id) playersInCurrentRound.add(m.team1_partner_id);
-            if (m.team2_id) playersInCurrentRound.add(m.team2_id);
-            if (m.team2_partner_id) playersInCurrentRound.add(m.team2_partner_id);
+        // Count matches per player
+        const playerMatchCounts: Record<string, number> = {};
+        registrations.forEach(r => playerMatchCounts[r.id] = 0);
+
+        allMatches?.forEach(m => {
+            if (m.team1_id && playerMatchCounts[m.team1_id] !== undefined) playerMatchCounts[m.team1_id]++;
+            if (m.team1_partner_id && playerMatchCounts[m.team1_partner_id] !== undefined) playerMatchCounts[m.team1_partner_id]++;
+            if (m.team2_id && playerMatchCounts[m.team2_id] !== undefined) playerMatchCounts[m.team2_id]++;
+            if (m.team2_partner_id && playerMatchCounts[m.team2_partner_id] !== undefined) playerMatchCounts[m.team2_partner_id]++;
         });
 
-        let availablePlayers = registrations.filter(r => !playersInCurrentRound.has(r.id));
+        // Sort players: first by match count (ascending), then randomly
+        const sortedPlayers = [...registrations].sort((a, b) => {
+            const countDiff = playerMatchCounts[a.id] - playerMatchCounts[b.id];
+            if (countDiff !== 0) return countDiff;
+            return Math.random() - 0.5;
+        });
 
-        // If fewer than 4 players are available in the current round, it means the round is complete.
-        // We should advance to the NEXT round.
-        if (availablePlayers.length < 4) {
-            currentRound++;
-            availablePlayers = [...registrations]; // Everyone is available for the new round
-        }
+        // Select the first 4 players
+        const selectedPlayers = sortedPlayers.slice(0, 4);
 
-        // Shuffle available players randomly
-        const shuffledPlayers = availablePlayers.sort(() => Math.random() - 0.5);
+        const currentRound = (tournament.current_round || 0) + 1;
 
-        const matchesToInsert = [];
+        const matchesToInsert = [{
+            tournament_id: tournamentId,
+            round: `fecha_${currentRound}`,
+            stage: 'group',
+            group_name: `Fecha ${currentRound}`,
+            team1_id: selectedPlayers[0].id,
+            team1_partner_id: selectedPlayers[1].id,
+            team2_id: selectedPlayers[2].id,
+            team2_partner_id: selectedPlayers[3].id,
+            match_date: currentRound,
+            start_time: new Date().toISOString()
+        }];
 
-        // Group into sets of 4 players
-        for (let i = 0; i < shuffledPlayers.length; i += 4) {
-            // If less than 4 players remain, they rest this round
-            if (i + 3 < shuffledPlayers.length) {
-                matchesToInsert.push({
-                    tournament_id: tournamentId,
-                    round: `fecha_${currentRound}`,
-                    stage: 'group',
-                    group_name: `Fecha ${currentRound}`,
-                    team1_id: shuffledPlayers[i].id,
-                    team1_partner_id: shuffledPlayers[i+1].id,
-                    team2_id: shuffledPlayers[i+2].id,
-                    team2_partner_id: shuffledPlayers[i+3].id,
-                    match_date: currentRound,
-                    start_time: new Date().toISOString()
-                });
-            }
-        }
-
-        if (matchesToInsert.length > 0) {
-            const { error: matchError } = await supabase
-                .from('tournament_matches')
-                .insert(matchesToInsert);
-            
-            if (matchError) throw matchError;
-        }
+        const { error: matchError } = await supabase
+            .from('tournament_matches')
+            .insert(matchesToInsert);
+        
+        if (matchError) throw matchError;
 
         // 3. Update current_round on tournament
         const { error: updateError } = await supabase
