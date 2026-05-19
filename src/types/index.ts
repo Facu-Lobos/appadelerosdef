@@ -83,7 +83,7 @@ export interface Tournament {
     zones_count?: number;
     teams_advancing_per_zone?: number;
     total_dates?: number; // Used in Liga Paternidad
-    current_date?: number; // Used in Liga Paternidad
+    current_round?: number; // Used in Liga Paternidad
 }
 
 export interface TournamentRegistration {

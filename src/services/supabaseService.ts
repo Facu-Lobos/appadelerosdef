@@ -1340,7 +1340,7 @@ export const supabaseService = {
 
         if (registrations.length < 4) throw new Error('Se necesitan al menos 4 jugadores');
 
-        const currentDate = (tournament.current_date || 0) + 1;
+        const currentRound = (tournament.current_round || 0) + 1;
 
         // Shuffle players randomly
         const shuffledPlayers = [...registrations].sort(() => Math.random() - 0.5);
@@ -1355,12 +1355,12 @@ export const supabaseService = {
                     tournament_id: tournamentId,
                     round: 'group', // we use 'group' stage for the main league phase
                     stage: 'group',
-                    group_name: `Fecha ${currentDate}`,
+                    group_name: `Fecha ${currentRound}`,
                     team1_id: shuffledPlayers[i].id,
                     team1_partner_id: shuffledPlayers[i+1].id,
                     team2_id: shuffledPlayers[i+2].id,
                     team2_partner_id: shuffledPlayers[i+3].id,
-                    match_date: currentDate,
+                    match_date: currentRound,
                     start_time: new Date().toISOString()
                 });
             }
@@ -1374,11 +1374,11 @@ export const supabaseService = {
             if (matchError) throw matchError;
         }
 
-        // 3. Update current_date on tournament
+        // 3. Update current_round on tournament
         const { error: updateError } = await supabase
             .from('tournaments')
             .update({ 
-                current_date: currentDate,
+                current_round: currentRound,
                 status: 'ongoing'
             })
             .eq('id', tournamentId);

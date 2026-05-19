@@ -40,7 +40,7 @@ export const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({ is
                 format: formData.format as 'knockout' | 'league' | 'americano' | 'largo_12' | 'flexible' | 'liga_paternidad',
                 max_teams: formData.format === 'largo_12' ? 12 : formData.max_teams,
                 total_dates: formData.format === 'liga_paternidad' ? formData.total_dates : undefined,
-                current_date: formData.format === 'liga_paternidad' ? 0 : undefined,
+                current_round: formData.format === 'liga_paternidad' ? 0 : undefined,
                 club_id: clubId
             });
             onTournamentCreated();

@@ -55,6 +55,12 @@ const TournamentDetail = () => {
     const [manualPlayoffTeam1, setManualPlayoffTeam1] = useState('');
     const [manualPlayoffTeam2, setManualPlayoffTeam2] = useState('');
 
+    // Manual Group Match State
+    const [showManualGroupForm, setShowManualGroupForm] = useState(false);
+    const [manualGroupTeam1, setManualGroupTeam1] = useState('');
+    const [manualGroupTeam2, setManualGroupTeam2] = useState('');
+    const [manualGroupSelect, setManualGroupSelect] = useState('A');
+
     // Dialog state
     const [confirmDialog, setConfirmDialog] = useState<{
         isOpen: boolean;
@@ -188,7 +194,7 @@ const TournamentDetail = () => {
             setIsGenerating(true);
             await supabaseService.generateLigaPaternidadDate(tournament.id);
             showToast('Fecha sorteada correctamente!', 'success');
-            loadTournamentData(tournament.id); // Reload to get updated current_date
+            loadTournamentData(tournament.id); // Reload to get updated current_round
             setActiveTab('groups');
         } catch (error: any) {
             console.error('Error generating date:', error);
@@ -218,6 +224,35 @@ const TournamentDetail = () => {
             showToast('Partido añadido a la llave final', 'success');
             setManualPlayoffTeam1('');
             setManualPlayoffTeam2('');
+            loadRegistrations(tournament.id);
+        } catch (error: any) {
+             showToast('Error al añadir partido: ' + error.message, 'error');
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const handleAddManualGroupMatch = async () => {
+        if (!tournament) return;
+        if (!manualGroupSelect) {
+            showToast('Selecciona un grupo', 'error');
+            return;
+        }
+        
+        try {
+            setIsGenerating(true);
+            await supabaseService.createTournamentMatch({
+                tournament_id: tournament.id,
+                stage: 'group',
+                round: 'group',
+                group_name: manualGroupSelect,
+                team1_id: manualGroupTeam1 || undefined,
+                team2_id: manualGroupTeam2 || undefined,
+                start_time: new Date().toISOString()
+            });
+            showToast('Partido añadido al grupo', 'success');
+            setManualGroupTeam1('');
+            setManualGroupTeam2('');
             loadRegistrations(tournament.id);
         } catch (error: any) {
              showToast('Error al añadir partido: ' + error.message, 'error');
@@ -621,7 +656,7 @@ const TournamentDetail = () => {
                                             onClick={tournament.format === 'liga_paternidad' ? handleGenerateLigaPaternidadDate : handleGenerateFixture} 
                                             className="w-full py-4 text-lg" 
                                             variant="primary" 
-                                            disabled={isGenerating || (tournament.format === 'liga_paternidad' && (tournament.current_date || 0) >= (tournament.total_dates || 1))}
+                                            disabled={isGenerating || (tournament.format === 'liga_paternidad' && (tournament.current_round || 0) >= (tournament.total_dates || 1))}
                                         >
                                             {isGenerating ? (
                                                 <>
@@ -630,7 +665,7 @@ const TournamentDetail = () => {
                                                 </>
                                             ) : (
                                                 tournament.format === 'liga_paternidad' 
-                                                    ? `Sortear Fecha ${(tournament.current_date || 0) + 1} de ${tournament.total_dates || '?'}`
+                                                    ? `Sortear Fecha ${(tournament.current_round || 0) + 1} de ${tournament.total_dates || '?'}`
                                                     : tournament.format === 'americano' ? 'Generar Fixture (Automático)' : 'Generar Fase de Grupos (Automático)'
                                             )}
                                         </Button>
@@ -715,49 +750,116 @@ const TournamentDetail = () => {
                             </div>
                         ) : (
                             <>
-                                <div className="flex justify-end mb-6 gap-3">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 cursor-pointer"
-                                        onClick={async () => {
-                                            if (!tournament) return;
-                                            setConfirmDialog({
-                                                isOpen: true,
-                                                title: 'Simular Resultados',
-                                                message: '¿Simular resultados aleatorios para todos los partidos de grupo? Esto sobrescribirá los resultados existentes.',
-                                                type: 'warning',
-                                                onConfirm: async () => {
-                                                    closeConfirmDialog();
-                                                    try {
-                                                        setIsGenerating(true);
-                                                        await supabaseService.simulateGroupStageResults(tournament.id);
-                                                        showToast('Resultados simulados correctamente.', 'success');
-                                                        loadRegistrations(tournament.id);
-                                                    } catch (error: any) {
-                                                        console.error('Error simulating results:', error);
-                                                        showToast('Error: ' + error.message, 'error');
-                                                    } finally {
-                                                        setIsGenerating(false);
+                                <div className="flex justify-between items-center bg-black/20 p-4 rounded-xl border border-white/5 mb-6">
+                                    <div>
+                                        <h3 className="text-lg font-bold text-white">Gestión de Partidos</h3>
+                                        <p className="text-sm text-gray-400">Puedes generar los partidos automáticamente o agregarlos manualmente.</p>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 justify-end">
+                                        <Button
+                                            variant="secondary"
+                                            onClick={() => setShowManualGroupForm(!showManualGroupForm)}
+                                        >
+                                            {showManualGroupForm ? 'Cerrar Plantilla' : 'Añadir Partido Manual'}
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 cursor-pointer"
+                                            onClick={async () => {
+                                                if (!tournament) return;
+                                                setConfirmDialog({
+                                                    isOpen: true,
+                                                    title: 'Simular Resultados',
+                                                    message: '¿Simular resultados aleatorios para todos los partidos de grupo? Esto sobrescribirá los resultados existentes.',
+                                                    type: 'warning',
+                                                    onConfirm: async () => {
+                                                        closeConfirmDialog();
+                                                        try {
+                                                            setIsGenerating(true);
+                                                            await supabaseService.simulateGroupStageResults(tournament.id);
+                                                            showToast('Resultados simulados correctamente.', 'success');
+                                                            loadRegistrations(tournament.id);
+                                                        } catch (error: any) {
+                                                            console.error('Error simulating results:', error);
+                                                            showToast('Error: ' + error.message, 'error');
+                                                        } finally {
+                                                            setIsGenerating(false);
+                                                        }
                                                     }
-                                                }
-                                            });
-                                        }}
-                                        disabled={isGenerating}
-                                    >
-                                        {isGenerating ? <Loader2 size={16} className="mr-2 animate-spin" /> : <RefreshCw size={16} className="mr-2" />}
-                                        Simular Resultados (Test)
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="text-red-400 hover:text-red-300 hover:bg-red-400/10 cursor-pointer"
-                                        onClick={handleResetFixture}
-                                    >
-                                        <Trash2 size={16} className="mr-2" />
-                                        Reiniciar Fase de Grupos
-                                    </Button>
+                                                });
+                                            }}
+                                            disabled={isGenerating}
+                                        >
+                                            {isGenerating ? <Loader2 size={16} className="mr-2 animate-spin" /> : <RefreshCw size={16} className="mr-2" />}
+                                            Simular Resultados
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-red-400 hover:text-red-300 hover:bg-red-400/10 cursor-pointer"
+                                            onClick={handleResetFixture}
+                                        >
+                                            <Trash2 size={16} className="mr-2" />
+                                            Reiniciar Fase
+                                        </Button>
+                                    </div>
                                 </div>
+
+                                {showManualGroupForm && (
+                                    <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-6">
+                                        <h4 className="font-bold text-primary mb-4 flex items-center gap-2">
+                                            <Plus size={18} /> Crear Nuevo Partido en Grupo
+                                        </h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                                            <div>
+                                                <label className="text-sm text-gray-400 block mb-1">Grupo / Zona</label>
+                                                <input
+                                                    className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary transition-colors"
+                                                    value={manualGroupSelect}
+                                                    onChange={(e) => setManualGroupSelect(e.target.value.toUpperCase())}
+                                                    placeholder="A, B, C..."
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-sm text-gray-400 block mb-1">Equipo 1</label>
+                                                <select
+                                                    className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary transition-colors"
+                                                    value={manualGroupTeam1}
+                                                    onChange={(e) => setManualGroupTeam1(e.target.value)}
+                                                >
+                                                    <option value="">-- Seleccionar --</option>
+                                                    {registrations.filter(r => r.status === 'approved').map(team => (
+                                                        <option key={team.id} value={team.id}>{team.team_name} ({team.group_name || 'Sin Z.'})</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="text-sm text-gray-400 block mb-1">Equipo 2</label>
+                                                <select
+                                                    className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary transition-colors"
+                                                    value={manualGroupTeam2}
+                                                    onChange={(e) => setManualGroupTeam2(e.target.value)}
+                                                >
+                                                    <option value="">-- Seleccionar --</option>
+                                                    {registrations.filter(r => r.status === 'approved').map(team => (
+                                                        <option key={team.id} value={team.id}>{team.team_name} ({team.group_name || 'Sin Z.'})</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <Button
+                                                    className="w-full"
+                                                    onClick={handleAddManualGroupMatch}
+                                                    disabled={isGenerating}
+                                                >
+                                                    {isGenerating ? <Loader2 size={18} className="animate-spin mr-2" /> : <Check size={18} className="mr-2" />}
+                                                    Guardar Partido
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                                     {Array.from(new Set(registrations.map(r => r.group_name).filter(Boolean))).sort().map(groupName => {
