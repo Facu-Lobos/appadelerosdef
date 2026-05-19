@@ -177,6 +177,27 @@ const TournamentDetail = () => {
         });
     };
 
+    const handleGenerateLigaPaternidadDate = async () => {
+        if (!tournament) return;
+        if (registrations.length < 4) {
+            alert('Se necesitan al menos 4 jugadores para sortear una fecha (1 partido).');
+            return;
+        }
+
+        try {
+            setIsGenerating(true);
+            await supabaseService.generateLigaPaternidadDate(tournament.id);
+            showToast('Fecha sorteada correctamente!', 'success');
+            loadTournamentData(tournament.id); // Reload to get updated current_date
+            setActiveTab('groups');
+        } catch (error: any) {
+            console.error('Error generating date:', error);
+            showToast('Error al sortear fecha: ' + error.message, 'error');
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
     const handleAddManualPlayoffMatch = async () => {
         if (!tournament) return;
         if (!manualPlayoffRound) {
@@ -370,7 +391,7 @@ const TournamentDetail = () => {
                         <h1 className="text-2xl font-bold text-white">{tournament.name}</h1>
                         <div className="flex items-center gap-4 text-sm text-gray-400 mt-1">
                             <span className="flex items-center gap-1"><Calendar size={14} /> {format(new Date(tournament.start_date), "d 'de' MMMM", { locale: es })}</span>
-                            <span className="flex items-center gap-1"><Users size={14} /> {tournament.format === 'largo_12' ? 'Torneo Largo' : tournament.format === 'americano' ? 'Americano' : 'Torneo'} • {tournament.category} • {tournament.max_teams} Equipos</span>
+                            <span className="flex items-center gap-1"><Users size={14} /> {tournament.format === 'largo_12' ? 'Torneo Largo' : tournament.format === 'americano' ? 'Americano' : tournament.format === 'liga_paternidad' ? 'Liga Paternidad' : 'Torneo'} • {tournament.category} {tournament.format !== 'liga_paternidad' && `• ${tournament.max_teams} Equipos`}</span>
                             <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${tournament.status === 'open' ? 'bg-green-500/20 text-green-400' :
                                 tournament.status === 'ongoing' ? 'bg-blue-500/20 text-blue-400' :
                                     'bg-gray-500/20 text-gray-400'
@@ -444,9 +465,9 @@ const TournamentDetail = () => {
                         loadRegistrations(tournament.id);
                     }}
                 >
-                    {tournament.format === 'americano' ? 'Posiciones Generales' : 'Fase de Grupos'}
+                    {tournament.format === 'americano' ? 'Posiciones Generales' : tournament.format === 'liga_paternidad' ? 'Posiciones Individuales' : 'Fase de Grupos'}
                 </button>
-                {tournament.format !== 'americano' && (
+                {tournament.format !== 'americano' && tournament.format !== 'liga_paternidad' && (
                     <button
                         className={`pb-4 px-2 text-lg font-medium transition-colors ${activeTab === 'playoffs' ? 'text-primary border-b-2 border-primary' : 'text-gray-400 hover:text-white'}`}
                         onClick={() => setActiveTab('playoffs')}
@@ -468,7 +489,7 @@ const TournamentDetail = () => {
                             </h3>
                             <div className="space-y-4">
                                 <div>
-                                    <label className="text-sm text-gray-400 block mb-1">Jugador 1</label>
+                                    <label className="text-sm text-gray-400 block mb-1">{tournament.format === 'liga_paternidad' ? 'Jugador' : 'Jugador 1'}</label>
                                     <input
                                         className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary transition-colors"
                                         value={manualPlayer1}
@@ -476,27 +497,29 @@ const TournamentDetail = () => {
                                         placeholder="Nombre completo"
                                     />
                                 </div>
-                                <div>
-                                    <label className="text-sm text-gray-400 block mb-1">Jugador 2</label>
-                                    <input
-                                        className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary transition-colors"
-                                        value={manualPlayer2}
-                                        onChange={(e) => setManualPlayer2(e.target.value)}
-                                        placeholder="Nombre completo"
-                                    />
-                                </div>
+                                {tournament.format !== 'liga_paternidad' && (
+                                    <div>
+                                        <label className="text-sm text-gray-400 block mb-1">Jugador 2</label>
+                                        <input
+                                            className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary transition-colors"
+                                            value={manualPlayer2}
+                                            onChange={(e) => setManualPlayer2(e.target.value)}
+                                            placeholder="Nombre completo"
+                                        />
+                                    </div>
+                                )}
                             </div>
                             <Button onClick={handleManualRegistration} className="w-full mt-4">
-                                Inscribir Equipo
+                                {tournament.format === 'liga_paternidad' ? 'Inscribir Jugador' : 'Inscribir Equipo'}
                             </Button>
                         </div>
 
                         {/* Registered Teams List */}
                         <div className="lg:col-span-2">
                             <h3 className="font-bold text-white mb-6 flex items-center justify-between text-lg">
-                                Equipos Inscritos
+                                {tournament.format === 'liga_paternidad' ? 'Jugadores Inscritos' : 'Equipos Inscritos'}
                                 <span className="text-sm font-normal text-gray-400 bg-white/10 px-3 py-1 rounded-full">
-                                    {registrations.length} / {tournament.max_teams}
+                                    {registrations.length} {tournament.format !== 'liga_paternidad' ? `/ ${tournament.max_teams}` : ''}
                                 </span>
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto pr-2">
@@ -506,12 +529,16 @@ const TournamentDetail = () => {
                                     registrations.map((reg) => (
                                         <div key={reg.id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex justify-between items-center hover:bg-white/10 transition-colors">
                                             <div>
-                                                <div className="font-bold text-white mb-1">{reg.team_name}</div>
-                                                <div className="text-sm text-gray-400 flex gap-2">
-                                                    <span>{reg.player1?.name || reg.player1_name || 'Jugador 1'}</span>
-                                                    <span className="text-gray-600">/</span>
-                                                    <span>{reg.player2?.name || reg.player2_name || 'Jugador 2'}</span>
+                                                <div className="font-bold text-white mb-1">
+                                                    {tournament.format === 'liga_paternidad' ? (reg.player1?.name || reg.player1_name || reg.team_name || 'Jugador') : reg.team_name}
                                                 </div>
+                                                {tournament.format !== 'liga_paternidad' && (
+                                                    <div className="text-sm text-gray-400 flex gap-2">
+                                                        <span>{reg.player1?.name || reg.player1_name || 'Jugador 1'}</span>
+                                                        <span className="text-gray-600">/</span>
+                                                        <span>{reg.player2?.name || reg.player2_name || 'Jugador 2'}</span>
+                                                    </div>
+                                                )}
                                                 <div className={`text-xs mt-2 uppercase tracking-wider font-bold ${reg.status === 'approved' ? 'text-green-400' : 'text-yellow-400'
                                                     }`}>
                                                     {reg.status === 'approved' ? 'Confirmado' : 'Pendiente'}
@@ -587,39 +614,48 @@ const TournamentDetail = () => {
                                 )}
                             </div>
 
-                            {tournament.status === 'open' ? (
-                                registrations.length >= 3 ? (
+                            {tournament.status === 'open' || tournament.format === 'liga_paternidad' ? (
+                                registrations.length >= (tournament.format === 'liga_paternidad' ? 4 : 3) ? (
                                     <div className="mt-8 pt-8 border-t border-white/10 space-y-3">
-                                        <Button onClick={handleGenerateFixture} className="w-full py-4 text-lg" variant="primary" disabled={isGenerating}>
+                                        <Button 
+                                            onClick={tournament.format === 'liga_paternidad' ? handleGenerateLigaPaternidadDate : handleGenerateFixture} 
+                                            className="w-full py-4 text-lg" 
+                                            variant="primary" 
+                                            disabled={isGenerating || (tournament.format === 'liga_paternidad' && (tournament.current_date || 0) >= (tournament.total_dates || 1))}
+                                        >
                                             {isGenerating ? (
                                                 <>
                                                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                                                     Generando...
                                                 </>
                                             ) : (
-                                                tournament.format === 'americano' ? 'Generar Fixture (Automático)' : 'Generar Fase de Grupos (Automático)'
+                                                tournament.format === 'liga_paternidad' 
+                                                    ? `Sortear Fecha ${(tournament.current_date || 0) + 1} de ${tournament.total_dates || '?'}`
+                                                    : tournament.format === 'americano' ? 'Generar Fixture (Automático)' : 'Generar Fase de Grupos (Automático)'
                                             )}
                                         </Button>
-                                        <Button onClick={handleGenerateManualFixture} className="w-full py-4 text-lg" variant="secondary" disabled={isGenerating}>
-                                            {isGenerating ? (
-                                                <>
-                                                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                                    Generando...
-                                                </>
-                                            ) : (
-                                                'Generar Fixture (Zonas Manuales)'
-                                            )}
-                                        </Button>
+                                        {tournament.format !== 'liga_paternidad' && (
+                                            <Button onClick={handleGenerateManualFixture} className="w-full py-4 text-lg" variant="secondary" disabled={isGenerating}>
+                                                {isGenerating ? (
+                                                    <>
+                                                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                                        Generando...
+                                                    </>
+                                                ) : (
+                                                    'Generar Fixture (Zonas Manuales)'
+                                                )}
+                                            </Button>
+                                        )}
                                     </div>
                                 ) : (
                                     <div className="mt-8 pt-8 border-t border-white/10 text-center">
                                         <p className="text-gray-500 italic mb-4">
-                                            Se necesitan al menos 3 equipos para generar la fase de grupos.
+                                            Se necesitan al menos {tournament.format === 'liga_paternidad' ? '4 jugadores' : '3 equipos'} para generar {tournament.format === 'liga_paternidad' ? 'la primera fecha' : 'la fase de grupos'}.
                                         </p>
                                         <div className="w-full bg-white/5 h-3 rounded-full overflow-hidden max-w-md mx-auto">
                                             <div
                                                 className="bg-primary h-full transition-all duration-500"
-                                                style={{ width: `${(registrations.length / 3) * 100}%` }}
+                                                style={{ width: `${(registrations.length / (tournament.format === 'liga_paternidad' ? 4 : 3)) * 100}%` }}
                                             />
                                         </div>
                                     </div>
@@ -638,7 +674,7 @@ const TournamentDetail = () => {
                                             }}
                                             variant="secondary"
                                         >
-                                            {tournament.format === 'americano' ? 'Ver Fixture' : 'Ver Fase de Grupos'}
+                                            {tournament.format === 'americano' ? 'Ver Fixture' : tournament.format === 'liga_paternidad' ? 'Ver Posiciones' : 'Ver Fase de Grupos'}
                                         </Button>
                                         <Button
                                             onClick={handleResetFixture}

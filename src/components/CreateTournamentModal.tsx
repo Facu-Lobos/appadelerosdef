@@ -22,7 +22,8 @@ export const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({ is
         max_teams: 8,
         format: 'knockout',
         zones_count: 4,
-        teams_advancing_per_zone: 2
+        teams_advancing_per_zone: 2,
+        total_dates: 10
     });
 
     if (!isOpen) return null;
@@ -36,8 +37,10 @@ export const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({ is
             await supabaseService.createTournament({
                 ...formData,
                 gender: formData.gender as 'Masculino' | 'Femenino' | 'Mixto',
-                format: formData.format as 'knockout' | 'league' | 'americano' | 'largo_12' | 'flexible',
+                format: formData.format as 'knockout' | 'league' | 'americano' | 'largo_12' | 'flexible' | 'liga_paternidad',
                 max_teams: formData.format === 'largo_12' ? 12 : formData.max_teams,
+                total_dates: formData.format === 'liga_paternidad' ? formData.total_dates : undefined,
+                current_date: formData.format === 'liga_paternidad' ? 0 : undefined,
                 club_id: clubId
             });
             onTournamentCreated();
@@ -142,6 +145,7 @@ export const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({ is
                                 <option value="americano">Americano</option>
                                 <option value="largo_12">Largo (12 Parejas - 4 Zonas de 3)</option>
                                 <option value="flexible">100% Flexible (Grupos libres + Llave Manual)</option>
+                                <option value="liga_paternidad">Liga Paternidad (Individual 2v2)</option>
                             </select>
                         </div>
                         {formData.format === 'knockout' && (
@@ -208,6 +212,21 @@ export const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({ is
                                     onChange={(e) => setFormData({ ...formData, teams_advancing_per_zone: parseInt(e.target.value) })}
                                 />
                             </div>
+                        </div>
+                    )}
+
+                    {formData.format === 'liga_paternidad' && (
+                        <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                            <label className="block text-sm font-medium text-gray-400 mb-1">Cantidad Total de Fechas</label>
+                            <Input
+                                type="number"
+                                min={1}
+                                value={formData.total_dates}
+                                onChange={(e) => setFormData({ ...formData, total_dates: parseInt(e.target.value) })}
+                            />
+                            <p className="text-xs text-gray-500 mt-2">
+                                Cuando todos los jugadores jueguen esta cantidad de fechas, la liga finaliza.
+                            </p>
                         </div>
                     )}
 

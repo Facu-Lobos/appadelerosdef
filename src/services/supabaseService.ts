@@ -1040,6 +1040,8 @@ export const supabaseService = {
                 *,
                 team1:tournament_registrations!team1_id(team_name, player1_name, player2_name, player1:profiles!player1_id(name), player2:profiles!player2_id(name)),
                 team2:tournament_registrations!team2_id(team_name, player1_name, player2_name, player1:profiles!player1_id(name), player2:profiles!player2_id(name)),
+                team1_partner:tournament_registrations!team1_partner_id(team_name, player1_name, player2_name, player1:profiles!player1_id(name), player2:profiles!player2_id(name)),
+                team2_partner:tournament_registrations!team2_partner_id(team_name, player1_name, player2_name, player1:profiles!player1_id(name), player2:profiles!player2_id(name)),
                 court:courts!court_id(name)
             `)
             .eq('tournament_id', tournamentId)
@@ -1069,24 +1071,45 @@ export const supabaseService = {
 
         if (matchError) throw matchError;
 
+        // Fetch tournament details
+        const { data: tournament, error: tError } = await supabase
+            .from('tournaments')
+            .select('format')
+            .eq('id', match.tournament_id)
+            .single();
+
+        if (tError) throw tError;
+        const isLigaPaternidad = tournament.format === 'liga_paternidad';
+
         // 2. Recalculate Stats for the Group
-        // Fetch all matches in this group
-        const { data: groupMatches, error: groupError } = await supabase
+        // Fetch all matches in this group (or all group stage matches if Liga Paternidad)
+        let matchesQuery = supabase
             .from('tournament_matches')
             .select('*')
             .eq('tournament_id', match.tournament_id)
-            .eq('group_name', match.group_name)
-            .not('winner_id', 'is', null); // Only completed matches
+            .not('winner_id', 'is', null);
 
+        if (!isLigaPaternidad) {
+            matchesQuery = matchesQuery.eq('group_name', match.group_name);
+        } else {
+            matchesQuery = matchesQuery.eq('stage', 'group'); // All matches for individual standings
+        }
+
+        const { data: groupMatches, error: groupError } = await matchesQuery;
         if (groupError) throw groupError;
 
-        // Fetch all teams in this group
-        const { data: teams, error: teamsError } = await supabase
+        // Fetch all teams in this group (or all teams if Liga Paternidad)
+        let teamsQuery = supabase
             .from('tournament_registrations')
             .select('*')
             .eq('tournament_id', match.tournament_id)
-            .eq('group_name', match.group_name);
+            .eq('status', 'approved');
 
+        if (!isLigaPaternidad) {
+            teamsQuery = teamsQuery.eq('group_name', match.group_name);
+        }
+
+        const { data: teams, error: teamsError } = await teamsQuery;
         if (teamsError) throw teamsError;
 
         // Calculate Stats
@@ -1095,78 +1118,63 @@ export const supabaseService = {
             statsMap[team.id] = { points: 0, played: 0, won: 0, lost: 0, sets_won: 0, sets_lost: 0, games_won: 0, games_lost: 0 };
         });
 
+        const incrementStat = (playerId: string | undefined | null, stat: string, amount = 1) => {
+            if (playerId && statsMap[playerId]) {
+                statsMap[playerId][stat] += amount;
+            }
+        };
+
         groupMatches.forEach(m => {
             const team1 = m.team1_id;
+            const team1_partner = m.team1_partner_id;
             const team2 = m.team2_id;
+            const team2_partner = m.team2_partner_id;
             const winner = m.winner_id;
-            const loser = winner === team1 ? team2 : team1;
+            const isWinnerTeam1 = winner === team1;
 
-            if (statsMap[team1]) statsMap[team1].played++;
-            if (statsMap[team2]) statsMap[team2].played++;
+            const winnerIds = isWinnerTeam1 ? [team1, team1_partner] : [team2, team2_partner];
+            const loserIds = isWinnerTeam1 ? [team2, team2_partner] : [team1, team1_partner];
 
-            if (statsMap[winner]) {
-                statsMap[winner].won++;
-                statsMap[winner].points += 2; // 2 points for win
-            }
-            if (statsMap[loser]) {
-                statsMap[loser].lost++;
-                statsMap[loser].points += 1; // 1 point for loss
-            }
+            [team1, team1_partner, team2, team2_partner].forEach(id => incrementStat(id, 'played', 1));
+
+            winnerIds.forEach(id => {
+                incrementStat(id, 'won', 1);
+                incrementStat(id, 'points', 2);
+            });
+
+            loserIds.forEach(id => {
+                incrementStat(id, 'lost', 1);
+                incrementStat(id, 'points', 1);
+            });
 
             // Sets and Games
-            // Fallback: Parse score string if sets_score is missing
             let sets = m.sets_score;
             if (!sets && m.score && m.score !== 'BYE') {
-                // Parse "6-4, 6-2" assuming "Team1-Team2" format
                 try {
                     sets = m.score.split(',').map((s: string) => {
                         const [s1, s2] = s.trim().split('-').map(Number);
-                        // We need to map this to { w, l } relative to the WINNER of the match?
-                        // The logic below expects {w, l} where w=games for winner, l=games for loser.
-                        // But calculate logic uses set.w and set.l directly.
-                        // The logic below: if (set.w > set.l) -> winner gets set win.
-
-                        // If m.score is "Team1-Team2", then s1 is Team1Games, s2 is Team2Games.
-                        // We need to determine who is winner of this specific set to assign w/l correctly?
-                        // actually the logic below:
-                        // if (statsMap[winner]) statsMap[winner].games_won += set.w
-                        // This implies set.w MUST be the games won by the Match Winner? 
-                        // NO. The logic below (lines 929+) says:
-                        // winner gets `set.w`, loser gets `set.l`.
-                        // So `sets` MUST be [{w: gamesOfMatchWinner, l: gamesOfMatchLoser}].
-
-                        // So we need to parse s1, s2, check who is match winner, and assign accordingly.
-                        const team1Points = s1;
-                        const team2Points = s2;
-
-                        if (winner === team1) {
-                            return { w: team1Points, l: team2Points };
-                        } else {
-                            return { w: team2Points, l: team1Points };
-                        }
+                        return isWinnerTeam1 ? { w: s1, l: s2 } : { w: s2, l: s1 };
                     });
                 } catch (e) { console.error("Error parsing score", e); }
             }
 
             if (sets && Array.isArray(sets)) {
                 sets.forEach((set: { w: number, l: number }) => {
-                    // Winner gets 'w' games, Loser gets 'l' games
-                    if (statsMap[winner]) {
-                        statsMap[winner].games_won += set.w;
-                        statsMap[winner].games_lost += set.l;
-                    }
-                    if (statsMap[loser]) {
-                        statsMap[loser].games_won += set.l;
-                        statsMap[loser].games_lost += set.w;
-                    }
+                    winnerIds.forEach(id => {
+                        incrementStat(id, 'games_won', set.w);
+                        incrementStat(id, 'games_lost', set.l);
+                    });
+                    loserIds.forEach(id => {
+                        incrementStat(id, 'games_won', set.l);
+                        incrementStat(id, 'games_lost', set.w);
+                    });
 
-                    // Determine set winner based on games
                     if (set.w > set.l) {
-                        if (statsMap[winner]) statsMap[winner].sets_won += 1;
-                        if (statsMap[loser]) statsMap[loser].sets_lost += 1;
+                        winnerIds.forEach(id => incrementStat(id, 'sets_won', 1));
+                        loserIds.forEach(id => incrementStat(id, 'sets_lost', 1));
                     } else {
-                        if (statsMap[winner]) statsMap[winner].sets_lost += 1;
-                        if (statsMap[loser]) statsMap[loser].sets_won += 1;
+                        winnerIds.forEach(id => incrementStat(id, 'sets_lost', 1));
+                        loserIds.forEach(id => incrementStat(id, 'sets_won', 1));
                     }
                 });
             }
@@ -1307,6 +1315,75 @@ export const supabaseService = {
             .from('tournaments')
             .update({ status: 'ongoing' })
             .eq('id', tournamentId);
+
+        return true;
+    },
+
+    async generateLigaPaternidadDate(tournamentId: string) {
+        // 1. Get tournament details
+        const { data: tournament, error: tError } = await supabase
+            .from('tournaments')
+            .select('*')
+            .eq('id', tournamentId)
+            .single();
+
+        if (tError) throw tError;
+
+        // 2. Get approved registrations (individual players)
+        const { data: registrations, error: regError } = await supabase
+            .from('tournament_registrations')
+            .select('*')
+            .eq('tournament_id', tournamentId)
+            .eq('status', 'approved');
+
+        if (regError) throw regError;
+
+        if (registrations.length < 4) throw new Error('Se necesitan al menos 4 jugadores');
+
+        const currentDate = (tournament.current_date || 0) + 1;
+
+        // Shuffle players randomly
+        const shuffledPlayers = [...registrations].sort(() => Math.random() - 0.5);
+
+        const matchesToInsert = [];
+
+        // Group into sets of 4 players
+        for (let i = 0; i < shuffledPlayers.length; i += 4) {
+            // If less than 4 players remain, they rest this round
+            if (i + 3 < shuffledPlayers.length) {
+                matchesToInsert.push({
+                    tournament_id: tournamentId,
+                    round: 'group', // we use 'group' stage for the main league phase
+                    stage: 'group',
+                    group_name: `Fecha ${currentDate}`,
+                    team1_id: shuffledPlayers[i].id,
+                    team1_partner_id: shuffledPlayers[i+1].id,
+                    team2_id: shuffledPlayers[i+2].id,
+                    team2_partner_id: shuffledPlayers[i+3].id,
+                    match_date: currentDate,
+                    start_time: new Date().toISOString()
+                });
+            }
+        }
+
+        if (matchesToInsert.length > 0) {
+            const { error: matchError } = await supabase
+                .from('tournament_matches')
+                .insert(matchesToInsert);
+            
+            if (matchError) throw matchError;
+        }
+
+        // 3. Update current_date on tournament
+        const { error: updateError } = await supabase
+            .from('tournaments')
+            .update({ 
+                current_date: currentDate,
+                status: 'ongoing'
+            })
+            .eq('id', tournamentId);
+            
+        if (updateError) throw updateError;
 
         return true;
     },

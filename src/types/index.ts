@@ -79,9 +79,11 @@ export interface Tournament {
     status: 'open' | 'ongoing' | 'finished';
     max_teams: number;
     created_at?: string;
-    format?: 'knockout' | 'league' | 'americano' | 'largo_12' | 'flexible';
+    format?: 'knockout' | 'league' | 'americano' | 'largo_12' | 'flexible' | 'liga_paternidad';
     zones_count?: number;
     teams_advancing_per_zone?: number;
+    total_dates?: number; // Used in Liga Paternidad
+    current_date?: number; // Used in Liga Paternidad
 }
 
 export interface TournamentRegistration {
@@ -124,9 +126,15 @@ export interface TournamentMatch {
     winner_id?: string;
     court_id?: string;
     start_time?: string;
+    // Fields for Liga Paternidad (2v2 with individual registrations)
+    team1_partner_id?: string; // Refers to TournamentRegistration id
+    team2_partner_id?: string; // Refers to TournamentRegistration id
+    match_date?: number; // the "fecha" this match belongs to
     // Joined fields
     team1?: TournamentRegistration;
     team2?: TournamentRegistration;
+    team1_partner?: TournamentRegistration;
+    team2_partner?: TournamentRegistration;
     court?: Court;
 }
 
