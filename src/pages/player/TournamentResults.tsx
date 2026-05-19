@@ -214,13 +214,21 @@ const TournamentResults = () => {
                                                 {groupMatches.map(match => (
                                                     <div key={match.id} className="bg-black/20 p-4 rounded-lg flex flex-col gap-3 hover:bg-black/30 transition-colors">
                                                         <div className="flex items-center justify-between">
-                                                            <div className="flex-1 text-right text-sm font-medium text-gray-300">{match.team1?.team_name}</div>
+                                                            <div className="flex-1 text-right text-sm font-medium text-gray-300">
+                                                                {tournament.format === 'liga_paternidad' && match.team1_partner
+                                                                    ? `${match.team1?.team_name?.split(' ')[0] || '?'}/${match.team1_partner?.team_name?.split(' ')[0] || '?'}`
+                                                                    : match.team1?.team_name}
+                                                            </div>
                                                             <div className="px-6 flex flex-col items-center gap-2">
                                                                 <div className="bg-white/10 px-3 py-1 rounded text-sm font-mono font-bold text-white min-w-[60px] text-center">
                                                                     {match.score || 'vs'}
                                                                 </div>
                                                             </div>
-                                                            <div className="flex-1 text-left text-sm font-medium text-gray-300">{match.team2?.team_name}</div>
+                                                            <div className="flex-1 text-left text-sm font-medium text-gray-300">
+                                                                {tournament.format === 'liga_paternidad' && match.team2_partner
+                                                                    ? `${match.team2?.team_name?.split(' ')[0] || '?'}/${match.team2_partner?.team_name?.split(' ')[0] || '?'}`
+                                                                    : match.team2?.team_name}
+                                                            </div>
                                                         </div>
 
                                                         {/* Schedule Info */}
