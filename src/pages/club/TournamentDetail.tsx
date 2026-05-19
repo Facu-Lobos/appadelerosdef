@@ -282,9 +282,10 @@ const TournamentDetail = () => {
     };
 
     const handleManualRegistration = async () => {
-        if (!tournament || !manualPlayer1 || !manualPlayer2) return;
+        if (!tournament || !manualPlayer1) return;
+        if (tournament.format !== 'liga_paternidad' && !manualPlayer2) return;
 
-        const generatedTeamName = `${manualPlayer1} & ${manualPlayer2}`;
+        const generatedTeamName = tournament.format === 'liga_paternidad' ? manualPlayer1 : `${manualPlayer1} & ${manualPlayer2}`;
 
         try {
             await supabaseService.registerTeam({
