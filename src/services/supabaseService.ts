@@ -1388,6 +1388,16 @@ export const supabaseService = {
         return true;
     },
 
+    async updateTournamentCurrentRound(tournamentId: string, currentRound: number) {
+        const { error } = await supabase
+            .from('tournaments')
+            .update({ current_round: currentRound })
+            .eq('id', tournamentId);
+        
+        if (error) throw error;
+        return true;
+    },
+
     async generateGroupStage(tournamentId: string) {
         // 1. Get tournament details
         const { data: tournament, error: tError } = await supabase

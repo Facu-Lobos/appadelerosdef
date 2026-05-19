@@ -58,7 +58,9 @@ const TournamentDetail = () => {
     // Manual Group Match State
     const [showManualGroupForm, setShowManualGroupForm] = useState(false);
     const [manualGroupTeam1, setManualGroupTeam1] = useState('');
+    const [manualGroupTeam1Partner, setManualGroupTeam1Partner] = useState('');
     const [manualGroupTeam2, setManualGroupTeam2] = useState('');
+    const [manualGroupTeam2Partner, setManualGroupTeam2Partner] = useState('');
     const [manualGroupSelect, setManualGroupSelect] = useState('A');
 
     // Dialog state
@@ -235,25 +237,41 @@ const TournamentDetail = () => {
     const handleAddManualGroupMatch = async () => {
         if (!tournament) return;
         if (!manualGroupSelect) {
-            showToast('Selecciona un grupo', 'error');
+            showToast('Selecciona un grupo o fecha', 'error');
             return;
         }
+
+        // For Liga Paternidad, we might want match_date to be parsed from manualGroupSelect (e.g. "Fecha 1" -> 1)
+        let matchDateStr = manualGroupSelect.replace(/\D/g, '');
+        let matchDateNum = matchDateStr ? parseInt(matchDateStr) : undefined;
         
         try {
             setIsGenerating(true);
             await supabaseService.createTournamentMatch({
                 tournament_id: tournament.id,
                 stage: 'group',
-                round: 'group',
+                round: tournament.format === 'liga_paternidad' ? `fecha_${matchDateNum || 1}` : 'group',
                 group_name: manualGroupSelect,
                 team1_id: manualGroupTeam1 || undefined,
+                team1_partner_id: manualGroupTeam1Partner || undefined,
                 team2_id: manualGroupTeam2 || undefined,
+                team2_partner_id: manualGroupTeam2Partner || undefined,
+                match_date: tournament.format === 'liga_paternidad' ? (matchDateNum || 1) : undefined,
                 start_time: new Date().toISOString()
             });
-            showToast('Partido añadido al grupo', 'success');
+
+            // Update current_round if needed
+            if (tournament.format === 'liga_paternidad' && matchDateNum && matchDateNum > (tournament.current_round || 0)) {
+                await supabaseService.updateTournamentCurrentRound(tournament.id, matchDateNum);
+            }
+
+            showToast('Partido añadido', 'success');
             setManualGroupTeam1('');
+            setManualGroupTeam1Partner('');
             setManualGroupTeam2('');
+            setManualGroupTeam2Partner('');
             loadRegistrations(tournament.id);
+            loadTournamentData(tournament.id);
         } catch (error: any) {
              showToast('Error al añadir partido: ' + error.message, 'error');
         } finally {
@@ -819,11 +837,11 @@ const TournamentDetail = () => {
                                                     className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary transition-colors"
                                                     value={manualGroupSelect}
                                                     onChange={(e) => setManualGroupSelect(e.target.value.toUpperCase())}
-                                                    placeholder="A, B, C..."
+                                                    placeholder={tournament.format === 'liga_paternidad' ? "Ej. Fecha 1" : "A, B, C..."}
                                                 />
                                             </div>
                                             <div>
-                                                <label className="text-sm text-gray-400 block mb-1">Equipo 1</label>
+                                                <label className="text-sm text-gray-400 block mb-1">{tournament.format === 'liga_paternidad' ? 'Jugador 1' : 'Equipo 1'}</label>
                                                 <select
                                                     className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary transition-colors"
                                                     value={manualGroupTeam1}
@@ -835,20 +853,50 @@ const TournamentDetail = () => {
                                                     ))}
                                                 </select>
                                             </div>
+                                            {tournament.format === 'liga_paternidad' && (
+                                                <div>
+                                                    <label className="text-sm text-gray-400 block mb-1">Compañero 1</label>
+                                                    <select
+                                                        className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary transition-colors"
+                                                        value={manualGroupTeam1Partner}
+                                                        onChange={(e) => setManualGroupTeam1Partner(e.target.value)}
+                                                    >
+                                                        <option value="">-- Seleccionar --</option>
+                                                        {registrations.filter(r => r.status === 'approved' && r.id !== manualGroupTeam1).map(team => (
+                                                            <option key={team.id} value={team.id}>{team.team_name}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            )}
                                             <div>
-                                                <label className="text-sm text-gray-400 block mb-1">Equipo 2</label>
+                                                <label className="text-sm text-gray-400 block mb-1">{tournament.format === 'liga_paternidad' ? 'Jugador 2' : 'Equipo 2'}</label>
                                                 <select
                                                     className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary transition-colors"
                                                     value={manualGroupTeam2}
                                                     onChange={(e) => setManualGroupTeam2(e.target.value)}
                                                 >
                                                     <option value="">-- Seleccionar --</option>
-                                                    {registrations.filter(r => r.status === 'approved').map(team => (
+                                                    {registrations.filter(r => r.status === 'approved' && r.id !== manualGroupTeam1 && r.id !== manualGroupTeam1Partner).map(team => (
                                                         <option key={team.id} value={team.id}>{team.team_name} ({team.group_name || 'Sin Z.'})</option>
                                                     ))}
                                                 </select>
                                             </div>
-                                            <div>
+                                            {tournament.format === 'liga_paternidad' && (
+                                                <div>
+                                                    <label className="text-sm text-gray-400 block mb-1">Compañero 2</label>
+                                                    <select
+                                                        className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary transition-colors"
+                                                        value={manualGroupTeam2Partner}
+                                                        onChange={(e) => setManualGroupTeam2Partner(e.target.value)}
+                                                    >
+                                                        <option value="">-- Seleccionar --</option>
+                                                        {registrations.filter(r => r.status === 'approved' && r.id !== manualGroupTeam1 && r.id !== manualGroupTeam1Partner && r.id !== manualGroupTeam2).map(team => (
+                                                            <option key={team.id} value={team.id}>{team.team_name}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            )}
+                                            <div className={tournament.format === 'liga_paternidad' ? "md:col-span-5" : ""}>
                                                 <Button
                                                     className="w-full"
                                                     onClick={handleAddManualGroupMatch}
