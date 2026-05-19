@@ -131,14 +131,20 @@ const TournamentResults = () => {
             <div className="bg-surface border border-white/10 rounded-2xl p-6 min-h-[600px]">
                 {activeTab === 'groups' && (
                     <div className="space-y-8">
-                        {registrations.filter(r => r.group_name).length === 0 ? (
+                        {(tournament.format !== 'liga_paternidad' && registrations.filter(r => r.group_name).length === 0) ? (
                             <div className="text-center py-20 text-gray-400">
                                 <p className="text-xl mb-4">La fase de grupos aún no ha comenzado.</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                                {Array.from(new Set(registrations.map(r => r.group_name).filter(Boolean))).sort().map(groupName => {
-                                    const groupTeams = registrations.filter(r => r.group_name === groupName);
+                                {(tournament.format === 'liga_paternidad' 
+                                    ? ['Única'] 
+                                    : Array.from(new Set(registrations.map(r => r.group_name).filter(Boolean))).sort()
+                                ).map(groupName => {
+                                    const groupTeams = tournament.format === 'liga_paternidad'
+                                        ? registrations.filter(r => r.status === 'approved')
+                                        : registrations.filter(r => r.group_name === groupName);
+                                        
                                     if (groupTeams.length === 0) return null;
 
                                     // Sort by points, then sets won, then games won
@@ -160,10 +166,12 @@ const TournamentResults = () => {
                                         return gameDiffB - gameDiffA;
                                     });
 
-                                    const groupMatches = matches.filter(m => m.group_name === groupName);
+                                    const groupMatches = tournament.format === 'liga_paternidad'
+                                        ? matches.filter(m => m.stage === 'group' || !m.stage).sort((a, b) => (b.match_date || 0) - (a.match_date || 0)) // Newest first
+                                        : matches.filter(m => m.group_name === groupName);
 
                                     return (
-                                        <div key={groupName} className="bg-white/5 rounded-xl p-3 sm:p-6 border border-white/10">
+                                        <div key={groupName} className={`bg-white/5 rounded-xl p-3 sm:p-6 border border-white/10 ${tournament.format === 'liga_paternidad' ? 'xl:col-span-2' : ''}`}>
                                             <h3 className="text-lg sm:text-xl font-bold text-primary mb-4 sm:mb-6">Grupo {groupName}</h3>
 
                                             {/* Standings Table */}
