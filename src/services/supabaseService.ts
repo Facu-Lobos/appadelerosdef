@@ -1340,10 +1340,36 @@ export const supabaseService = {
 
         if (registrations.length < 4) throw new Error('Se necesitan al menos 4 jugadores');
 
-        const currentRound = (tournament.current_round || 0) + 1;
+        let currentRound = tournament.current_round || 1;
 
-        // Shuffle players randomly
-        const shuffledPlayers = [...registrations].sort(() => Math.random() - 0.5);
+        // Fetch matches to see who already played in currentRound
+        const { data: existingMatches, error: matchFetchError } = await supabase
+            .from('tournament_matches')
+            .select('*')
+            .eq('tournament_id', tournamentId)
+            .eq('match_date', currentRound);
+
+        if (matchFetchError) throw matchFetchError;
+
+        let playersInCurrentRound = new Set<string>();
+        existingMatches?.forEach(m => {
+            if (m.team1_id) playersInCurrentRound.add(m.team1_id);
+            if (m.team1_partner_id) playersInCurrentRound.add(m.team1_partner_id);
+            if (m.team2_id) playersInCurrentRound.add(m.team2_id);
+            if (m.team2_partner_id) playersInCurrentRound.add(m.team2_partner_id);
+        });
+
+        let availablePlayers = registrations.filter(r => !playersInCurrentRound.has(r.id));
+
+        // If fewer than 4 players are available in the current round, it means the round is complete.
+        // We should advance to the NEXT round.
+        if (availablePlayers.length < 4) {
+            currentRound++;
+            availablePlayers = [...registrations]; // Everyone is available for the new round
+        }
+
+        // Shuffle available players randomly
+        const shuffledPlayers = availablePlayers.sort(() => Math.random() - 0.5);
 
         const matchesToInsert = [];
 
@@ -1353,7 +1379,7 @@ export const supabaseService = {
             if (i + 3 < shuffledPlayers.length) {
                 matchesToInsert.push({
                     tournament_id: tournamentId,
-                    round: 'group', // we use 'group' stage for the main league phase
+                    round: `fecha_${currentRound}`,
                     stage: 'group',
                     group_name: `Fecha ${currentRound}`,
                     team1_id: shuffledPlayers[i].id,

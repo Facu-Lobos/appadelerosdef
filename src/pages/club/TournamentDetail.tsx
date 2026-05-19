@@ -684,7 +684,7 @@ const TournamentDetail = () => {
                                                 </>
                                             ) : (
                                                 tournament.format === 'liga_paternidad' 
-                                                    ? `Sortear Fecha ${(tournament.current_round || 0) + 1} de ${tournament.total_dates || '?'}`
+                                                    ? `Sortear / Completar Fecha`
                                                     : tournament.format === 'americano' ? 'Generar Fixture (Automático)' : 'Generar Fase de Grupos (Automático)'
                                             )}
                                         </Button>
@@ -775,6 +775,16 @@ const TournamentDetail = () => {
                                         <p className="text-sm text-gray-400">Puedes generar los partidos automáticamente o agregarlos manualmente.</p>
                                     </div>
                                     <div className="flex flex-wrap gap-2 justify-end">
+                                        {tournament.format === 'liga_paternidad' && (
+                                            <Button
+                                                variant="primary"
+                                                onClick={handleGenerateLigaPaternidadDate}
+                                                disabled={isGenerating || (tournament.current_round || 0) >= (tournament.total_dates || 1)}
+                                            >
+                                                {isGenerating ? <Loader2 size={16} className="mr-2 animate-spin" /> : null}
+                                                Sortear / Completar Fecha
+                                            </Button>
+                                        )}
                                         <Button
                                             variant="secondary"
                                             onClick={() => setShowManualGroupForm(!showManualGroupForm)}
