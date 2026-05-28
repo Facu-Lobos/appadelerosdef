@@ -111,6 +111,7 @@ export interface TournamentRegistration {
     // Joined fields
     player1?: PlayerProfile;
     player2?: PlayerProfile;
+    is_active?: boolean; // For Liga Paternidad to freeze players
 }
 
 export interface TournamentMatch {

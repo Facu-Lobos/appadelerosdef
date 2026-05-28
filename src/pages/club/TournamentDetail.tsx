@@ -583,8 +583,11 @@ const TournamentDetail = () => {
                                     registrations.map((reg) => (
                                         <div key={reg.id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex justify-between items-center hover:bg-white/10 transition-colors">
                                             <div>
-                                                <div className="font-bold text-white mb-1">
+                                                <div className="font-bold text-white mb-1 flex items-center gap-2">
                                                     {tournament.format === 'liga_paternidad' ? (reg.player1?.name || reg.player1_name || reg.team_name || 'Jugador') : reg.team_name}
+                                                    {tournament.format === 'liga_paternidad' && reg.is_active === false && (
+                                                        <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full uppercase tracking-wider">Congelado</span>
+                                                    )}
                                                 </div>
                                                 {tournament.format !== 'liga_paternidad' && (
                                                     <div className="text-sm text-gray-400 flex gap-2">
@@ -642,6 +645,25 @@ const TournamentDetail = () => {
                                             )}
                                             {reg.status === 'approved' && (
                                                 <div className="flex gap-2">
+                                                    {tournament.format === 'liga_paternidad' && (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            className={reg.is_active === false ? "text-blue-400 hover:text-blue-300 hover:bg-blue-400/10" : "text-yellow-500 hover:text-yellow-400 hover:bg-yellow-500/10"}
+                                                            onClick={async () => {
+                                                                try {
+                                                                    await supabaseService.togglePlayerActiveStatus(reg.id, reg.is_active === false ? true : false);
+                                                                    showToast(reg.is_active === false ? 'Jugador activado' : 'Jugador congelado', 'success');
+                                                                    loadRegistrations(tournament!.id);
+                                                                } catch (error) {
+                                                                    showToast('Error al cambiar estado', 'error');
+                                                                }
+                                                            }}
+                                                            title={reg.is_active === false ? "Activar jugador" : "Congelar jugador"}
+                                                        >
+                                                            <span className="text-xs font-bold">{reg.is_active === false ? "ACTIVAR" : "CONGELAR"}</span>
+                                                        </Button>
+                                                    )}
                                                     <Button
                                                         size="sm"
                                                         variant="ghost"
@@ -1069,6 +1091,31 @@ const TournamentDetail = () => {
                                                                     >
                                                                         Editar Resultado
                                                                     </button>
+                                                                    {tournament.format === 'liga_paternidad' && (
+                                                                        <button
+                                                                            className="text-xs text-red-400 hover:text-red-300 hover:underline cursor-pointer flex items-center gap-1"
+                                                                            onClick={() => {
+                                                                                setConfirmDialog({
+                                                                                    isOpen: true,
+                                                                                    title: 'Eliminar Partido',
+                                                                                    message: '¿Estás seguro de que quieres eliminar este partido?',
+                                                                                    type: 'danger',
+                                                                                    onConfirm: async () => {
+                                                                                        closeConfirmDialog();
+                                                                                        try {
+                                                                                            await supabaseService.deleteTournamentMatch(match.id);
+                                                                                            showToast('Partido eliminado correctamente', 'success');
+                                                                                            loadRegistrations(tournament.id);
+                                                                                        } catch (error) {
+                                                                                            showToast('Error al eliminar partido', 'error');
+                                                                                        }
+                                                                                    }
+                                                                                });
+                                                                            }}
+                                                                        >
+                                                                            <Trash2 size={12} /> Eliminar
+                                                                        </button>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         </div>

@@ -1338,7 +1338,9 @@ export const supabaseService = {
 
         if (regError) throw regError;
 
-        if (registrations.length < 4) throw new Error('Se necesitan al menos 4 jugadores');
+        const activePlayers = registrations.filter(r => r.is_active !== false);
+
+        if (activePlayers.length < 4) throw new Error('Se necesitan al menos 4 jugadores activos');
 
         // Fetch ALL matches to count how many matches each player has played
         const { data: allMatches, error: matchFetchError } = await supabase
@@ -1350,7 +1352,7 @@ export const supabaseService = {
 
         // Count matches per player
         const playerMatchCounts: Record<string, number> = {};
-        registrations.forEach(r => playerMatchCounts[r.id] = 0);
+        activePlayers.forEach(r => playerMatchCounts[r.id] = 0);
 
         allMatches?.forEach(m => {
             if (m.team1_id && playerMatchCounts[m.team1_id] !== undefined) playerMatchCounts[m.team1_id]++;
@@ -1360,29 +1362,33 @@ export const supabaseService = {
         });
 
         // Sort players: first by match count (ascending), then randomly
-        const sortedPlayers = [...registrations].sort((a, b) => {
+        const sortedPlayers = [...activePlayers].sort((a, b) => {
             const countDiff = playerMatchCounts[a.id] - playerMatchCounts[b.id];
             if (countDiff !== 0) return countDiff;
             return Math.random() - 0.5;
         });
 
-        // Select the first 4 players
-        const selectedPlayers = sortedPlayers.slice(0, 4);
+        const numMatches = Math.floor(activePlayers.length / 4);
+        const selectedPlayers = sortedPlayers.slice(0, numMatches * 4);
 
         const currentRound = (tournament.current_round || 0) + 1;
+        const matchesToInsert = [];
 
-        const matchesToInsert = [{
-            tournament_id: tournamentId,
-            round: `fecha_${currentRound}`,
-            stage: 'group',
-            group_name: `Fecha ${currentRound}`,
-            team1_id: selectedPlayers[0].id,
-            team1_partner_id: selectedPlayers[1].id,
-            team2_id: selectedPlayers[2].id,
-            team2_partner_id: selectedPlayers[3].id,
-            match_date: currentRound,
-            start_time: new Date().toISOString()
-        }];
+        for (let i = 0; i < numMatches; i++) {
+            const offset = i * 4;
+            matchesToInsert.push({
+                tournament_id: tournamentId,
+                round: `fecha_${currentRound}`,
+                stage: 'group',
+                group_name: `Fecha ${currentRound}`,
+                team1_id: selectedPlayers[offset].id,
+                team1_partner_id: selectedPlayers[offset + 1].id,
+                team2_id: selectedPlayers[offset + 2].id,
+                team2_partner_id: selectedPlayers[offset + 3].id,
+                match_date: currentRound,
+                start_time: new Date().toISOString()
+            });
+        }
 
         const { error: matchError } = await supabase
             .from('tournament_matches')
@@ -1401,6 +1407,32 @@ export const supabaseService = {
             
         if (updateError) throw updateError;
 
+        return true;
+    },
+
+    async togglePlayerActiveStatus(registrationId: string, isActive: boolean) {
+        const { error } = await supabase
+            .from('tournament_registrations')
+            .update({ is_active: isActive })
+            .eq('id', registrationId);
+
+        if (error) {
+            console.error('Error toggling player active status:', error);
+            throw error;
+        }
+        return true;
+    },
+
+    async deleteTournamentMatch(matchId: string) {
+        const { error } = await supabase
+            .from('tournament_matches')
+            .delete()
+            .eq('id', matchId);
+
+        if (error) {
+            console.error('Error deleting match:', error);
+            throw error;
+        }
         return true;
     },
 
