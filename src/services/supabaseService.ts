@@ -2393,7 +2393,7 @@ export const supabaseService = {
             }
         }
         return true;
-    }
+    },
 
     async simulateGroupStageResults(tournamentId: string) {
         // 1. Get all group matches
