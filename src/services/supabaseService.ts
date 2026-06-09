@@ -1139,7 +1139,7 @@ export const supabaseService = {
 
             winnerIds.forEach(id => {
                 incrementStat(id, 'won', 1);
-                incrementStat(id, 'points', 2);
+                incrementStat(id, 'points', 3);
             });
 
             loserIds.forEach(id => {
