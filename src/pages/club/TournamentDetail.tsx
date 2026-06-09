@@ -854,6 +854,38 @@ const TournamentDetail = () => {
                                             <Trash2 size={16} className="mr-2" />
                                             Reiniciar Fase
                                         </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10 cursor-pointer"
+                                            onClick={async () => {
+                                                if (!tournament) return;
+                                                setConfirmDialog({
+                                                    isOpen: true,
+                                                    title: 'Arreglar Puntos',
+                                                    message: '¿Recalcular todos los puntos de la fase de grupos basados en los resultados actuales? Usa esto para arreglar errores de suma.',
+                                                    type: 'warning',
+                                                    onConfirm: async () => {
+                                                        closeConfirmDialog();
+                                                        try {
+                                                            setIsGenerating(true);
+                                                            await supabaseService.fixTournamentStats(tournament.id);
+                                                            showToast('Puntos recalculados correctamente.', 'success');
+                                                            loadRegistrations(tournament.id);
+                                                        } catch (error: any) {
+                                                            console.error('Error recalculando:', error);
+                                                            showToast('Error: ' + error.message, 'error');
+                                                        } finally {
+                                                            setIsGenerating(false);
+                                                        }
+                                                    }
+                                                });
+                                            }}
+                                            disabled={isGenerating}
+                                        >
+                                            {isGenerating ? <Loader2 size={16} className="mr-2 animate-spin" /> : <RefreshCw size={16} className="mr-2" />}
+                                            Arreglar Puntos
+                                        </Button>
                                     </div>
                                 </div>
 

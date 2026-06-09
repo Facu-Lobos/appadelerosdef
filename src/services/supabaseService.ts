@@ -2209,6 +2209,192 @@ export const supabaseService = {
 
 
 
+    async fixTournamentStats(tournamentId: string) {
+        // Fetch tournament details
+        const { data: tournament, error: tError } = await supabase
+            .from('tournaments')
+            .select('format')
+            .eq('id', tournamentId)
+            .single();
+
+        if (tError) throw tError;
+        const isLigaPaternidad = tournament.format === 'liga_paternidad';
+
+        // Get all matches
+        const { data: matches, error: matchesError } = await supabase
+            .from('tournament_matches')
+            .select('*')
+            .eq('tournament_id', tournamentId)
+            .not('winner_id', 'is', null);
+
+        if (matchesError) throw matchesError;
+
+        // Get all teams
+        const { data: teams, error: teamsError } = await supabase
+            .from('tournament_registrations')
+            .select('*')
+            .eq('tournament_id', tournamentId)
+            .eq('status', 'approved');
+
+        if (teamsError) throw teamsError;
+
+        if (isLigaPaternidad) {
+            // Recalculate stats for ALL teams based on all group matches
+            const groupMatches = matches.filter(m => m.stage === 'group' || !m.stage);
+            const statsMap: { [key: string]: any } = {};
+            teams.forEach(team => {
+                statsMap[team.id] = { points: 0, played: 0, won: 0, lost: 0, sets_won: 0, sets_lost: 0, games_won: 0, games_lost: 0 };
+            });
+
+            const incrementStat = (playerId: string | undefined | null, stat: string, amount = 1) => {
+                if (playerId && statsMap[playerId]) {
+                    statsMap[playerId][stat] += amount;
+                }
+            };
+
+            groupMatches.forEach(m => {
+                const team1 = m.team1_id;
+                const team1_partner = m.team1_partner_id;
+                const team2 = m.team2_id;
+                const team2_partner = m.team2_partner_id;
+                const winner = m.winner_id;
+                const isWinnerTeam1 = winner === team1;
+
+                const winnerIds = isWinnerTeam1 ? [team1, team1_partner] : [team2, team2_partner];
+                const loserIds = isWinnerTeam1 ? [team2, team2_partner] : [team1, team1_partner];
+
+                [team1, team1_partner, team2, team2_partner].forEach(id => incrementStat(id, 'played', 1));
+
+                winnerIds.forEach(id => {
+                    incrementStat(id, 'won', 1);
+                    incrementStat(id, 'points', 3);
+                });
+
+                loserIds.forEach(id => {
+                    incrementStat(id, 'lost', 1);
+                    incrementStat(id, 'points', 1);
+                });
+
+                let sets = m.sets_score;
+                if (!sets && m.score && m.score !== 'BYE') {
+                    try {
+                        sets = m.score.split(',').map((s: string) => {
+                            const [s1, s2] = s.trim().split('-').map(Number);
+                            return isWinnerTeam1 ? { w: s1, l: s2 } : { w: s2, l: s1 };
+                        });
+                    } catch (e) { }
+                }
+
+                if (sets && Array.isArray(sets)) {
+                    sets.forEach((set: { w: number, l: number }) => {
+                        winnerIds.forEach(id => {
+                            incrementStat(id, 'games_won', set.w);
+                            incrementStat(id, 'games_lost', set.l);
+                        });
+                        loserIds.forEach(id => {
+                            incrementStat(id, 'games_won', set.l);
+                            incrementStat(id, 'games_lost', set.w);
+                        });
+
+                        if (set.w > set.l) {
+                            winnerIds.forEach(id => incrementStat(id, 'sets_won', 1));
+                            loserIds.forEach(id => incrementStat(id, 'sets_lost', 1));
+                        } else {
+                            winnerIds.forEach(id => incrementStat(id, 'sets_lost', 1));
+                            loserIds.forEach(id => incrementStat(id, 'sets_won', 1));
+                        }
+                    });
+                }
+            });
+
+            for (const teamId in statsMap) {
+                await supabase
+                    .from('tournament_registrations')
+                    .update({ stats: statsMap[teamId] })
+                    .eq('id', teamId);
+            }
+        } else {
+            // Calculate by group
+            const groups = [...new Set(teams.map(t => t.group_name).filter(Boolean))];
+            for (const groupName of groups) {
+                const groupTeams = teams.filter(t => t.group_name === groupName);
+                const groupMatches = matches.filter(m => m.group_name === groupName);
+
+                const statsMap: { [key: string]: any } = {};
+                groupTeams.forEach(team => {
+                    statsMap[team.id] = { points: 0, played: 0, won: 0, lost: 0, sets_won: 0, sets_lost: 0, games_won: 0, games_lost: 0 };
+                });
+
+                const incrementStat = (playerId: string | undefined | null, stat: string, amount = 1) => {
+                    if (playerId && statsMap[playerId]) {
+                        statsMap[playerId][stat] += amount;
+                    }
+                };
+
+                groupMatches.forEach(m => {
+                    const team1 = m.team1_id;
+                    const team2 = m.team2_id;
+                    const winner = m.winner_id;
+                    const isWinnerTeam1 = winner === team1;
+
+                    const winnerIds = isWinnerTeam1 ? [team1] : [team2];
+                    const loserIds = isWinnerTeam1 ? [team2] : [team1];
+
+                    [team1, team2].forEach(id => incrementStat(id, 'played', 1));
+
+                    winnerIds.forEach(id => {
+                        incrementStat(id, 'won', 1);
+                        incrementStat(id, 'points', 3);
+                    });
+
+                    loserIds.forEach(id => {
+                        incrementStat(id, 'lost', 1);
+                        incrementStat(id, 'points', 1);
+                    });
+
+                    let sets = m.sets_score;
+                    if (!sets && m.score && m.score !== 'BYE') {
+                        try {
+                            sets = m.score.split(',').map((s: string) => {
+                                const [s1, s2] = s.trim().split('-').map(Number);
+                                return isWinnerTeam1 ? { w: s1, l: s2 } : { w: s2, l: s1 };
+                            });
+                        } catch (e) { }
+                    }
+
+                    if (sets && Array.isArray(sets)) {
+                        sets.forEach((set: { w: number, l: number }) => {
+                            winnerIds.forEach(id => {
+                                incrementStat(id, 'games_won', set.w);
+                                incrementStat(id, 'games_lost', set.l);
+                            });
+                            loserIds.forEach(id => {
+                                incrementStat(id, 'games_won', set.l);
+                                incrementStat(id, 'games_lost', set.w);
+                            });
+
+                            if (set.w > set.l) {
+                                winnerIds.forEach(id => incrementStat(id, 'sets_won', 1));
+                                loserIds.forEach(id => incrementStat(id, 'sets_lost', 1));
+                            } else {
+                                winnerIds.forEach(id => incrementStat(id, 'sets_lost', 1));
+                                loserIds.forEach(id => incrementStat(id, 'sets_won', 1));
+                            }
+                        });
+                    }
+                });
+
+                for (const teamId in statsMap) {
+                    await supabase
+                        .from('tournament_registrations')
+                        .update({ stats: statsMap[teamId] })
+                        .eq('id', teamId);
+                }
+            }
+        }
+        return true;
+    }
+
     async simulateGroupStageResults(tournamentId: string) {
         // 1. Get all group matches
         const { data: matches, error } = await supabase
