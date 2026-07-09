@@ -1319,7 +1319,7 @@ export const supabaseService = {
         return true;
     },
 
-    async generateLigaPaternidadDate(tournamentId: string) {
+        async generateLigaPaternidadDate(tournamentId: string) {
         // 1. Get tournament details
         const { data: tournament, error: tError } = await supabase
             .from('tournaments')
@@ -1350,15 +1350,31 @@ export const supabaseService = {
 
         if (matchFetchError) throw matchFetchError;
 
-        // Count matches per player
+        // Count matches per player AND track partner frequencies
         const playerMatchCounts: Record<string, number> = {};
-        activePlayers.forEach(r => playerMatchCounts[r.id] = 0);
+        const partnerCounts: Record<string, Record<string, number>> = {};
+        
+        activePlayers.forEach(r => {
+            playerMatchCounts[r.id] = 0;
+            partnerCounts[r.id] = {};
+        });
 
         allMatches?.forEach(m => {
+            // Count total matches played
             if (m.team1_id && playerMatchCounts[m.team1_id] !== undefined) playerMatchCounts[m.team1_id]++;
             if (m.team1_partner_id && playerMatchCounts[m.team1_partner_id] !== undefined) playerMatchCounts[m.team1_partner_id]++;
             if (m.team2_id && playerMatchCounts[m.team2_id] !== undefined) playerMatchCounts[m.team2_id]++;
             if (m.team2_partner_id && playerMatchCounts[m.team2_partner_id] !== undefined) playerMatchCounts[m.team2_partner_id]++;
+            
+            // Track partnerships
+            if (m.team1_id && m.team1_partner_id && partnerCounts[m.team1_id] && partnerCounts[m.team1_partner_id]) {
+                partnerCounts[m.team1_id][m.team1_partner_id] = (partnerCounts[m.team1_id][m.team1_partner_id] || 0) + 1;
+                partnerCounts[m.team1_partner_id][m.team1_id] = (partnerCounts[m.team1_partner_id][m.team1_id] || 0) + 1;
+            }
+            if (m.team2_id && m.team2_partner_id && partnerCounts[m.team2_id] && partnerCounts[m.team2_partner_id]) {
+                partnerCounts[m.team2_id][m.team2_partner_id] = (partnerCounts[m.team2_id][m.team2_partner_id] || 0) + 1;
+                partnerCounts[m.team2_partner_id][m.team2_id] = (partnerCounts[m.team2_partner_id][m.team2_id] || 0) + 1;
+            }
         });
 
         // Sort players: first by match count (ascending), then randomly
@@ -1371,23 +1387,55 @@ export const supabaseService = {
         const numMatches = Math.floor(activePlayers.length / 4);
         const selectedPlayers = sortedPlayers.slice(0, numMatches * 4);
 
+        // Form pairs trying to avoid repeating partners
+        const availableForPairing = [...selectedPlayers];
+        // Shuffle to avoid predictable pairing when partner counts are equal
+        availableForPairing.sort(() => Math.random() - 0.5);
+        
+        const formedPairs: any[][] = [];
+        
+        while (availableForPairing.length >= 2) {
+            const p1 = availableForPairing[0];
+            let bestP2Index = 1;
+            let minPartnerCount = Infinity;
+            
+            for (let j = 1; j < availableForPairing.length; j++) {
+                const p2 = availableForPairing[j];
+                const count = partnerCounts[p1.id][p2.id] || 0;
+                
+                if (count < minPartnerCount) {
+                    minPartnerCount = count;
+                    bestP2Index = j;
+                }
+            }
+            
+            const p2 = availableForPairing[bestP2Index];
+            formedPairs.push([p1, p2]);
+            availableForPairing.splice(bestP2Index, 1);
+            availableForPairing.splice(0, 1);
+        }
+        
+        // Match the pairs randomly
+        formedPairs.sort(() => Math.random() - 0.5);
+
         const currentRound = (tournament.current_round || 0) + 1;
         const matchesToInsert = [];
 
-        for (let i = 0; i < numMatches; i++) {
-            const offset = i * 4;
-            matchesToInsert.push({
-                tournament_id: tournamentId,
-                round: `fecha_${currentRound}`,
-                stage: 'group',
-                group_name: `Fecha ${currentRound}`,
-                team1_id: selectedPlayers[offset].id,
-                team1_partner_id: selectedPlayers[offset + 1].id,
-                team2_id: selectedPlayers[offset + 2].id,
-                team2_partner_id: selectedPlayers[offset + 3].id,
-                match_date: currentRound,
-                start_time: new Date().toISOString()
-            });
+        for (let i = 0; i < formedPairs.length; i += 2) {
+            if (i + 1 < formedPairs.length) {
+                matchesToInsert.push({
+                    tournament_id: tournamentId,
+                    round: `fecha_${currentRound}`,
+                    stage: 'group',
+                    group_name: `Fecha ${currentRound}`,
+                    team1_id: formedPairs[i][0].id,
+                    team1_partner_id: formedPairs[i][1].id,
+                    team2_id: formedPairs[i+1][0].id,
+                    team2_partner_id: formedPairs[i+1][1].id,
+                    match_date: currentRound,
+                    start_time: new Date().toISOString()
+                });
+            }
         }
 
         const { error: matchError } = await supabase
