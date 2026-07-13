@@ -90,14 +90,14 @@ export function MatchFlyerModal({ isOpen, onClose, matchData }: MatchFlyerModalP
 
         return (
             <div className="flex flex-col items-center gap-4 transform transition-transform hover:scale-105">
-                <div className="w-32 h-32 md:w-36 md:h-36 rounded-full overflow-hidden border-[6px] border-primary bg-slate-900 flex items-center justify-center shadow-[0_0_30px_rgba(34,197,94,0.4)]">
+                <div className="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-[4px] border-primary bg-slate-900 flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.4)]">
                     {avatar ? (
-                        <img src={avatar} alt={name} className="w-full h-full object-cover" crossOrigin="anonymous" />
+                        <img src={avatar} alt={name} className="w-full h-full object-cover object-top" crossOrigin="anonymous" />
                     ) : (
                         <User size={64} className="text-gray-500" />
                     )}
                 </div>
-                <span className="font-extrabold text-white text-xl md:text-2xl tracking-wide text-center leading-tight drop-shadow-xl" style={{ fontFamily: 'system-ui, sans-serif' }}>
+                <span className="font-extrabold text-white text-lg md:text-xl tracking-wide text-center leading-tight drop-shadow-xl" style={{ fontFamily: 'system-ui, sans-serif' }}>
                     {name.toUpperCase()}
                 </span>
             </div>
