@@ -1,10 +1,10 @@
-﻿import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { toPng } from 'html-to-image';
 import download from 'downloadjs';
 import { Button } from './ui/Button';
-import { Share2, Download, X, User } from 'lucide-react';
-import { supabaseService } from '../services/supabaseService';
+import { Share2, X, User } from 'lucide-react';
 import { supabase } from '../services/supabaseClient';
+import Logo from './Logo';
 
 interface MatchFlyerModalProps {
     isOpen: boolean;
@@ -44,18 +44,15 @@ export function MatchFlyerModal({ isOpen, onClose, matchData }: MatchFlyerModalP
             matchData.team2.name2
         ].filter(Boolean) as string[];
 
-        // Check if images exist by trying to load them
         for (const name of names) {
             const url = getNormalizedUrl(name);
             if (url) {
                 try {
-                    // Try fetching to see if it exists (avoids showing broken image icon)
                     const res = await fetch(url, { method: 'HEAD' });
                     if (res.ok) {
                         newAvatars[name] = url;
                     }
                 } catch (e) {
-                    // Ignore errors, it just means no avatar
                 }
             }
         }
@@ -65,21 +62,18 @@ export function MatchFlyerModal({ isOpen, onClose, matchData }: MatchFlyerModalP
     if (!isOpen) return null;
 
     const handleShare = async () => {
-        if (ref.current === null) {
-            return;
-        }
-
+        if (ref.current === null) return;
         setLoading(true);
         try {
-            const dataUrl = await toPng(ref.current, { cacheBust: true, backgroundColor: '#0f172a' });
-            download(dataUrl, 'partido-flyer.png');
+            const dataUrl = await toPng(ref.current, { cacheBust: true, backgroundColor: '#0f172a', quality: 1.0, pixelRatio: 2 });
+            download(dataUrl, 'flyer-partido.png');
 
             if (navigator.share) {
                 const blob = await (await fetch(dataUrl)).blob();
-                const file = new File([blob], 'partido-flyer.png', { type: 'image/png' });
+                const file = new File([blob], 'flyer-partido.png', { type: 'image/png' });
                 await navigator.share({
                     title: 'Próximo Partido',
-                    text: `¡Gran partido en ${matchData.tournamentName}! 🔥`,
+                    text: `¡Gran partido en la Liga de la Paternidad! 🔥`,
                     files: [file]
                 });
             }
@@ -95,86 +89,101 @@ export function MatchFlyerModal({ isOpen, onClose, matchData }: MatchFlyerModalP
         const avatar = avatars[name];
 
         return (
-            <div className="flex flex-col items-center gap-3">
-                <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-primary/50 bg-black/40 flex items-center justify-center shadow-xl shadow-primary/20">
+            <div className="flex flex-col items-center gap-4 transform transition-transform hover:scale-105">
+                <div className="w-32 h-32 md:w-36 md:h-36 rounded-full overflow-hidden border-[6px] border-primary bg-slate-900 flex items-center justify-center shadow-[0_0_30px_rgba(34,197,94,0.4)]">
                     {avatar ? (
                         <img src={avatar} alt={name} className="w-full h-full object-cover" crossOrigin="anonymous" />
                     ) : (
-                        <User size={40} className="text-gray-400" />
+                        <User size={64} className="text-gray-500" />
                     )}
                 </div>
-                <span className="font-bold text-white text-lg text-center leading-tight drop-shadow-md">
-                    {name}
+                <span className="font-extrabold text-white text-xl md:text-2xl tracking-wide text-center leading-tight drop-shadow-xl" style={{ fontFamily: 'system-ui, sans-serif' }}>
+                    {name.toUpperCase()}
                 </span>
             </div>
         );
     };
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-            <div className="bg-slate-900 rounded-2xl max-w-md w-full overflow-hidden shadow-2xl shadow-primary/20">
-                <div className="p-4 border-b border-white/10 flex justify-between items-center">
-                    <h3 className="font-bold text-white">Compartir Sorteo</h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-4 overflow-y-auto">
+            <div className="bg-slate-900 rounded-3xl max-w-2xl w-full overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] my-8 relative">
+                <div className="absolute top-4 right-4 z-50">
+                    <button onClick={onClose} className="p-2 bg-black/50 rounded-full text-gray-300 hover:text-white hover:bg-black/80 transition-all">
                         <X size={24} />
                     </button>
                 </div>
 
-                <div className="p-6">
+                <div className="p-0">
                     {/* Contenedor del Flyer */}
                     <div 
                         ref={ref} 
-                        className="bg-gradient-to-br from-slate-900 via-slate-800 to-black p-8 rounded-xl relative overflow-hidden"
+                        className="bg-gradient-to-br from-[#0f172a] via-[#020617] to-black p-10 md:p-14 relative overflow-hidden"
                     >
-                        {/* Decoraciones de fondo */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
-                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3"></div>
+                        {/* Decoraciones de fondo con colores de la app (primario = green-500) */}
+                        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3"></div>
+                        <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3"></div>
+                        
+                        {/* Grilla sutil de fondo */}
+                        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
 
-                        <div className="relative z-10 flex flex-col items-center">
-                            <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-green-300 text-center uppercase tracking-widest mb-8 drop-shadow-lg">
-                                {matchData.tournamentName}
-                            </h2>
+                        <div className="relative z-10 flex flex-col items-center h-full justify-between gap-12">
+                            
+                            {/* Header */}
+                            <div className="w-full flex flex-col items-center gap-4">
+                                <div className="scale-125 mb-2 drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]">
+                                    <Logo />
+                                </div>
+                                <h2 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-gray-400 text-center uppercase tracking-[0.2em] drop-shadow-2xl" style={{ fontFamily: 'system-ui, sans-serif' }}>
+                                    LIGA DE LA PATERNIDAD
+                                </h2>
+                            </div>
 
-                            <div className="w-full flex flex-col gap-8 items-center">
+                            <div className="w-full flex flex-col gap-10 md:gap-14 items-center mt-4">
                                 {/* Equipo 1 */}
-                                <div className="flex gap-6 justify-center items-center">
+                                <div className="flex gap-8 md:gap-16 justify-center items-center w-full">
                                     {renderPlayer(matchData.team1.name1)}
                                     {matchData.team1.name2 && renderPlayer(matchData.team1.name2)}
                                 </div>
 
-                                {/* VS */}
-                                <div className="text-3xl font-black text-white/20 italic tracking-widest my-2">
-                                    VS
+                                {/* VS Glowing */}
+                                <div className="relative flex items-center justify-center w-full py-4">
+                                    <div className="absolute w-full h-[2px] bg-gradient-to-r from-transparent via-primary/50 to-transparent"></div>
+                                    <div className="relative z-10 bg-slate-900 px-6 py-2 rounded-xl border-2 border-primary/30 shadow-[0_0_20px_rgba(34,197,94,0.3)]">
+                                        <span className="text-4xl md:text-5xl font-black italic text-primary tracking-widest drop-shadow-[0_0_10px_rgba(34,197,94,0.8)]">VS</span>
+                                    </div>
                                 </div>
 
                                 {/* Equipo 2 */}
-                                <div className="flex gap-6 justify-center items-center">
+                                <div className="flex gap-8 md:gap-16 justify-center items-center w-full">
                                     {renderPlayer(matchData.team2.name1)}
                                     {matchData.team2.name2 && renderPlayer(matchData.team2.name2)}
                                 </div>
                             </div>
 
                             {/* Footer */}
-                            <div className="mt-10 pt-4 border-t border-white/10 w-full text-center">
-                                <p className="text-sm font-semibold text-primary/80 tracking-widest">
-                                    APP.APADELEROS.COM
-                                </p>
+                            <div className="mt-12 pt-6 w-full text-center">
+                                <div className="inline-block px-8 py-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+                                    <p className="text-lg md:text-xl font-bold text-primary tracking-[0.3em] font-mono">
+                                        APPADELEROS.VERCEL.APP
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    <div className="mt-6 flex gap-4">
-                        <Button onClick={handleShare} disabled={loading} className="w-full flex justify-center gap-2">
-                            {loading ? (
-                                'Generando...'
-                            ) : (
-                                <>
-                                    <Share2 size={20} />
-                                    Compartir Flyer
-                                </>
-                            )}
-                        </Button>
-                    </div>
+                </div>
+                
+                {/* Footer Modal Actions */}
+                <div className="p-6 bg-slate-900 border-t border-white/10">
+                    <Button onClick={handleShare} disabled={loading} className="w-full h-14 text-lg flex justify-center items-center gap-3 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]">
+                        {loading ? (
+                            'Generando Flyer de Alta Calidad...'
+                        ) : (
+                            <>
+                                <Share2 size={24} />
+                                Compartir Flyer
+                            </>
+                        )}
+                    </Button>
                 </div>
             </div>
         </div>

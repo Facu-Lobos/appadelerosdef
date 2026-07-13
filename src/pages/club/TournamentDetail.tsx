@@ -558,11 +558,26 @@ const TournamentDetail = () => {
                                         value={manualPlayer1}
                                         onChange={(e) => setManualPlayer1(e.target.value)}
                                         placeholder="Nombre completo"
-                                    />
-                                </div>
-                                {tournament.format !== 'liga_paternidad' && (
-                                    <div>
-                                        <label className="text-sm text-gray-400 block mb-1">Jugador 2</label>
+                                      />
+                                  </div>
+                                  {tournament.format === 'liga_paternidad' && (
+                                      <div className="mt-4">
+                                          <label className="text-sm text-gray-400 block mb-1">Foto del Jugador (Opcional)</label>
+                                          <input
+                                              type="file"
+                                              accept="image/*"
+                                              className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary/80"
+                                              onChange={(e) => {
+                                                  if (e.target.files && e.target.files[0]) {
+                                                      setManualPlayerImage(e.target.files[0]);
+                                                  }
+                                              }}
+                                          />
+                                      </div>
+                                  )}
+                                  {tournament.format !== 'liga_paternidad' && (
+                                      <div className="mt-4">
+                                          <label className="text-sm text-gray-400 block mb-1">Jugador 2</label>
                                         <input
                                             className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary transition-colors"
                                             value={manualPlayer2}
