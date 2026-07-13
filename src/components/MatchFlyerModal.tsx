@@ -4,7 +4,7 @@ import download from 'downloadjs';
 import { Button } from './ui/Button';
 import { Share2, X, User } from 'lucide-react';
 import { supabase } from '../services/supabaseClient';
-import Logo from './Logo';
+import AppLogo from './AppLogo';
 
 interface MatchFlyerModalProps {
     isOpen: boolean;
@@ -153,14 +153,16 @@ export function MatchFlyerModal({ isOpen, onClose, matchData }: MatchFlyerModalP
                     <div className="relative z-10 flex-1 flex w-full px-5 mt-2 mb-0 overflow-hidden">
                         {/* Column 1 (Azul Oscuro) */}
                         <div className="flex-1 bg-[#0a192f] rounded-tl-[40px] rounded-bl-[40px] border-r-2 border-slate-800 flex flex-col items-center pt-5 relative overflow-hidden shadow-2xl">
-                            <h5 className="text-white text-lg font-bold tracking-widest mb-6 z-10">EQUIPO 1</h5>
+                            
+                            <div className="mt-8"></div>
                             {renderPlayerVertical(matchData.team1.name1, false)}
                             {matchData.team1.name2 && renderPlayerVertical(matchData.team1.name2, false)}
                         </div>
 
                         {/* Column 2 (Primary / Verde-Cyan) */}
                         <div className="flex-1 bg-primary rounded-tr-[40px] rounded-br-[40px] flex flex-col items-center pt-5 relative overflow-hidden shadow-2xl">
-                            <h5 className="text-[#0a192f] text-lg font-bold tracking-widest mb-6 z-10">EQUIPO 2</h5>
+                            
+                            <div className="mt-8"></div>
                             {renderPlayerVertical(matchData.team2.name1, true)}
                             {matchData.team2.name2 && renderPlayerVertical(matchData.team2.name2, true)}
                         </div>
@@ -181,7 +183,7 @@ export function MatchFlyerModal({ isOpen, onClose, matchData }: MatchFlyerModalP
                         {/* Logo flotante */}
                         <div className="absolute -top-7 bg-[#0a192f] rounded-full p-2 border-[4px] border-primary flex items-center justify-center shadow-lg">
                             <div className="scale-75">
-                                <Logo />
+                                <AppLogo variant='small' />
                             </div>
                         </div>
                         <h3 className="text-[#0a192f] text-[24px] font-black uppercase tracking-tight">
