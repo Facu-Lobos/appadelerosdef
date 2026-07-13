@@ -88,6 +88,22 @@ export function MatchFlyerModal({ isOpen, onClose, matchData }: MatchFlyerModalP
         }
     };
 
+    const getTeamHeaderText = (name1?: string, name2?: string) => {
+        if (!name1) return 'EQUIPO';
+        
+        const getLastName = (n: string) => {
+            const parts = n.trim().split(' ');
+            return parts.length > 1 ? parts[parts.length - 1] : parts[0];
+        };
+
+        const ln1 = getLastName(name1);
+        if (name2) {
+            const ln2 = getLastName(name2);
+            return `${ln1} ${ln2}`.toUpperCase();
+        }
+        return ln1.toUpperCase();
+    };
+
     const renderPlayerVertical = (name?: string, isDarkText?: boolean) => {
         if (!name) return null;
         const avatar = avatars[name];
@@ -179,14 +195,14 @@ export function MatchFlyerModal({ isOpen, onClose, matchData }: MatchFlyerModalP
                     </div>
 
                     {/* Footer Superior (Cyan) */}
-                    <div className="relative z-20 w-full bg-primary pt-7 pb-2 flex flex-col items-center mt-5 shrink-0">
-                        {/* Logo flotante */}
-                        <div className="absolute -top-7 bg-[#0a192f] rounded-full p-2 border-[4px] border-primary flex items-center justify-center shadow-lg">
-                            <div className="scale-75">
+                    <div className="relative z-20 w-full bg-primary pt-5 pb-3 flex flex-col items-center mt-8 shrink-0">
+                        {/* Logo flotante un poco mas chico y subido para no tapar el texto */}
+                        <div className="absolute -top-10 bg-[#0a192f] rounded-full p-1 border-[3px] border-primary flex items-center justify-center shadow-lg">
+                            <div className="scale-[0.65] origin-center h-12 flex items-center justify-center">
                                 <AppLogo variant='small' />
                             </div>
                         </div>
-                        <h3 className="text-[#0a192f] text-[24px] font-black uppercase tracking-tight">
+                        <h3 className="text-[#0a192f] text-[22px] font-black uppercase tracking-tight mt-1">
                             ¡NO TE PIERDAS ESTE DUELO!
                         </h3>
                     </div>
