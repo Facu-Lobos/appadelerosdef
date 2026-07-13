@@ -1003,12 +1003,13 @@ export const supabaseService = {
 
     async uploadGuestAvatar(playerName: string, file: File): Promise<string> {
         const normalizedName = playerName.trim().replace(/\s+/g, '_').toLowerCase();
-        // Save without extension to make the URL predictable regardless of the uploaded image type
-        const filePath = `guest_${normalizedName}`;
+        const timestamp = Date.now();
+        // Append timestamp to avoid RLS UPDATE issues and browser caching
+        const filePath = `guest_${normalizedName}_${timestamp}`;
 
         const { error: uploadError } = await supabase.storage
             .from('avatars')
-            .upload(filePath, file, { upsert: true });
+            .upload(filePath, file);
 
         if (uploadError) throw uploadError;
 

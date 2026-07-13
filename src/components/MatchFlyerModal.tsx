@@ -27,11 +27,24 @@ export function MatchFlyerModal({ isOpen, onClose, matchData }: MatchFlyerModalP
         }
     }, [isOpen, matchData]);
 
-    const getNormalizedUrl = (name: string) => {
+    const getLatestAvatarUrl = async (name: string) => {
         if (!name) return null;
         const normalized = name.trim().replace(/\s+/g, '_').toLowerCase();
-        const { data } = supabase.storage.from('avatars').getPublicUrl(`guest_${normalized}`);
-        return data.publicUrl;
+        
+        // Check for files starting with guest_normalized
+        const { data, error } = await supabase.storage.from('avatars').list('', {
+            search: `guest_${normalized}`
+        });
+
+        if (data && data.length > 0) {
+            // Sort to get the latest timestamp
+            data.sort((a, b) => b.name.localeCompare(a.name));
+            const latestFile = data[0].name;
+            const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(latestFile);
+            return urlData.publicUrl;
+        }
+        
+        return null;
     };
 
     const loadAvatars = async () => {
@@ -45,15 +58,10 @@ export function MatchFlyerModal({ isOpen, onClose, matchData }: MatchFlyerModalP
         ].filter(Boolean) as string[];
 
         for (const name of names) {
-            const url = getNormalizedUrl(name);
+            const url = await getLatestAvatarUrl(name);
             if (url) {
-                try {
-                    const res = await fetch(url, { method: 'HEAD' });
-                    if (res.ok) {
-                        newAvatars[name] = url;
-                    }
-                } catch (e) {
-                }
+                // We don't necessarily need to check HEAD anymore because we just listed it from storage and know it exists
+                newAvatars[name] = url;
             }
         }
         setAvatars(newAvatars);
