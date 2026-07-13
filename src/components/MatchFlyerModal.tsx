@@ -1,4 +1,4 @@
-﻿import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { toPng } from 'html-to-image';
 import download from 'downloadjs';
 import { Button } from './ui/Button';
@@ -88,44 +88,57 @@ export function MatchFlyerModal({ isOpen, onClose, matchData }: MatchFlyerModalP
         }
     };
 
-    const getTeamHeaderText = (name1?: string, name2?: string) => {
-        if (!name1) return 'EQUIPO';
-        
-        const getLastName = (n: string) => {
-            const parts = n.trim().split(' ');
-            return parts.length > 1 ? parts[parts.length - 1] : parts[0];
-        };
-
-        const ln1 = getLastName(name1);
-        if (name2) {
-            const ln2 = getLastName(name2);
-            return `${ln1} ${ln2}`.toUpperCase();
-        }
-        return ln1.toUpperCase();
+    const getLastName = (n: string) => {
+        const parts = n.trim().split(' ');
+        return parts.length > 1 ? parts[parts.length - 1] : parts[0];
     };
 
-    const renderPlayerVertical = (name?: string, isDarkText?: boolean) => {
-        if (!name) return null;
-        const avatar = avatars[name];
+    const renderTeamColumn = (name1?: string, name2?: string, isDarkText?: boolean) => {
+        if (!name1) return null;
         
-        // Tratar de separar nombre y apellido
-        const parts = name.trim().split(' ');
-        let firstName = parts[0];
-        let lastName = parts.length > 1 ? parts.slice(1).join(' ') : '';
+        const avatar1 = avatars[name1];
+        const avatar2 = name2 ? avatars[name2] : null;
+
+        const ln1 = getLastName(name1).toUpperCase();
+        const ln2 = name2 ? getLastName(name2).toUpperCase() : '';
+
+        const textColorClass = isDarkText ? 'text-[#0a192f]' : 'text-white';
 
         return (
-            <div className="flex flex-col items-center mb-6 w-full z-10 px-2">
-                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-[4px] border-yellow-400 bg-slate-800 shadow-xl mb-3 relative flex items-center justify-center shrink-0">
-                    {avatar ? (
-                        <img src={avatar} alt={name} className="w-full h-full object-cover object-top" crossOrigin="anonymous" />
+            <div className="flex flex-col items-center justify-center w-full z-10 px-2 h-full py-4 space-y-4">
+                
+                {/* Photo 1 */}
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-[4px] border-yellow-400 bg-slate-800 shadow-xl relative flex items-center justify-center shrink-0">
+                    {avatar1 ? (
+                        <img src={avatar1} alt={name1} className="w-full h-full object-cover object-top" crossOrigin="anonymous" />
                     ) : (
                         <User size={48} className="text-gray-500" />
                     )}
                 </div>
-                <span className={`font-black text-[20px] sm:text-[22px] leading-[1.1] text-center uppercase ${isDarkText ? 'text-[#0a192f]' : 'text-white'} drop-shadow-md tracking-wide`} style={{ fontFamily: 'system-ui, sans-serif' }}>
-                    {lastName || firstName}<br/>
-                    {lastName ? firstName : ''}
-                </span>
+
+                {/* Combined Names in the Middle */}
+                <div className="flex flex-col items-center justify-center py-2">
+                    <span className={`font-black text-[22px] sm:text-[24px] leading-[1] text-center uppercase ${textColorClass} drop-shadow-md tracking-wide`} style={{ fontFamily: 'system-ui, sans-serif' }}>
+                        {ln1}
+                        {ln2 && (
+                            <>
+                                <br />
+                                {ln2}
+                            </>
+                        )}
+                    </span>
+                </div>
+
+                {/* Photo 2 (Only if exists) */}
+                {name2 && (
+                    <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-[4px] border-yellow-400 bg-slate-800 shadow-xl relative flex items-center justify-center shrink-0">
+                        {avatar2 ? (
+                            <img src={avatar2} alt={name2} className="w-full h-full object-cover object-top" crossOrigin="anonymous" />
+                        ) : (
+                            <User size={48} className="text-gray-500" />
+                        )}
+                    </div>
+                )}
             </div>
         );
     };
@@ -168,25 +181,19 @@ export function MatchFlyerModal({ isOpen, onClose, matchData }: MatchFlyerModalP
                     {/* Columnas de Equipos */}
                     <div className="relative z-10 flex-1 flex w-full px-5 mt-2 mb-0 overflow-hidden">
                         {/* Column 1 (Azul Oscuro) */}
-                        <div className="flex-1 bg-[#0a192f] rounded-tl-[40px] rounded-bl-[40px] border-r-2 border-slate-800 flex flex-col items-center pt-5 relative overflow-hidden shadow-2xl">
-                            
-                            <div className="mt-8"></div>
-                            {renderPlayerVertical(matchData.team1.name1, false)}
-                            {matchData.team1.name2 && renderPlayerVertical(matchData.team1.name2, false)}
+                        <div className="flex-1 bg-[#0a192f] rounded-tl-[40px] rounded-bl-[40px] border-r-2 border-slate-800 relative overflow-hidden shadow-2xl flex items-center">
+                            {renderTeamColumn(matchData.team1.name1, matchData.team1.name2, false)}
                         </div>
 
                         {/* Column 2 (Primary / Verde-Cyan) */}
-                        <div className="flex-1 bg-primary rounded-tr-[40px] rounded-br-[40px] flex flex-col items-center pt-5 relative overflow-hidden shadow-2xl">
-                            
-                            <div className="mt-8"></div>
-                            {renderPlayerVertical(matchData.team2.name1, true)}
-                            {matchData.team2.name2 && renderPlayerVertical(matchData.team2.name2, true)}
+                        <div className="flex-1 bg-primary rounded-tr-[40px] rounded-br-[40px] relative overflow-hidden shadow-2xl flex items-center">
+                            {renderTeamColumn(matchData.team2.name1, matchData.team2.name2, true)}
                         </div>
 
                         {/* VS Center Badge */}
-                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[60%] z-30">
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30">
                             <span 
-                                className="text-[70px] font-black italic text-yellow-400 drop-shadow-[0_6px_6px_rgba(0,0,0,0.6)]" 
+                                className="text-[75px] font-black italic text-yellow-400 drop-shadow-[0_6px_6px_rgba(0,0,0,0.6)]" 
                                 style={{ WebkitTextStroke: '2px #0a192f' }}
                             >
                                 VS
@@ -195,14 +202,14 @@ export function MatchFlyerModal({ isOpen, onClose, matchData }: MatchFlyerModalP
                     </div>
 
                     {/* Footer Superior (Cyan) */}
-                    <div className="relative z-20 w-full bg-primary pt-5 pb-3 flex flex-col items-center mt-8 shrink-0">
-                        {/* Logo flotante un poco mas chico y subido para no tapar el texto */}
-                        <div className="absolute -top-10 bg-[#0a192f] rounded-full p-1 border-[3px] border-primary flex items-center justify-center shadow-lg">
-                            <div className="scale-[0.65] origin-center h-12 flex items-center justify-center">
+                    <div className="relative z-20 w-full bg-primary flex items-center justify-center mt-7 shrink-0 h-14">
+                        {/* Logo flotante centrado a la izquierda para dejar lugar al texto, o simplemente arriba */}
+                        <div className="absolute -top-6 bg-[#0a192f] rounded-full p-1.5 border-[3px] border-primary flex items-center justify-center shadow-md">
+                            <div className="scale-[0.6] origin-center h-10 w-10 flex items-center justify-center ml-3">
                                 <AppLogo variant='small' />
                             </div>
                         </div>
-                        <h3 className="text-[#0a192f] text-[22px] font-black uppercase tracking-tight mt-1">
+                        <h3 className="text-[#0a192f] text-[20px] font-black uppercase tracking-tight mt-4">
                             ¡NO TE PIERDAS ESTE DUELO!
                         </h3>
                     </div>
