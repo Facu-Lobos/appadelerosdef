@@ -670,10 +670,34 @@ const TournamentDetail = () => {
                                             {reg.status === 'approved' && (
                                                 <div className="flex gap-2">
                                                     {tournament.format === 'liga_paternidad' && (
-                                                        <Button
-                                                            size="sm"
-                                                            variant="ghost"
-                                                            className={reg.is_active === false ? "text-blue-400 hover:text-blue-300 hover:bg-blue-400/10" : "text-yellow-500 hover:text-yellow-400 hover:bg-yellow-500/10"}
+                                                        <>
+                                                            <label className="cursor-pointer flex items-center justify-center w-8 h-8 text-gray-500 hover:text-primary hover:bg-primary/10 rounded-md transition-colors" title="Subir o actualizar foto del jugador">
+                                                                <input 
+                                                                    type="file" 
+                                                                    accept="image/*" 
+                                                                    className="hidden" 
+                                                                    onChange={async (e) => {
+                                                                        if (e.target.files && e.target.files[0]) {
+                                                                            const file = e.target.files[0];
+                                                                            const playerName = reg.player1?.name || reg.player1_name || reg.team_name;
+                                                                            if (playerName) {
+                                                                                try {
+                                                                                    showToast('Subiendo foto...', 'info');
+                                                                                    await supabaseService.uploadGuestAvatar(playerName, file);
+                                                                                    showToast('Foto actualizada correctamente', 'success');
+                                                                                } catch(err) {
+                                                                                    showToast('Error al subir foto', 'error');
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }}
+                                                                />
+                                                                <Camera size={18} />
+                                                            </label>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                className={reg.is_active === false ? "text-blue-400 hover:text-blue-300 hover:bg-blue-400/10" : "text-yellow-500 hover:text-yellow-400 hover:bg-yellow-500/10"}
                                                             onClick={async () => {
                                                                 try {
                                                                     await supabaseService.togglePlayerActiveStatus(reg.id, reg.is_active === false ? true : false);
@@ -686,7 +710,8 @@ const TournamentDetail = () => {
                                                             title={reg.is_active === false ? "Activar jugador" : "Congelar jugador"}
                                                         >
                                                             <span className="text-xs font-bold">{reg.is_active === false ? "ACTIVAR" : "CONGELAR"}</span>
-                                                        </Button>
+                                                            </Button>
+                                                        </>
                                                     )}
                                                     <Button
                                                         size="sm"
