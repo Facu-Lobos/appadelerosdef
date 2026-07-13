@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+﻿import { useRef, useState, useEffect } from 'react';
 import { toPng } from 'html-to-image';
 import download from 'downloadjs';
 import { Button } from './ui/Button';
@@ -31,13 +31,11 @@ export function MatchFlyerModal({ isOpen, onClose, matchData }: MatchFlyerModalP
         if (!name) return null;
         const normalized = name.trim().replace(/\s+/g, '_').toLowerCase();
         
-        // Check for files starting with guest_normalized
         const { data, error } = await supabase.storage.from('avatars').list('', {
             search: `guest_${normalized}`
         });
 
         if (data && data.length > 0) {
-            // Sort to get the latest timestamp
             data.sort((a, b) => b.name.localeCompare(a.name));
             const latestFile = data[0].name;
             const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(latestFile);
@@ -49,7 +47,6 @@ export function MatchFlyerModal({ isOpen, onClose, matchData }: MatchFlyerModalP
 
     const loadAvatars = async () => {
         const newAvatars: Record<string, string> = {};
-        
         const names = [
             matchData.team1.name1,
             matchData.team1.name2,
@@ -60,7 +57,6 @@ export function MatchFlyerModal({ isOpen, onClose, matchData }: MatchFlyerModalP
         for (const name of names) {
             const url = await getLatestAvatarUrl(name);
             if (url) {
-                // We don't necessarily need to check HEAD anymore because we just listed it from storage and know it exists
                 newAvatars[name] = url;
             }
         }
@@ -73,7 +69,7 @@ export function MatchFlyerModal({ isOpen, onClose, matchData }: MatchFlyerModalP
         if (ref.current === null) return;
         setLoading(true);
         try {
-            const dataUrl = await toPng(ref.current, { cacheBust: true, backgroundColor: '#0f172a', quality: 1.0, pixelRatio: 2 });
+            const dataUrl = await toPng(ref.current, { cacheBust: true, quality: 1.0, pixelRatio: 2 });
             download(dataUrl, 'flyer-partido.png');
 
             if (navigator.share) {
@@ -81,7 +77,7 @@ export function MatchFlyerModal({ isOpen, onClose, matchData }: MatchFlyerModalP
                 const file = new File([blob], 'flyer-partido.png', { type: 'image/png' });
                 await navigator.share({
                     title: 'Próximo Partido',
-                    text: `¡Gran partido en la Liga de la Paternidad! 🔥`,
+                    text: `¡Gran partido en la Liga de la Paternidad! 🎾`,
                     files: [file]
                 });
             }
@@ -92,21 +88,27 @@ export function MatchFlyerModal({ isOpen, onClose, matchData }: MatchFlyerModalP
         }
     };
 
-    const renderPlayer = (name?: string) => {
+    const renderPlayerVertical = (name?: string, isDarkText?: boolean) => {
         if (!name) return null;
         const avatar = avatars[name];
+        
+        // Tratar de separar nombre y apellido
+        const parts = name.trim().split(' ');
+        let firstName = parts[0];
+        let lastName = parts.length > 1 ? parts.slice(1).join(' ') : '';
 
         return (
-            <div className="flex flex-col items-center gap-4 transform transition-transform hover:scale-105">
-                <div className="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-[4px] border-primary bg-slate-900 flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.4)]">
+            <div className="flex flex-col items-center mb-6 w-full z-10 px-2">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-[4px] border-yellow-400 bg-slate-800 shadow-xl mb-3 relative flex items-center justify-center shrink-0">
                     {avatar ? (
                         <img src={avatar} alt={name} className="w-full h-full object-cover object-top" crossOrigin="anonymous" />
                     ) : (
-                        <User size={64} className="text-gray-500" />
+                        <User size={48} className="text-gray-500" />
                     )}
                 </div>
-                <span className="font-extrabold text-white text-lg md:text-xl tracking-wide text-center leading-tight drop-shadow-xl" style={{ fontFamily: 'system-ui, sans-serif' }}>
-                    {name.toUpperCase()}
+                <span className={`font-black text-[20px] sm:text-[22px] leading-[1.1] text-center uppercase ${isDarkText ? 'text-[#0a192f]' : 'text-white'} drop-shadow-md tracking-wide`} style={{ fontFamily: 'system-ui, sans-serif' }}>
+                    {lastName || firstName}<br/>
+                    {lastName ? firstName : ''}
                 </span>
             </div>
         );
@@ -114,81 +116,99 @@ export function MatchFlyerModal({ isOpen, onClose, matchData }: MatchFlyerModalP
 
     return (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-4 overflow-y-auto">
-            <div className="bg-slate-900 rounded-3xl max-w-2xl w-full overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] my-8 relative">
-                <div className="absolute top-4 right-4 z-50">
-                    <button onClick={onClose} className="p-2 bg-black/50 rounded-full text-gray-300 hover:text-white hover:bg-black/80 transition-all">
-                        <X size={24} />
+            <div className="flex flex-col items-center justify-center my-4 w-full">
+                
+                {/* Controles superiores */}
+                <div className="w-full flex justify-end mb-4 max-w-[420px]">
+                    <button onClick={onClose} className="p-2 bg-white/10 rounded-full text-white hover:bg-white/20 transition-all">
+                        <X size={28} />
                     </button>
                 </div>
 
-                <div className="p-0">
-                    {/* Contenedor del Flyer */}
-                    <div 
-                        ref={ref} 
-                        className="bg-gradient-to-br from-[#0f172a] via-[#020617] to-black p-10 md:p-14 relative overflow-hidden"
-                    >
-                        {/* Decoraciones de fondo con colores de la app (primario = green-500) */}
-                        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3"></div>
-                        <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3"></div>
-                        
-                        {/* Grilla sutil de fondo */}
-                        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+                {/* Contenedor del Flyer (Tamaño Fijo para asegurar proporción tipo Story de Instagram) */}
+                <div 
+                    ref={ref} 
+                    className="relative overflow-hidden flex flex-col font-sans bg-slate-900 shadow-2xl rounded-sm"
+                    style={{ width: '420px', height: '746px' }} // Proporción 9:16 approx
+                >
+                    {/* Fondo de Cancha (Falso gradiente oscuro con textura si no hay imagen) */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-800 to-black"></div>
+                    {/* Imagen de fondo simulando la cancha */}
+                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?q=80&w=800&auto=format&fit=crop')] bg-cover bg-center opacity-30 mix-blend-overlay"></div>
+                    
+                    {/* Header */}
+                    <div className="relative z-10 w-full pt-8 pb-3 flex flex-col items-center shrink-0">
+                        <h2 className="text-[26px] font-black text-primary uppercase tracking-tight drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]" style={{ fontFamily: 'system-ui, sans-serif' }}>
+                            LIGA DE LA PATERNIDAD
+                        </h2>
+                        <h3 className="text-3xl font-black text-yellow-400 uppercase tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] mt-1">
+                            VILLA GESELL
+                        </h3>
+                        <h4 className="text-[20px] italic font-black text-yellow-400/90 uppercase tracking-wider mt-2 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+                            PARTIDO DE LA FECHA
+                        </h4>
+                    </div>
 
-                        <div className="relative z-10 flex flex-col items-center h-full justify-between gap-12">
-                            
-                            {/* Header */}
-                            <div className="w-full flex flex-col items-center gap-4">
-                                <div className="scale-125 mb-2 drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]">
-                                    <Logo />
-                                </div>
-                                <h2 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-gray-400 text-center uppercase tracking-[0.2em] drop-shadow-2xl" style={{ fontFamily: 'system-ui, sans-serif' }}>
-                                    LIGA DE LA PATERNIDAD
-                                </h2>
-                            </div>
+                    {/* Columnas de Equipos */}
+                    <div className="relative z-10 flex-1 flex w-full px-5 mt-2 mb-0 overflow-hidden">
+                        {/* Column 1 (Azul Oscuro) */}
+                        <div className="flex-1 bg-[#0a192f] rounded-tl-[40px] rounded-bl-[40px] border-r-2 border-slate-800 flex flex-col items-center pt-5 relative overflow-hidden shadow-2xl">
+                            <h5 className="text-white text-lg font-bold tracking-widest mb-6 z-10">EQUIPO 1</h5>
+                            {renderPlayerVertical(matchData.team1.name1, false)}
+                            {matchData.team1.name2 && renderPlayerVertical(matchData.team1.name2, false)}
+                        </div>
 
-                            <div className="w-full flex flex-col gap-10 md:gap-14 items-center mt-4">
-                                {/* Equipo 1 */}
-                                <div className="flex gap-8 md:gap-16 justify-center items-center w-full">
-                                    {renderPlayer(matchData.team1.name1)}
-                                    {matchData.team1.name2 && renderPlayer(matchData.team1.name2)}
-                                </div>
+                        {/* Column 2 (Primary / Verde-Cyan) */}
+                        <div className="flex-1 bg-primary rounded-tr-[40px] rounded-br-[40px] flex flex-col items-center pt-5 relative overflow-hidden shadow-2xl">
+                            <h5 className="text-[#0a192f] text-lg font-bold tracking-widest mb-6 z-10">EQUIPO 2</h5>
+                            {renderPlayerVertical(matchData.team2.name1, true)}
+                            {matchData.team2.name2 && renderPlayerVertical(matchData.team2.name2, true)}
+                        </div>
 
-                                {/* VS Glowing */}
-                                <div className="relative flex items-center justify-center w-full py-4">
-                                    <div className="absolute w-full h-[2px] bg-gradient-to-r from-transparent via-primary/50 to-transparent"></div>
-                                    <div className="relative z-10 bg-slate-900 px-6 py-2 rounded-xl border-2 border-primary/30 shadow-[0_0_20px_rgba(34,197,94,0.3)]">
-                                        <span className="text-4xl md:text-5xl font-black italic text-primary tracking-widest drop-shadow-[0_0_10px_rgba(34,197,94,0.8)]">VS</span>
-                                    </div>
-                                </div>
+                        {/* VS Center Badge */}
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[60%] z-30">
+                            <span 
+                                className="text-[70px] font-black italic text-yellow-400 drop-shadow-[0_6px_6px_rgba(0,0,0,0.6)]" 
+                                style={{ WebkitTextStroke: '2px #0a192f' }}
+                            >
+                                VS
+                            </span>
+                        </div>
+                    </div>
 
-                                {/* Equipo 2 */}
-                                <div className="flex gap-8 md:gap-16 justify-center items-center w-full">
-                                    {renderPlayer(matchData.team2.name1)}
-                                    {matchData.team2.name2 && renderPlayer(matchData.team2.name2)}
-                                </div>
-                            </div>
-
-                            {/* Footer */}
-                            <div className="mt-12 pt-6 w-full text-center">
-                                <div className="inline-block px-8 py-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
-                                    <p className="text-lg md:text-xl font-bold text-primary tracking-[0.3em] font-mono">
-                                        APPADELEROS.VERCEL.APP
-                                    </p>
-                                </div>
+                    {/* Footer Superior (Cyan) */}
+                    <div className="relative z-20 w-full bg-primary pt-7 pb-2 flex flex-col items-center mt-5 shrink-0">
+                        {/* Logo flotante */}
+                        <div className="absolute -top-7 bg-[#0a192f] rounded-full p-2 border-[4px] border-primary flex items-center justify-center shadow-lg">
+                            <div className="scale-75">
+                                <Logo />
                             </div>
                         </div>
+                        <h3 className="text-[#0a192f] text-[24px] font-black uppercase tracking-tight">
+                            ¡NO TE PIERDAS ESTE DUELO!
+                        </h3>
+                    </div>
+
+                    {/* Footer Inferior (Azul Oscuro) */}
+                    <div className="relative z-10 w-full bg-[#0a192f] pt-3 pb-5 flex flex-col items-center text-center shrink-0">
+                        <p className="text-yellow-400 font-bold text-[20px]">Sitio Oficial y Reservas:</p>
+                        <p className="text-white font-black text-[28px] tracking-tight mt-1">appadeleros.vercel.app</p>
                     </div>
                 </div>
                 
-                {/* Footer Modal Actions */}
-                <div className="p-6 bg-slate-900 border-t border-white/10">
-                    <Button onClick={handleShare} disabled={loading} className="w-full h-14 text-lg flex justify-center items-center gap-3 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]">
+                {/* Botón de Compartir (Fuera del Flyer generado) */}
+                <div className="w-full max-w-[420px] mt-6">
+                    <Button 
+                        onClick={handleShare} 
+                        disabled={loading} 
+                        className="w-full h-16 text-xl rounded-2xl flex justify-center items-center gap-3 bg-primary hover:bg-primary/90 text-[#0a192f] font-black shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]"
+                    >
                         {loading ? (
-                            'Generando Flyer de Alta Calidad...'
+                            'Generando Flyer...'
                         ) : (
                             <>
-                                <Share2 size={24} />
-                                Compartir Flyer
+                                <Share2 size={26} />
+                                DESCARGAR Y COMPARTIR
                             </>
                         )}
                     </Button>
