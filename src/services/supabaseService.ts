@@ -1001,6 +1001,24 @@ export const supabaseService = {
         return tournaments as Tournament[];
     },
 
+    async uploadGuestAvatar(playerName: string, file: File): Promise<string> {
+        const normalizedName = playerName.trim().replace(/\s+/g, '_').toLowerCase();
+        // Save without extension to make the URL predictable regardless of the uploaded image type
+        const filePath = `guest_${normalizedName}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(filePath, file, { upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(filePath);
+
+        return data.publicUrl;
+    },
+
     async registerTeam(registration: Omit<TournamentRegistration, 'id' | 'created_at'>) {
         const { data, error } = await supabase
             .from('tournament_registrations')

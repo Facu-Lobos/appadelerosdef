@@ -10,6 +10,7 @@ import type { Tournament } from '../../types';
 import { Button } from '../../components/ui/Button';
 import { MatchScoreModal } from '../../components/MatchScoreModal';
 import { MatchScheduleModal } from '../../components/MatchScheduleModal';
+import { MatchFlyerModal } from '../../components/MatchFlyerModal';
 import { useToast } from '../../context/ToastContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -36,6 +37,7 @@ const TournamentDetail = () => {
     // Manual Registration State
     const [manualPlayer1, setManualPlayer1] = useState('');
     const [manualPlayer2, setManualPlayer2] = useState('');
+    const [manualPlayerImage, setManualPlayerImage] = useState<File | null>(null);
 
     // Edit Registration State
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -48,6 +50,13 @@ const TournamentDetail = () => {
     // Match Schedule Modal State
     const [selectedMatchForSchedule, setSelectedMatchForSchedule] = useState<any>(null);
     const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+    const [selectedMatchForFlyer, setSelectedMatchForFlyer] = useState<any>(null);
+    const [isFlyerModalOpen, setIsFlyerModalOpen] = useState(false);
+
+    const handleFlyerMatch = (match: any) => {
+        setSelectedMatchForFlyer(match);
+        setIsFlyerModalOpen(true);
+    };
 
     // Manual Playoff State
     const [showManualPlayoffForm, setShowManualPlayoffForm] = useState(false);
@@ -1117,6 +1126,14 @@ const TournamentDetail = () => {
                                                                     >
                                                                         <Calendar size={12} /> Programar
                                                                     </button>
+                                                                    {tournament.format === 'liga_paternidad' && (
+                                                                        <button
+                                                                            className="text-xs text-green-400 hover:text-green-300 hover:underline cursor-pointer flex items-center gap-1"
+                                                                            onClick={() => handleFlyerMatch(match)}
+                                                                        >
+                                                                            Flyer
+                                                                        </button>
+                                                                    )}
                                                                     <button
                                                                         className="text-xs text-primary hover:text-primary/80 hover:underline cursor-pointer"
                                                                         onClick={() => handleEditScore(match)}
@@ -1489,6 +1506,17 @@ const TournamentDetail = () => {
                                                                     >
                                                                         <Calendar size={12} />
                                                                     </Button>
+                                                                    {tournament.format === 'liga_paternidad' && (
+                                                                        <Button
+                                                                            size="sm"
+                                                                            variant="ghost"
+                                                                            onClick={() => handleFlyerMatch(match)}
+                                                                            className="text-[10px] h-5 px-2 text-green-400 hover:text-green-300 hover:bg-green-400/10"
+                                                                            title="Generar Flyer"
+                                                                        >
+                                                                            Flyer
+                                                                        </Button>
+                                                                    )}
                                                                     <Button
                                                                         size="sm"
                                                                         variant={match.winner_id ? "ghost" : (isFinal ? "primary" : "ghost")}
@@ -1520,7 +1548,7 @@ const TournamentDetail = () => {
                 onScoreUpdated={handleScoreUpdated}
             />
 
-            {
+                        {
                 tournament && (
                     <MatchScheduleModal
                         isOpen={isScheduleModalOpen}
@@ -1528,6 +1556,25 @@ const TournamentDetail = () => {
                         match={selectedMatchForSchedule}
                         onScheduleUpdated={handleScheduleUpdated}
                         clubId={tournament.club_id}
+                    />
+                )
+            }
+            {
+                tournament && selectedMatchForFlyer && (
+                    <MatchFlyerModal
+                        isOpen={isFlyerModalOpen}
+                        onClose={() => setIsFlyerModalOpen(false)}
+                        matchData={{
+                            tournamentName: tournament.name,
+                            team1: {
+                                name1: tournament.format === 'liga_paternidad' ? selectedMatchForFlyer.team1?.player1_name || selectedMatchForFlyer.team1?.team_name : selectedMatchForFlyer.team1?.team_name,
+                                name2: tournament.format === 'liga_paternidad' ? selectedMatchForFlyer.team1_partner?.player1_name || selectedMatchForFlyer.team1_partner?.team_name : undefined
+                            },
+                            team2: {
+                                name1: tournament.format === 'liga_paternidad' ? selectedMatchForFlyer.team2?.player1_name || selectedMatchForFlyer.team2?.team_name : selectedMatchForFlyer.team2?.team_name,
+                                name2: tournament.format === 'liga_paternidad' ? selectedMatchForFlyer.team2_partner?.player1_name || selectedMatchForFlyer.team2_partner?.team_name : undefined
+                            }
+                        }}
                     />
                 )
             }
