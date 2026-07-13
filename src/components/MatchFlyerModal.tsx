@@ -194,7 +194,7 @@ export function MatchFlyerModal({ isOpen, onClose, matchData }: MatchFlyerModalP
                         {/* VS Center Badge */}
                         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30">
                             <span 
-                                className="text-[75px] font-black italic text-yellow-400 drop-shadow-[0_6px_6px_rgba(0,0,0,0.6)]" 
+                                className="text-[50px] font-black italic text-yellow-400 drop-shadow-[0_6px_6px_rgba(0,0,0,0.6)]" 
                                 style={{ WebkitTextStroke: '2px #0a192f' }}
                             >
                                 VS
