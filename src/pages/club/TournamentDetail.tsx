@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { ShareTournamentModal } from '../../components/club/ShareTournamentModal';
 import { EditRegistrationModal } from '../../components/club/EditRegistrationModal';
 import { EditTournamentModal } from '../../components/club/EditTournamentModal';
-import { Plus, Trophy, Calendar, Users, ChevronLeft, Check, RefreshCw, Trash2, Clock, MapPin, Loader2, Share2, Download, Edit2 } from 'lucide-react';
+import { Plus, Trophy, Calendar, Users, ChevronLeft, Check, RefreshCw, Trash2, Clock, MapPin, Loader2, Share2, Download, Edit2, Camera } from 'lucide-react';
 import { supabaseService } from '../../services/supabaseService';
 import type { Tournament } from '../../types';
 import { Button } from '../../components/ui/Button';
