@@ -89,8 +89,9 @@ export function MatchFlyerModal({ isOpen, onClose, matchData }: MatchFlyerModalP
     };
 
     const getLastName = (n: string) => {
+        // Asumiendo que el usuario ingresa "Apellido Nombre", el primer elemento es el apellido
         const parts = n.trim().split(' ');
-        return parts.length > 1 ? parts[parts.length - 1] : parts[0];
+        return parts[0]; 
     };
 
     const renderTeamColumn = (name1?: string, name2?: string, isDarkText?: boolean) => {
@@ -202,14 +203,14 @@ export function MatchFlyerModal({ isOpen, onClose, matchData }: MatchFlyerModalP
                     </div>
 
                     {/* Footer Superior (Cyan) */}
-                    <div className="relative z-20 w-full bg-primary flex items-center justify-center mt-7 shrink-0 h-14">
-                        {/* Logo flotante centrado a la izquierda para dejar lugar al texto, o simplemente arriba */}
-                        <div className="absolute -top-6 bg-[#0a192f] rounded-full p-1.5 border-[3px] border-primary flex items-center justify-center shadow-md">
-                            <div className="scale-[0.6] origin-center h-10 w-10 flex items-center justify-center ml-3">
+                    <div className="relative z-20 w-full bg-primary flex flex-col items-center justify-center mt-6 shrink-0 py-2">
+                        {/* Logo flotante más grande pero sin exagerar */}
+                        <div className="absolute -top-7 bg-[#0a192f] rounded-full p-2 border-[3px] border-primary flex items-center justify-center shadow-md">
+                            <div className="scale-[0.8] origin-center h-10 flex items-center justify-center">
                                 <AppLogo variant='small' />
                             </div>
                         </div>
-                        <h3 className="text-[#0a192f] text-[20px] font-black uppercase tracking-tight mt-4">
+                        <h3 className="text-[#0a192f] text-[20px] font-black uppercase tracking-tight mt-6 mb-1">
                             ¡NO TE PIERDAS ESTE DUELO!
                         </h3>
                     </div>
