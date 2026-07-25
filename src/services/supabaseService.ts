@@ -1002,7 +1002,7 @@ export const supabaseService = {
     },
 
     async uploadGuestAvatar(playerName: string, file: File): Promise<string> {
-        const normalizedName = playerName.trim().replace(/\s+/g, '_').toLowerCase();
+        const normalizedName = playerName.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '_').toLowerCase();
         const timestamp = Date.now();
         // Append timestamp to avoid RLS UPDATE issues and browser caching
         const filePath = `guest_${normalizedName}_${timestamp}`;
