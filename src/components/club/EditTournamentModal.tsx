@@ -16,7 +16,8 @@ export const EditTournamentModal: React.FC<EditTournamentModalProps> = ({ isOpen
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         start_date: tournament.start_date,
-        end_date: tournament.end_date
+        end_date: tournament.end_date,
+        total_dates: tournament.total_dates || 1
     });
 
     if (!isOpen) return null;
@@ -28,7 +29,8 @@ export const EditTournamentModal: React.FC<EditTournamentModalProps> = ({ isOpen
         try {
             await supabaseService.updateTournament(tournament.id, {
                 start_date: formData.start_date,
-                end_date: formData.end_date
+                end_date: formData.end_date,
+                ...(tournament.format === 'liga_paternidad' && { total_dates: Number(formData.total_dates) })
             });
             onUpdated();
             onClose();
@@ -52,7 +54,7 @@ export const EditTournamentModal: React.FC<EditTournamentModalProps> = ({ isOpen
 
                 <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
                     <CalendarIcon className="text-primary" />
-                    Editar Fechas
+                    Editar Configuracion
                 </h2>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -74,6 +76,18 @@ export const EditTournamentModal: React.FC<EditTournamentModalProps> = ({ isOpen
                             required
                         />
                     </div>
+                    {tournament.format === 'liga_paternidad' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-400 mb-1">Cantidad de Fechas (Partidos)</label>
+                            <Input
+                                type="number"
+                                min="1"
+                                value={formData.total_dates}
+                                onChange={(e) => setFormData({ ...formData, total_dates: parseInt(e.target.value) })}
+                                required
+                            />
+                        </div>
+                    )}
 
                     <div className="pt-4">
                         <Button type="submit" isLoading={loading} className="w-full">
