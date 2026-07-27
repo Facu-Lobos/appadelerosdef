@@ -2068,49 +2068,44 @@ export const supabaseService = {
             // 1. Clear existing playoffs
             await this.clearPlayoffs(tournamentId);
 
-            // 2. Get all registrations with stats
+            // 2. Get all approved registrations in the tournament
             const { data: registrations, error: regError } = await supabase
                 .from('tournament_registrations')
                 .select('*')
                 .eq('tournament_id', tournamentId)
-                .not('group_name', 'is', null);
+                .eq('status', 'approved');
 
             if (regError) throw regError;
 
-            // 3. Group by group_name to determine qualifiers
-            const groups: { [key: string]: typeof registrations } = {};
-            registrations.forEach(reg => {
-                if (!groups[reg.group_name!]) groups[reg.group_name!] = [];
-                groups[reg.group_name!].push(reg);
+            // 3. Sort players globally by their stats (Points, sets difference, games difference)
+            const sortedPlayers = [...registrations].sort((a, b) => {
+                const statsA = a.stats || { points: 0, sets_won: 0, sets_lost: 0, games_won: 0, games_lost: 0 };
+                const statsB = b.stats || { points: 0, sets_won: 0, sets_lost: 0, games_won: 0, games_lost: 0 };
+
+                if (statsB.points !== statsA.points) return statsB.points - statsA.points;
+
+                const setDiffA = (statsA.sets_won || 0) - (statsA.sets_lost || 0);
+                const setDiffB = (statsB.sets_won || 0) - (statsB.sets_lost || 0);
+                if (setDiffB !== setDiffA) return setDiffB - setDiffA;
+
+                const gameDiffA = (statsA.games_won || 0) - (statsA.games_lost || 0);
+                const gameDiffB = (statsB.games_won || 0) - (statsB.games_lost || 0);
+                return gameDiffB - gameDiffA;
             });
 
-            let allQualifiers: typeof registrations = [];
-            const qualifyCount = tournament.teams_advancing_per_zone || 8;
-
-            for (const groupName in groups) {
-                const groupTeams = groups[groupName];
-                const sorted = groupTeams.sort((a, b) => {
-                    const statsA = a.stats || { points: 0, sets_won: 0, sets_lost: 0, games_won: 0, games_lost: 0 };
-                    const statsB = b.stats || { points: 0, sets_won: 0, sets_lost: 0, games_won: 0, games_lost: 0 };
-
-                    if (statsB.points !== statsA.points) return statsB.points - statsA.points;
-
-                    const setDiffA = (statsA.sets_won || 0) - (statsA.sets_lost || 0);
-                    const setDiffB = (statsB.sets_won || 0) - (statsB.sets_lost || 0);
-                    if (setDiffB !== setDiffA) return setDiffB - setDiffA;
-
-                    const gameDiffA = (statsA.games_won || 0) - (statsA.games_lost || 0);
-                    const gameDiffB = (statsB.games_won || 0) - (statsB.games_lost || 0);
-                    return gameDiffB - gameDiffA;
-                });
-
-                const qualifiers = sorted.slice(0, Math.min(qualifyCount, sorted.length));
-                allQualifiers.push(...qualifiers);
+            // Determine qualify count: top 16 if total registered > 16, else top 8
+            let qualifyCount = 8;
+            if (sortedPlayers.length > 16) {
+                qualifyCount = 16;
+            } else if (sortedPlayers.length >= 8) {
+                qualifyCount = 8;
+            } else if (sortedPlayers.length >= 4) {
+                qualifyCount = 4;
+            } else {
+                throw new Error('Se necesitan al menos 4 jugadores activos aprobados para armar los playoffs.');
             }
 
-            if (allQualifiers.length < 4 || allQualifiers.length % 4 !== 0) {
-                throw new Error(`Se necesitan que la cantidad total de clasificados (${allQualifiers.length}) sea múltiplo de 4 para armar parejas de 2v2.`);
-            }
+            const allQualifiers = sortedPlayers.slice(0, qualifyCount);
 
             // Shuffle the qualifiers (random pairing)
             const shuffledQualifiers = [...allQualifiers].sort(() => Math.random() - 0.5);
