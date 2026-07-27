@@ -1024,11 +1024,11 @@ const TournamentDetail = () => {
                                 )}
 
                                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                                    {(tournament.format === 'liga_paternidad' 
-                                        ? ['Única'] 
-                                        : Array.from(new Set(registrations.map(r => r.group_name).filter(Boolean))).sort()
-                                    ).map(groupName => {
-                                        const groupTeams = tournament.format === 'liga_paternidad'
+                                    {(() => {
+                                        const distinctGroups = Array.from(new Set(registrations.map(r => r.group_name).filter(Boolean))).sort();
+                                        return distinctGroups.length > 0 ? distinctGroups : (tournament.format === 'liga_paternidad' ? ['Única'] : []);
+                                    })().map(groupName => {
+                                        const groupTeams = (tournament.format === 'liga_paternidad' && groupName === 'Única')
                                             ? registrations.filter(r => r.status === 'approved')
                                             : registrations.filter(r => r.group_name === groupName);
                                             
@@ -1054,12 +1054,17 @@ const TournamentDetail = () => {
                                         });
 
                                         const groupMatches = tournament.format === 'liga_paternidad'
-                                            ? matches.filter(m => m.stage === 'group' || !m.stage).sort((a, b) => (b.match_date || 0) - (a.match_date || 0)) // Newest first
+                                            ? (groupName === 'Única'
+                                                ? matches.filter(m => m.stage === 'group' || !m.stage)
+                                                : matches.filter(m => (m.stage === 'group' || !m.stage) && m.group_name === groupName)
+                                              ).sort((a, b) => (b.match_date || 0) - (a.match_date || 0)) // Newest first
                                             : matches.filter(m => m.group_name === groupName);
 
                                         return (
-                                            <div key={groupName} className={`bg-white/5 rounded-xl p-3 sm:p-6 border border-white/10 ${tournament.format === 'liga_paternidad' ? 'xl:col-span-2' : ''}`}>
-                                                <h3 className="text-lg sm:text-xl font-bold text-primary mb-4 sm:mb-6">Grupo {groupName}</h3>
+                                            <div key={groupName} className={`bg-white/5 rounded-xl p-3 sm:p-6 border border-white/10 ${tournament.format === 'liga_paternidad' && groupName === 'Única' ? 'xl:col-span-2' : ''}`}>
+                                                <h3 className="text-lg sm:text-xl font-bold text-primary mb-4 sm:mb-6">
+                                                    {groupName === 'Única' ? 'Tabla de Posiciones' : `Zona ${groupName}`}
+                                                </h3>
 
                                                 {/* Standings Table */}
                                                 <div className="overflow-x-auto mb-6 sm:mb-8 -mx-1 sm:mx-0">
