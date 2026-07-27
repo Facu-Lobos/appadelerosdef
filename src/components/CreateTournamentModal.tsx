@@ -192,7 +192,7 @@ export const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({ is
                         )}
                     </div>
 
-                    {(formData.format === 'league' || formData.format === 'flexible') && (
+                    {(formData.format === 'league' || formData.format === 'flexible' || formData.format === 'liga_paternidad') && (
                         <div className="grid grid-cols-2 gap-4 bg-white/5 p-4 rounded-xl border border-white/10">
                             <div>
                                 <label className="block text-sm font-medium text-gray-400 mb-1">Cant. Zonas</label>
@@ -216,8 +216,8 @@ export const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({ is
                     )}
 
                     {formData.format === 'liga_paternidad' && (
-                        <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                            <label className="block text-sm font-medium text-gray-400 mb-1">Cantidad Total de Fechas</label>
+                        <div className="bg-white/5 p-4 rounded-xl border border-white/10 mt-4">
+                            <label className="block text-sm font-medium text-gray-400 mb-1">Cantidad Total de Fechas (Fase Regular)</label>
                             <Input
                                 type="number"
                                 min={1}
@@ -225,7 +225,7 @@ export const CreateTournamentModal: React.FC<CreateTournamentModalProps> = ({ is
                                 onChange={(e) => setFormData({ ...formData, total_dates: parseInt(e.target.value) })}
                             />
                             <p className="text-xs text-gray-500 mt-2">
-                                Cuando todos los jugadores jueguen esta cantidad de fechas, la liga finaliza.
+                                Cuando se completen estas fechas, se habilita el botón para generar los Playoffs Dinámicos (sorteo ronda por ronda).
                             </p>
                         </div>
                     )}

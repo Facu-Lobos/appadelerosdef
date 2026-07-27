@@ -137,11 +137,11 @@ const TournamentResults = () => {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                                {(tournament.format === 'liga_paternidad' 
-                                    ? ['Única'] 
-                                    : Array.from(new Set(registrations.map(r => r.group_name).filter(Boolean))).sort()
-                                ).map(groupName => {
-                                    const groupTeams = tournament.format === 'liga_paternidad'
+                                {(() => {
+                                    const distinctGroups = Array.from(new Set(registrations.map(r => r.group_name).filter(Boolean))).sort();
+                                    return distinctGroups.length > 0 ? distinctGroups : (tournament.format === 'liga_paternidad' ? ['Única'] : []);
+                                })().map(groupName => {
+                                    const groupTeams = (tournament.format === 'liga_paternidad' && groupName === 'Única')
                                         ? registrations.filter(r => r.status === 'approved')
                                         : registrations.filter(r => r.group_name === groupName);
                                         
@@ -167,12 +167,17 @@ const TournamentResults = () => {
                                     });
 
                                     const groupMatches = tournament.format === 'liga_paternidad'
-                                        ? matches.filter(m => m.stage === 'group' || !m.stage).sort((a, b) => (b.match_date || 0) - (a.match_date || 0)) // Newest first
+                                        ? (groupName === 'Única'
+                                            ? matches.filter(m => m.stage === 'group' || !m.stage)
+                                            : matches.filter(m => (m.stage === 'group' || !m.stage) && m.group_name === groupName)
+                                          ).sort((a, b) => (b.match_date || 0) - (a.match_date || 0)) // Newest first
                                         : matches.filter(m => m.group_name === groupName);
 
                                     return (
-                                        <div key={groupName} className={`bg-white/5 rounded-xl p-3 sm:p-6 border border-white/10 ${tournament.format === 'liga_paternidad' ? 'xl:col-span-2' : ''}`}>
-                                            <h3 className="text-lg sm:text-xl font-bold text-primary mb-4 sm:mb-6">Grupo {groupName}</h3>
+                                        <div key={groupName} className={`bg-white/5 rounded-xl p-3 sm:p-6 border border-white/10 ${tournament.format === 'liga_paternidad' && groupName === 'Única' ? 'xl:col-span-2' : ''}`}>
+                                            <h3 className="text-lg sm:text-xl font-bold text-primary mb-4 sm:mb-6">
+                                                {groupName === 'Única' ? 'Tabla de Posiciones' : `Zona ${groupName}`}
+                                            </h3>
 
                                             {/* Standings Table */}
                                             <div className="overflow-x-auto mb-6 sm:mb-8 -mx-1 sm:mx-0">
@@ -330,7 +335,10 @@ const TournamentResults = () => {
                                                                 {/* Team 1 */}
                                                                 <div className={`flex justify-between items-center p-1.5 rounded ${match.winner_id === match.team1_id ? (isFinal ? 'bg-yellow-500/20 text-yellow-400 font-bold' : 'bg-green-500/10 text-green-400 font-bold') : 'bg-black/20'}`}>
                                                                     <span className={`text-xs truncate max-w-[140px] ${!match.team1_id ? 'text-gray-600 italic' : ''}`}>
-                                                                        {match.team1?.team_name || (match.score === 'BYE' ? 'BYE' : 'TBD')}
+                                                                        {tournament.format === 'liga_paternidad' && match.team1_partner
+                                                                            ? `${match.team1?.team_name?.split(' ')[0] || '?'}/${match.team1_partner?.team_name?.split(' ')[0] || '?'}`
+                                                                            : (match.team1?.team_name || (match.score === 'BYE' ? 'BYE' : 'TBD'))
+                                                                        }
                                                                     </span>
                                                                     {(match.sets_score || (match.score && match.score !== 'BYE' && !match.score.includes('TBD'))) && (
                                                                         <span className="text-xs font-mono font-bold">
@@ -345,7 +353,10 @@ const TournamentResults = () => {
                                                                 {/* Team 2 */}
                                                                 <div className={`flex justify-between items-center p-1.5 rounded ${match.winner_id === match.team2_id ? (isFinal ? 'bg-yellow-500/20 text-yellow-400 font-bold' : 'bg-green-500/10 text-green-400 font-bold') : 'bg-black/20'}`}>
                                                                     <span className={`text-xs truncate max-w-[140px] ${!match.team2_id ? 'text-gray-600 italic' : ''}`}>
-                                                                        {match.team2?.team_name || (match.score === 'BYE' ? 'BYE' : 'TBD')}
+                                                                        {tournament.format === 'liga_paternidad' && match.team2_partner
+                                                                            ? `${match.team2?.team_name?.split(' ')[0] || '?'}/${match.team2_partner?.team_name?.split(' ')[0] || '?'}`
+                                                                            : (match.team2?.team_name || (match.score === 'BYE' ? 'BYE' : 'TBD'))
+                                                                        }
                                                                     </span>
                                                                     {(match.sets_score || (match.score && match.score !== 'BYE' && !match.score.includes('TBD'))) && (
                                                                         <span className="text-xs font-mono font-bold">

@@ -1208,8 +1208,11 @@ export const supabaseService = {
                     .eq('id', teamId);
             }
         } else if (match.stage === 'playoff' && winnerId) {
-            // Advance winner in playoffs
-            await this.advancePlayoffWinner(match, winnerId);
+            if (isLigaPaternidad) {
+                await this.advanceLigaPaternidadPlayoff(match);
+            } else {
+                await this.advancePlayoffWinner(match, winnerId);
+            }
         }
 
         return true;
@@ -1397,63 +1400,72 @@ export const supabaseService = {
         });
 
         // Sort players: first by match count (ascending), then randomly
-        const sortedPlayers = [...activePlayers].sort((a, b) => {
-            const countDiff = playerMatchCounts[a.id] - playerMatchCounts[b.id];
-            if (countDiff !== 0) return countDiff;
-            return Math.random() - 0.5;
-        });
-
-        const numMatches = Math.floor(activePlayers.length / 4);
-        const selectedPlayers = sortedPlayers.slice(0, numMatches * 4);
-
-        // Form pairs trying to avoid repeating partners
-        const availableForPairing = [...selectedPlayers];
-        // Shuffle to avoid predictable pairing when partner counts are equal
-        availableForPairing.sort(() => Math.random() - 0.5);
-        
-        const formedPairs: any[][] = [];
-        
-        while (availableForPairing.length >= 2) {
-            const p1 = availableForPairing[0];
-            let bestP2Index = 1;
-            let minPartnerCount = Infinity;
-            
-            for (let j = 1; j < availableForPairing.length; j++) {
-                const p2 = availableForPairing[j];
-                const count = partnerCounts[p1.id][p2.id] || 0;
-                
-                if (count < minPartnerCount) {
-                    minPartnerCount = count;
-                    bestP2Index = j;
-                }
-            }
-            
-            const p2 = availableForPairing[bestP2Index];
-            formedPairs.push([p1, p2]);
-            availableForPairing.splice(bestP2Index, 1);
-            availableForPairing.splice(0, 1);
-        }
-        
-        // Match the pairs randomly
-        formedPairs.sort(() => Math.random() - 0.5);
+        // Group players by group_name (Zone)
+        const groups = activePlayers.reduce((acc, player) => {
+            const groupName = player.group_name || 'Sin Z.';
+            if (!acc[groupName]) acc[groupName] = [];
+            acc[groupName].push(player);
+            return acc;
+        }, {} as Record<string, typeof activePlayers>);
 
         const currentRound = (tournament.current_round || 0) + 1;
         const matchesToInsert = [];
 
-        for (let i = 0; i < formedPairs.length; i += 2) {
-            if (i + 1 < formedPairs.length) {
-                matchesToInsert.push({
-                    tournament_id: tournamentId,
-                    round: `fecha_${currentRound}`,
-                    stage: 'group',
-                    group_name: `Fecha ${currentRound}`,
-                    team1_id: formedPairs[i][0].id,
-                    team1_partner_id: formedPairs[i][1].id,
-                    team2_id: formedPairs[i+1][0].id,
-                    team2_partner_id: formedPairs[i+1][1].id,
-                    match_date: currentRound,
-                    start_time: new Date().toISOString()
-                });
+        for (const [groupName, groupPlayers] of Object.entries(groups)) {
+            if (groupPlayers.length < 4) continue;
+
+            const sortedPlayers = [...groupPlayers].sort((a, b) => {
+                const countDiff = playerMatchCounts[a.id] - playerMatchCounts[b.id];
+                if (countDiff !== 0) return countDiff;
+                return Math.random() - 0.5;
+            });
+
+            const numMatches = Math.floor(groupPlayers.length / 4);
+            const selectedPlayers = sortedPlayers.slice(0, numMatches * 4);
+
+            const availableForPairing = [...selectedPlayers];
+            availableForPairing.sort(() => Math.random() - 0.5);
+            
+            const formedPairs: any[][] = [];
+            
+            while (availableForPairing.length >= 2) {
+                const p1 = availableForPairing[0];
+                let bestP2Index = 1;
+                let minPartnerCount = Infinity;
+                
+                for (let j = 1; j < availableForPairing.length; j++) {
+                    const p2 = availableForPairing[j];
+                    const count = partnerCounts[p1.id]?.[p2.id] || 0;
+                    
+                    if (count < minPartnerCount) {
+                        minPartnerCount = count;
+                        bestP2Index = j;
+                    }
+                }
+                
+                const p2 = availableForPairing[bestP2Index];
+                formedPairs.push([p1, p2]);
+                availableForPairing.splice(bestP2Index, 1);
+                availableForPairing.splice(0, 1);
+            }
+            
+            formedPairs.sort(() => Math.random() - 0.5);
+
+            for (let i = 0; i < formedPairs.length; i += 2) {
+                if (i + 1 < formedPairs.length) {
+                    matchesToInsert.push({
+                        tournament_id: tournamentId,
+                        round: `fecha_${currentRound}`,
+                        stage: 'group',
+                        group_name: groupName === 'Sin Z.' ? `Fecha ${currentRound}` : groupName,
+                        team1_id: formedPairs[i][0].id,
+                        team1_partner_id: formedPairs[i][1].id,
+                        team2_id: formedPairs[i+1][0].id,
+                        team2_partner_id: formedPairs[i+1][1].id,
+                        match_date: currentRound,
+                        start_time: new Date().toISOString()
+                    });
+                }
             }
         }
 
@@ -1894,6 +1906,102 @@ export const supabaseService = {
         return true;
     },
 
+    async advanceLigaPaternidadPlayoff(match: TournamentMatch) {
+        // 1. Fetch all matches of this round
+        const { data: roundMatches, error: matchesError } = await supabase
+            .from('tournament_matches')
+            .select('*')
+            .eq('tournament_id', match.tournament_id)
+            .eq('stage', 'playoff')
+            .eq('round', match.round);
+
+        if (matchesError || !roundMatches) throw matchesError || new Error("No matches found for round");
+
+        // 2. Check if all matches in this round are finished
+        const allFinished = roundMatches.every(m => m.winner_id !== null);
+        if (!allFinished) return; // Wait for other matches to finish
+
+        // 3. Determine next round name
+        let nextRound = '';
+        if (match.round === 'round_16') nextRound = 'quarter';
+        else if (match.round === 'quarter') nextRound = 'semi';
+        else if (match.round === 'semi') nextRound = 'final';
+        else return; // Final finished, tournament ends
+
+        // Check if next round matches already exist to avoid duplicates
+        const { data: existingNextRoundMatches } = await supabase
+            .from('tournament_matches')
+            .select('id')
+            .eq('tournament_id', match.tournament_id)
+            .eq('stage', 'playoff')
+            .eq('round', nextRound);
+
+        if (existingNextRoundMatches && existingNextRoundMatches.length > 0) {
+            console.log("Next round matches already generated.");
+            return;
+        }
+
+        // 4. Collect all winning players
+        const winningPlayerIds: string[] = [];
+        roundMatches.forEach(m => {
+            if (m.winner_id === m.team1_id) {
+                winningPlayerIds.push(m.team1_id);
+                if (m.team1_partner_id) winningPlayerIds.push(m.team1_partner_id);
+            } else if (m.winner_id === m.team2_id) {
+                winningPlayerIds.push(m.team2_id);
+                if (m.team2_partner_id) winningPlayerIds.push(m.team2_partner_id);
+            }
+        });
+
+        if (winningPlayerIds.length < 4 || winningPlayerIds.length % 4 !== 0) {
+            console.warn("Not enough winning players to form 2v2 matches (must be multiple of 4):", winningPlayerIds.length);
+            return;
+        }
+
+        // 5. Shuffle winning players
+        const shuffledWinners = [...winningPlayerIds].sort(() => Math.random() - 0.5);
+
+        // 6. Form pairs
+        const pairs: string[][] = [];
+        for (let i = 0; i < shuffledWinners.length; i += 2) {
+            if (i + 1 < shuffledWinners.length) {
+                pairs.push([shuffledWinners[i], shuffledWinners[i+1]]);
+            }
+        }
+
+        // Shuffle pairs to randomize matchups
+        const shuffledPairs = [...pairs].sort(() => Math.random() - 0.5);
+
+        // 7. Create next round matches
+        const matchesToInsert = [];
+        const timestamp = Date.now();
+        const numMatches = shuffledPairs.length / 2;
+
+        for (let i = 0; i < numMatches; i++) {
+            const pair1 = shuffledPairs[i * 2];
+            const pair2 = shuffledPairs[i * 2 + 1];
+
+            matchesToInsert.push({
+                tournament_id: match.tournament_id,
+                round: nextRound,
+                stage: 'playoff',
+                start_time: new Date(timestamp + i * 1000).toISOString(),
+                group_name: `M${i + 1}`,
+                team1_id: pair1[0],
+                team1_partner_id: pair1[1],
+                team2_id: pair2[0],
+                team2_partner_id: pair2[1]
+            });
+        }
+
+        if (matchesToInsert.length > 0) {
+            const { error: insertError } = await supabase
+                .from('tournament_matches')
+                .insert(matchesToInsert);
+            if (insertError) throw insertError;
+        }
+    },
+
     async generatePlayoffs(tournamentId: string) {
         // 0. Get tournament details
         const { data: tournament, error: tError } = await supabase
@@ -1911,6 +2019,101 @@ export const supabaseService = {
         if (tournament.format === 'flexible') {
             throw new Error('En el formato Flexible las llaves se arman de manera manual usando la opción "Generar Llave en Blanco".');
         }
+
+        if (tournament.format === 'liga_paternidad') {
+            // Liga de la Paternidad Playoff Generation
+            // 1. Clear existing playoffs
+            await this.clearPlayoffs(tournamentId);
+
+            // 2. Get all registrations with stats
+            const { data: registrations, error: regError } = await supabase
+                .from('tournament_registrations')
+                .select('*')
+                .eq('tournament_id', tournamentId)
+                .not('group_name', 'is', null);
+
+            if (regError) throw regError;
+
+            // 3. Group by group_name to determine qualifiers
+            const groups: { [key: string]: typeof registrations } = {};
+            registrations.forEach(reg => {
+                if (!groups[reg.group_name!]) groups[reg.group_name!] = [];
+                groups[reg.group_name!].push(reg);
+            });
+
+            let allQualifiers: typeof registrations = [];
+            const qualifyCount = tournament.teams_advancing_per_zone || 8;
+
+            for (const groupName in groups) {
+                const groupTeams = groups[groupName];
+                const sorted = groupTeams.sort((a, b) => {
+                    const statsA = a.stats || { points: 0, sets_won: 0, sets_lost: 0, games_won: 0, games_lost: 0 };
+                    const statsB = b.stats || { points: 0, sets_won: 0, sets_lost: 0, games_won: 0, games_lost: 0 };
+
+                    if (statsB.points !== statsA.points) return statsB.points - statsA.points;
+
+                    const setDiffA = (statsA.sets_won || 0) - (statsA.sets_lost || 0);
+                    const setDiffB = (statsB.sets_won || 0) - (statsB.sets_lost || 0);
+                    if (setDiffB !== setDiffA) return setDiffB - setDiffA;
+
+                    const gameDiffA = (statsA.games_won || 0) - (statsA.games_lost || 0);
+                    const gameDiffB = (statsB.games_won || 0) - (statsB.games_lost || 0);
+                    return gameDiffB - gameDiffA;
+                });
+
+                const qualifiers = sorted.slice(0, Math.min(qualifyCount, sorted.length));
+                allQualifiers.push(...qualifiers);
+            }
+
+            if (allQualifiers.length < 4 || allQualifiers.length % 4 !== 0) {
+                throw new Error(`Se necesitan que la cantidad total de clasificados (${allQualifiers.length}) sea múltiplo de 4 para armar parejas de 2v2.`);
+            }
+
+            // Shuffle the qualifiers (random pairing)
+            const shuffledQualifiers = [...allQualifiers].sort(() => Math.random() - 0.5);
+
+            // Form pairs: [p1, p2], [p3, p4]...
+            const pairs: any[][] = [];
+            for (let i = 0; i < shuffledQualifiers.length; i += 2) {
+                pairs.push([shuffledQualifiers[i], shuffledQualifiers[i+1]]);
+            }
+
+            // Shuffle pairs to randomize matchups
+            const shuffledPairs = [...pairs].sort(() => Math.random() - 0.5);
+
+            const numMatches = shuffledPairs.length / 2;
+            const startingRound = numMatches === 8 ? 'round_16' :
+                                 numMatches === 4 ? 'quarter' :
+                                 numMatches === 2 ? 'semi' : 'final';
+
+            const matchesToInsert = [];
+            const timestamp = Date.now();
+
+            for (let i = 0; i < numMatches; i++) {
+                const pair1 = shuffledPairs[i * 2];
+                const pair2 = shuffledPairs[i * 2 + 1];
+
+                matchesToInsert.push({
+                    tournament_id: tournamentId,
+                    round: startingRound,
+                    stage: 'playoff',
+                    start_time: new Date(timestamp + i * 1000).toISOString(),
+                    group_name: `M${i + 1}`,
+                    team1_id: pair1[0].id,
+                    team1_partner_id: pair1[1].id,
+                    team2_id: pair2[0].id,
+                    team2_partner_id: pair2[1].id
+                });
+            }
+
+            const { error: insertError } = await supabase
+                .from('tournament_matches')
+                .insert(matchesToInsert);
+
+            if (insertError) throw insertError;
+            return true;
+        }
+
 
         // 1. Get all registrations with stats
         const { data: registrations, error: regError } = await supabase

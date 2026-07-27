@@ -17,7 +17,9 @@ export const EditTournamentModal: React.FC<EditTournamentModalProps> = ({ isOpen
     const [formData, setFormData] = useState({
         start_date: tournament.start_date,
         end_date: tournament.end_date,
-        total_dates: tournament.total_dates || 1
+        total_dates: tournament.total_dates || 1,
+        zones_count: tournament.zones_count || 1,
+        teams_advancing_per_zone: tournament.teams_advancing_per_zone || 2
     });
 
     if (!isOpen) return null;
@@ -30,7 +32,11 @@ export const EditTournamentModal: React.FC<EditTournamentModalProps> = ({ isOpen
             await supabaseService.updateTournament(tournament.id, {
                 start_date: formData.start_date,
                 end_date: formData.end_date,
-                ...(tournament.format === 'liga_paternidad' && { total_dates: Number(formData.total_dates) })
+                ...(tournament.format === 'liga_paternidad' && { 
+                    total_dates: Number(formData.total_dates),
+                    zones_count: Number(formData.zones_count),
+                    teams_advancing_per_zone: Number(formData.teams_advancing_per_zone)
+                })
             });
             onUpdated();
             onClose();
@@ -77,16 +83,40 @@ export const EditTournamentModal: React.FC<EditTournamentModalProps> = ({ isOpen
                         />
                     </div>
                     {tournament.format === 'liga_paternidad' && (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-400 mb-1">Cantidad de Fechas (Partidos)</label>
-                            <Input
-                                type="number"
-                                min="1"
-                                value={formData.total_dates}
-                                onChange={(e) => setFormData({ ...formData, total_dates: parseInt(e.target.value) })}
-                                required
-                            />
-                        </div>
+                        <>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-1">Cantidad de Fechas (Fase Regular)</label>
+                                <Input
+                                    type="number"
+                                    min="1"
+                                    value={formData.total_dates}
+                                    onChange={(e) => setFormData({ ...formData, total_dates: parseInt(e.target.value) })}
+                                    required
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">Cant. Zonas</label>
+                                    <Input
+                                        type="number"
+                                        min="1"
+                                        value={formData.zones_count}
+                                        onChange={(e) => setFormData({ ...formData, zones_count: parseInt(e.target.value) })}
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">Clasificados x Zona</label>
+                                    <Input
+                                        type="number"
+                                        min="1"
+                                        value={formData.teams_advancing_per_zone}
+                                        onChange={(e) => setFormData({ ...formData, teams_advancing_per_zone: parseInt(e.target.value) })}
+                                        required
+                                    />
+                                </div>
+                            </div>
+                        </>
                     )}
 
                     <div className="pt-4">
