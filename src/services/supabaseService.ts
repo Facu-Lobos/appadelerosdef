@@ -1411,8 +1411,13 @@ export const supabaseService = {
         const currentRound = (tournament.current_round || 0) + 1;
         const matchesToInsert = [];
 
+        const leftoversByGroup: Record<string, any[]> = {};
+
         for (const [groupName, groupPlayers] of Object.entries(groups)) {
-            if (groupPlayers.length < 4) continue;
+            if (groupPlayers.length < 4) {
+                leftoversByGroup[groupName] = [...groupPlayers];
+                continue;
+            }
 
             const sortedPlayers = [...groupPlayers].sort((a, b) => {
                 const countDiff = playerMatchCounts[a.id] - playerMatchCounts[b.id];
@@ -1422,6 +1427,8 @@ export const supabaseService = {
 
             const numMatches = Math.floor(groupPlayers.length / 4);
             const selectedPlayers = sortedPlayers.slice(0, numMatches * 4);
+            const leftOver = sortedPlayers.slice(numMatches * 4);
+            leftoversByGroup[groupName] = leftOver;
 
             const availableForPairing = [...selectedPlayers];
             availableForPairing.sort(() => Math.random() - 0.5);
@@ -1465,6 +1472,42 @@ export const supabaseService = {
                         match_date: currentRound,
                         start_time: new Date().toISOString()
                     });
+                }
+            }
+        }
+
+        // Crossover pairings for leftovers across zones
+        const groupNames = Object.keys(leftoversByGroup);
+        let crossoverPairingDone = true;
+        while (crossoverPairingDone) {
+            crossoverPairingDone = false;
+            const sortedGroupNames = [...groupNames]
+                .filter(name => leftoversByGroup[name] && leftoversByGroup[name].length >= 2)
+                .sort((a, b) => leftoversByGroup[b].length - leftoversByGroup[a].length);
+
+            if (sortedGroupNames.length >= 2) {
+                const g1 = sortedGroupNames[0];
+                const g2 = sortedGroupNames[1];
+
+                const p1 = leftoversByGroup[g1].shift();
+                const p2 = leftoversByGroup[g1].shift();
+                const p3 = leftoversByGroup[g2].shift();
+                const p4 = leftoversByGroup[g2].shift();
+
+                if (p1 && p2 && p3 && p4) {
+                    matchesToInsert.push({
+                        tournament_id: tournamentId,
+                        round: `fecha_${currentRound}`,
+                        stage: 'group',
+                        group_name: 'Interzona',
+                        team1_id: p1.id,
+                        team1_partner_id: p2.id,
+                        team2_id: p3.id,
+                        team2_partner_id: p4.id,
+                        match_date: currentRound,
+                        start_time: new Date().toISOString()
+                    });
+                    crossoverPairingDone = true;
                 }
             }
         }

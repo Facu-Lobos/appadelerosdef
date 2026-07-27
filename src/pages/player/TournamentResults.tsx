@@ -171,10 +171,11 @@ const TournamentResults = () => {
                                             ? matches.filter(m => m.stage === 'group' || !m.stage)
                                             : matches.filter(m => {
                                                 if (m.stage && m.stage !== 'group') return false;
-                                                const matchZone = m.group_name && !m.group_name.startsWith('Fecha ')
-                                                    ? m.group_name
-                                                    : registrations.find(r => r.id === m.team1_id)?.group_name;
-                                                return matchZone === groupName;
+                                                const p1Zone = registrations.find(r => r.id === m.team1_id)?.group_name;
+                                                const p1pZone = registrations.find(r => r.id === m.team1_partner_id)?.group_name;
+                                                const p2Zone = registrations.find(r => r.id === m.team2_id)?.group_name;
+                                                const p2pZone = registrations.find(r => r.id === m.team2_partner_id)?.group_name;
+                                                return p1Zone === groupName || p1pZone === groupName || p2Zone === groupName || p2pZone === groupName;
                                             })
                                           ).sort((a, b) => (b.match_date || 0) - (a.match_date || 0)) // Newest first
                                         : matches.filter(m => m.group_name === groupName);
