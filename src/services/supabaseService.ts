@@ -1079,37 +1079,26 @@ export const supabaseService = {
         if (error) throw error;
     },
 
-    async updateMatchScore(matchId: string, score: string, setsScore: { w: number, l: number }[], winnerId: string) {
-        // 1. Update Match
-        const { data: match, error: matchError } = await supabase
-            .from('tournament_matches')
-            .update({ score, winner_id: winnerId }) // Removed sets_score as it causes 400 error (column missing)
-            .eq('id', matchId)
-            .select()
-            .single();
-
-        if (matchError) throw matchError;
-
+    async recalculateGroupStats(tournamentId: string, groupName: string | null) {
         // Fetch tournament details
         const { data: tournament, error: tError } = await supabase
             .from('tournaments')
             .select('format')
-            .eq('id', match.tournament_id)
+            .eq('id', tournamentId)
             .single();
 
         if (tError) throw tError;
         const isLigaPaternidad = tournament.format === 'liga_paternidad';
 
-        // 2. Recalculate Stats for the Group
         // Fetch all matches in this group (or all group stage matches if Liga Paternidad)
         let matchesQuery = supabase
             .from('tournament_matches')
             .select('*')
-            .eq('tournament_id', match.tournament_id)
+            .eq('tournament_id', tournamentId)
             .not('winner_id', 'is', null);
 
         if (!isLigaPaternidad) {
-            matchesQuery = matchesQuery.eq('group_name', match.group_name);
+            matchesQuery = matchesQuery.eq('group_name', groupName);
         } else {
             matchesQuery = matchesQuery.eq('stage', 'group'); // All matches for individual standings
         }
@@ -1121,23 +1110,23 @@ export const supabaseService = {
         let teamsQuery = supabase
             .from('tournament_registrations')
             .select('*')
-            .eq('tournament_id', match.tournament_id)
+            .eq('tournament_id', tournamentId)
             .eq('status', 'approved');
 
         if (!isLigaPaternidad) {
-            teamsQuery = teamsQuery.eq('group_name', match.group_name);
+            teamsQuery = teamsQuery.eq('group_name', groupName);
         }
 
         const { data: teams, error: teamsError } = await teamsQuery;
         if (teamsError) throw teamsError;
 
         // Calculate Stats
-        const statsMap: { [key: string]: any } = {};
+        const statsMap = {};
         teams.forEach(team => {
             statsMap[team.id] = { points: 0, played: 0, won: 0, lost: 0, sets_won: 0, sets_lost: 0, games_won: 0, games_lost: 0 };
         });
 
-        const incrementStat = (playerId: string | undefined | null, stat: string, amount = 1) => {
+        const incrementStat = (playerId, stat, amount = 1) => {
             if (playerId && statsMap[playerId]) {
                 statsMap[playerId][stat] += amount;
             }
@@ -1170,15 +1159,15 @@ export const supabaseService = {
             let sets = m.sets_score;
             if (!sets && m.score && m.score !== 'BYE') {
                 try {
-                    sets = m.score.split(',').map((s: string) => {
+                    sets = m.score.split(',').map(s => {
                         const [s1, s2] = s.trim().split('-').map(Number);
                         return isWinnerTeam1 ? { w: s1, l: s2 } : { w: s2, l: s1 };
                     });
-                } catch (e) { console.error("Error parsing score", e); }
+                } catch (e) { console.error('Error parsing score', e); }
             }
 
             if (sets && Array.isArray(sets)) {
-                sets.forEach((set: { w: number, l: number }) => {
+                sets.forEach(set => {
                     winnerIds.forEach(id => {
                         incrementStat(id, 'games_won', set.w);
                         incrementStat(id, 'games_lost', set.l);
@@ -1199,15 +1188,40 @@ export const supabaseService = {
             }
         });
 
-        // 3. Update Teams (Only for group stage)
+        // Update Teams
+        for (const teamId in statsMap) {
+            await supabase
+                .from('tournament_registrations')
+                .update({ stats: statsMap[teamId] })
+                .eq('id', teamId);
+        }
+    },
+
+    async updateMatchScore(matchId: string, score: string, setsScore: { w: number, l: number }[], winnerId: string) {
+        // 1. Update Match
+        const { data: match, error: matchError } = await supabase
+            .from('tournament_matches')
+            .update({ score, winner_id: winnerId })
+            .eq('id', matchId)
+            .select()
+            .single();
+
+        if (matchError) throw matchError;
+
+        // 2. Recalculate Stats for the Group
         if (match.stage === 'group') {
-            for (const teamId in statsMap) {
-                await supabase
-                    .from('tournament_registrations')
-                    .update({ stats: statsMap[teamId] })
-                    .eq('id', teamId);
-            }
+            await this.recalculateGroupStats(match.tournament_id, match.group_name);
         } else if (match.stage === 'playoff' && winnerId) {
+            // Fetch tournament details
+            const { data: tournament, error: tError } = await supabase
+                .from('tournaments')
+                .select('format')
+                .eq('id', match.tournament_id)
+                .single();
+
+            if (tError) throw tError;
+            const isLigaPaternidad = tournament.format === 'liga_paternidad';
+
             if (isLigaPaternidad) {
                 await this.advanceLigaPaternidadPlayoff(match);
             } else {
@@ -1217,7 +1231,6 @@ export const supabaseService = {
 
         return true;
     },
-
     async updateRegistrationStatus(registrationId: string, status: 'approved' | 'rejected') {
         const { error } = await supabase
             .from('tournament_registrations')
@@ -1546,18 +1559,36 @@ export const supabaseService = {
     },
 
     async deleteTournamentMatch(matchId: string) {
-        const { error } = await supabase
+        // 1. Fetch match details first to know tournament_id and group_name
+        const { data: match, error: fetchError } = await supabase
+            .from('tournament_matches')
+            .select('tournament_id, group_name, stage')
+            .eq('id', matchId)
+            .single();
+            
+        if (fetchError) {
+            console.error('Error fetching match for deletion:', fetchError);
+            throw fetchError;
+        }
+
+        // 2. Delete the match
+        const { error: deleteError } = await supabase
             .from('tournament_matches')
             .delete()
             .eq('id', matchId);
 
-        if (error) {
-            console.error('Error deleting match:', error);
-            throw error;
+        if (deleteError) {
+            console.error('Error deleting match:', deleteError);
+            throw deleteError;
         }
+
+        // 3. Recalculate stats for the group/tournament
+        if (match.stage === 'group') {
+            await this.recalculateGroupStats(match.tournament_id, match.group_name);
+        }
+
         return true;
     },
-
     async updateTournamentCurrentRound(tournamentId: string, currentRound: number) {
         const { error } = await supabase
             .from('tournaments')

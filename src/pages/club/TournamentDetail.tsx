@@ -624,51 +624,8 @@ const TournamentDetail = () => {
                                                     }`}>
                                                     {reg.status === 'approved' ? 'Confirmado' : 'Pendiente'}
                                                 </div>
-                                                {reg.status === 'approved' && (
-                                                    <div className="mt-2 flex items-center gap-2">
-                                                        <label className="text-xs text-gray-400 uppercase tracking-wider">Zona/Grupo:</label>
-                                                        <input 
-                                                            className="bg-black/20 border border-white/10 rounded px-2 py-1 text-xs text-white max-w-[60px] focus:outline-none focus:border-primary transition-colors"
-                                                            defaultValue={reg.group_name || ''}
-                                                            onBlur={async (e) => {
-                                                                const newGroup = e.target.value.trim().toUpperCase();
-                                                                if (newGroup !== (reg.group_name || '')) {
-                                                                    try {
-                                                                        await supabaseService.updateRegistrationGroup(reg.id, newGroup || 'A'); // Default to A if cleared
-                                                                        showToast('Zona actualizada', 'success');
-                                                                        loadRegistrations(tournament!.id);
-                                                                    } catch (err) {
-                                                                        showToast('Error al actualizar zona', 'error');
-                                                                    }
-                                                                }
-                                                            }}
-                                                            placeholder="A, B..."
-                                                        />
-                                                    </div>
-                                                )}
-                                            </div>
-                                            {reg.status === 'pending' && (
-                                                <div className="flex gap-2">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        className="text-green-400 hover:text-green-300 hover:bg-green-400/10"
-                                                        onClick={() => handleStatusUpdate(reg.id, 'approved')}
-                                                    >
-                                                        <Check size={18} />
-                                                    </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
-                                                        onClick={() => handleDeleteRegistration(reg.id)}
-                                                    >
-                                                        <Trash2 size={18} />
-                                                    </Button>
-                                                </div>
-                                            )}
                                             {reg.status === 'approved' && (
-                                                <div className="flex gap-2">
+                                                <div className="flex gap-2 items-center">
                                                     {tournament.format === 'liga_paternidad' && (
                                                         <>
                                                             <label className="cursor-pointer flex items-center justify-center w-8 h-8 text-gray-500 hover:text-primary hover:bg-primary/10 rounded-md transition-colors" title="Subir o actualizar foto del jugador">
@@ -711,6 +668,63 @@ const TournamentDetail = () => {
                                                         >
                                                             <span className="text-xs font-bold">{reg.is_active === false ? "ACTIVAR" : "CONGELAR"}</span>
                                                             </Button>
+                                                        </>
+                                                    )}
+                                                    {tournament.format === 'largo_12' && (
+                                                        <div className="flex gap-1 items-center bg-white/5 rounded-md px-1.5 py-0.5 border border-white/5">
+                                                            <span className="text-[10px] text-gray-500 mr-1">Fotos:</span>
+                                                            {/* Player 1 Photo Upload */}
+                                                            <label className="cursor-pointer flex items-center justify-center w-7 h-7 text-gray-500 hover:text-primary hover:bg-primary/10 rounded transition-colors" title={`Subir foto de ${reg.player1?.name || reg.player1_name || 'Jugador 1'}`}>
+                                                                <input 
+                                                                    type="file" 
+                                                                    accept="image/*" 
+                                                                    className="hidden" 
+                                                                    onChange={async (e) => {
+                                                                        if (e.target.files && e.target.files[0]) {
+                                                                            const file = e.target.files[0];
+                                                                            const playerName = reg.player1?.name || reg.player1_name;
+                                                                            if (playerName) {
+                                                                                try {
+                                                                                    showToast('Subiendo foto...', 'info');
+                                                                                    await supabaseService.uploadGuestAvatar(playerName, file);
+                                                                                    showToast('Foto de ' + playerName + ' actualizada', 'success');
+                                                                                } catch(err) {
+                                                                                    showToast('Error al subir foto', 'error');
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }}
+                                                                />
+                                                                <span className="text-[10px] font-bold mr-0.5">J1</span>
+                                                                <Camera size={14} />
+                                                            </label>
+                                                            {/* Player 2 Photo Upload */}
+                                                            <label className="cursor-pointer flex items-center justify-center w-7 h-7 text-gray-500 hover:text-primary hover:bg-primary/10 rounded transition-colors" title={`Subir foto de ${reg.player2?.name || reg.player2_name || 'Jugador 2'}`}>
+                                                                <input 
+                                                                    type="file" 
+                                                                    accept="image/*" 
+                                                                    className="hidden" 
+                                                                    onChange={async (e) => {
+                                                                        if (e.target.files && e.target.files[0]) {
+                                                                            const file = e.target.files[0];
+                                                                            const playerName = reg.player2?.name || reg.player2_name;
+                                                                            if (playerName) {
+                                                                                try {
+                                                                                    showToast('Subiendo foto...', 'info');
+                                                                                    await supabaseService.uploadGuestAvatar(playerName, file);
+                                                                                    showToast('Foto de ' + playerName + ' actualizada', 'success');
+                                                                                } catch(err) {
+                                                                                    showToast('Error al subir foto', 'error');
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }}
+                                                                />
+                                                                <span className="text-[10px] font-bold mr-0.5">J2</span>
+                                                                <Camera size={14} />
+                                                            </label>
+                                                        </div>
+                                                    )}
                                                         </>
                                                     )}
                                                     <Button
@@ -1025,8 +1039,11 @@ const TournamentDetail = () => {
 
                                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                                     {(() => {
+                                        if (tournament.format === 'liga_paternidad') {
+                                            return ['\u00da\u006e\u0069\u0063\u0061'];
+                                        }
                                         const distinctGroups = Array.from(new Set(registrations.map(r => r.group_name).filter(Boolean))).sort();
-                                        return distinctGroups.length > 0 ? distinctGroups : (tournament.format === 'liga_paternidad' ? ['Única'] : []);
+                                        return distinctGroups.length > 0 ? distinctGroups : [];
                                     })().map(groupName => {
                                         const groupTeams = (tournament.format === 'liga_paternidad' && groupName === 'Única')
                                             ? registrations.filter(r => r.status === 'approved')
@@ -1177,7 +1194,7 @@ const TournamentDetail = () => {
                                                                     >
                                                                         <Calendar size={12} /> Programar
                                                                     </button>
-                                                                    {tournament.format === 'liga_paternidad' && (
+                                                                    {(tournament.format === 'liga_paternidad' || tournament.format === 'largo_12') && (
                                                                         <button
                                                                             className="text-xs text-green-400 hover:text-green-300 hover:underline cursor-pointer flex items-center gap-1"
                                                                             onClick={() => handleFlyerMatch(match)}
@@ -1557,7 +1574,7 @@ const TournamentDetail = () => {
                                                                     >
                                                                         <Calendar size={12} />
                                                                     </Button>
-                                                                    {tournament.format === 'liga_paternidad' && (
+                                                                    {(tournament.format === 'liga_paternidad' || tournament.format === 'largo_12') && (
                                                                         <Button
                                                                             size="sm"
                                                                             variant="ghost"
@@ -1618,14 +1635,21 @@ const TournamentDetail = () => {
                         matchData={{
                             tournamentName: tournament.name,
                             team1: {
-                                name1: tournament.format === 'liga_paternidad' ? selectedMatchForFlyer.team1?.player1_name || selectedMatchForFlyer.team1?.team_name : selectedMatchForFlyer.team1?.team_name,
-                                name2: tournament.format === 'liga_paternidad' ? selectedMatchForFlyer.team1_partner?.player1_name || selectedMatchForFlyer.team1_partner?.team_name : undefined
+                                name1: tournament.format === 'liga_paternidad'
+                                    ? (selectedMatchForFlyer.team1?.player1_name || selectedMatchForFlyer.team1?.team_name)
+                                    : (selectedMatchForFlyer.team1?.player1?.name || selectedMatchForFlyer.team1?.player1_name || selectedMatchForFlyer.team1?.team_name),
+                                name2: tournament.format === 'liga_paternidad'
+                                    ? (selectedMatchForFlyer.team1_partner?.player1_name || selectedMatchForFlyer.team1_partner?.team_name)
+                                    : (selectedMatchForFlyer.team1?.player2?.name || selectedMatchForFlyer.team1?.player2_name)
                             },
                             team2: {
-                                name1: tournament.format === 'liga_paternidad' ? selectedMatchForFlyer.team2?.player1_name || selectedMatchForFlyer.team2?.team_name : selectedMatchForFlyer.team2?.team_name,
-                                name2: tournament.format === 'liga_paternidad' ? selectedMatchForFlyer.team2_partner?.player1_name || selectedMatchForFlyer.team2_partner?.team_name : undefined
+                                name1: tournament.format === 'liga_paternidad'
+                                    ? (selectedMatchForFlyer.team2?.player1_name || selectedMatchForFlyer.team2?.team_name)
+                                    : (selectedMatchForFlyer.team2?.player1?.name || selectedMatchForFlyer.team2?.player1_name || selectedMatchForFlyer.team2?.team_name),
+                                name2: tournament.format === 'liga_paternidad'
+                                    ? (selectedMatchForFlyer.team2_partner?.player1_name || selectedMatchForFlyer.team2_partner?.team_name)
+                                    : (selectedMatchForFlyer.team2?.player2?.name || selectedMatchForFlyer.team2?.player2_name)
                             }
-                        }}
                     />
                 )
             }

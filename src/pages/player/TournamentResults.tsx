@@ -138,8 +138,11 @@ const TournamentResults = () => {
                         ) : (
                             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                                 {(() => {
+                                    if (tournament.format === 'liga_paternidad') {
+                                        return ['\u00da\u006e\u0069\u0063\u0061'];
+                                    }
                                     const distinctGroups = Array.from(new Set(registrations.map(r => r.group_name).filter(Boolean))).sort();
-                                    return distinctGroups.length > 0 ? distinctGroups : (tournament.format === 'liga_paternidad' ? ['Única'] : []);
+                                    return distinctGroups.length > 0 ? distinctGroups : [];
                                 })().map(groupName => {
                                     const groupTeams = (tournament.format === 'liga_paternidad' && groupName === 'Única')
                                         ? registrations.filter(r => r.status === 'approved')
