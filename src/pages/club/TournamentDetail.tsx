@@ -725,8 +725,6 @@ const TournamentDetail = () => {
                                                             </label>
                                                         </div>
                                                     )}
-                                                        </>
-                                                    )}
                                                     <Button
                                                         size="sm"
                                                         variant="ghost"
