@@ -20,6 +20,10 @@ export const MatchScoreModal: React.FC<MatchScoreModalProps> = ({ isOpen, onClos
 
     if (!isOpen || !match) return null;
 
+    // Liga Paternidad: cada lado es una pareja de jugadores individuales
+    const team1Name = match.team1_partner ? `${match.team1?.team_name} / ${match.team1_partner?.team_name}` : match.team1?.team_name;
+    const team2Name = match.team2_partner ? `${match.team2?.team_name} / ${match.team2_partner?.team_name}` : match.team2?.team_name;
+
     const handleSetChange = (index: number, field: 'w' | 'l', value: string) => {
         const newSets = [...sets];
         newSets[index][field] = parseInt(value) || 0;
@@ -91,7 +95,7 @@ export const MatchScoreModal: React.FC<MatchScoreModalProps> = ({ isOpen, onClos
 
                 <h2 className="text-xl font-bold mb-1">Actualizar Resultado</h2>
                 <p className="text-sm text-gray-400 mb-6">
-                    {match.team1?.team_name} vs {match.team2?.team_name}
+                    {team1Name} vs {team2Name}
                 </p>
 
                 <div className="space-y-4 mb-8">
@@ -102,8 +106,8 @@ export const MatchScoreModal: React.FC<MatchScoreModalProps> = ({ isOpen, onClos
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <div className="w-24 text-right text-sm font-bold truncate">
-                            {match.team1?.team_name}
+                        <div className="w-24 text-right text-sm font-bold truncate" title={team1Name}>
+                            {team1Name}
                         </div>
                         <div className="flex-1 grid grid-cols-3 gap-4">
                             {sets.map((set, idx) => (
@@ -121,8 +125,8 @@ export const MatchScoreModal: React.FC<MatchScoreModalProps> = ({ isOpen, onClos
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <div className="w-24 text-right text-sm font-bold truncate">
-                            {match.team2?.team_name}
+                        <div className="w-24 text-right text-sm font-bold truncate" title={team2Name}>
+                            {team2Name}
                         </div>
                         <div className="flex-1 grid grid-cols-3 gap-4">
                             {sets.map((set, idx) => (

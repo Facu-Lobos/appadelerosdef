@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/Button';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAuth } from '../../context/AuthContext';
+import { LigaPaternidadPlayoff } from '../../components/club/LigaPaternidadPlayoff';
 
 const TournamentResults = () => {
     const { id } = useParams<{ id: string }>();
@@ -110,25 +111,25 @@ const TournamentResults = () => {
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-6 border-b border-white/10 mb-8">
+            <div className="flex gap-4 sm:gap-6 border-b border-white/10 mb-4 sm:mb-8 overflow-x-auto">
                 <button
-                    className={`pb-4 px-2 text-lg font-medium transition-colors ${activeTab === 'groups' ? 'text-primary border-b-2 border-primary' : 'text-gray-400 hover:text-white'}`}
+                    className={`pb-3 sm:pb-4 px-1 sm:px-2 text-sm sm:text-lg font-medium whitespace-nowrap transition-colors ${activeTab === 'groups' ? 'text-primary border-b-2 border-primary' : 'text-gray-400 hover:text-white'}`}
                     onClick={() => setActiveTab('groups')}
                 >
                     {tournament.format === 'americano' ? 'Posiciones Generales' : 'Fase de Grupos'}
                 </button>
                 {tournament.format !== 'americano' && (
                     <button
-                        className={`pb-4 px-2 text-lg font-medium transition-colors ${activeTab === 'playoffs' ? 'text-primary border-b-2 border-primary' : 'text-gray-400 hover:text-white'}`}
+                        className={`pb-3 sm:pb-4 px-1 sm:px-2 text-sm sm:text-lg font-medium whitespace-nowrap transition-colors ${activeTab === 'playoffs' ? 'text-primary border-b-2 border-primary' : 'text-gray-400 hover:text-white'}`}
                         onClick={() => setActiveTab('playoffs')}
                     >
-                        Llave Final
+                        {tournament.format === 'liga_paternidad' ? 'Fase Final' : 'Llave Final'}
                     </button>
                 )}
             </div>
 
             {/* Content */}
-            <div className="bg-surface border border-white/10 rounded-2xl p-6 min-h-[600px]">
+            <div className="bg-surface border border-white/10 rounded-2xl p-3 sm:p-6 min-h-[600px]">
                 {activeTab === 'groups' && (
                     <div className="space-y-8">
                         {(tournament.format !== 'liga_paternidad' && registrations.filter(r => r.group_name).length === 0) ? (
@@ -282,7 +283,11 @@ const TournamentResults = () => {
                     </div>
                 )}
 
-                {activeTab === 'playoffs' && (
+                {activeTab === 'playoffs' && tournament.format === 'liga_paternidad' && (
+                    <LigaPaternidadPlayoff registrations={registrations} matches={matches} />
+                )}
+
+                {activeTab === 'playoffs' && tournament.format !== 'liga_paternidad' && (
                     <div className="space-y-8">
                         {matches.filter(m => m.stage === 'playoff').length === 0 ? (
                             <div className="text-center py-20 text-gray-400">

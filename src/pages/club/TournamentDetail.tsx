@@ -16,6 +16,8 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ConfirmModal } from '../../components/ui/ConfirmModal';
 import type { ClubProfile } from '../../types';
+import { LigaPaternidadPlayoff } from '../../components/club/LigaPaternidadPlayoff';
+import type { LigaPlayoffRound } from '../../utils/ligaPaternidad';
 
 const TournamentDetail = () => {
     const { id } = useParams<{ id: string }>();
@@ -308,6 +310,67 @@ const TournamentDetail = () => {
         });
     };
 
+    const handleDrawLigaRound = (round: LigaPlayoffRound, playerIds: string[]) => {
+        if (!tournament) return;
+        const roundLabel = round === 'quarter' ? 'cuartos' : round === 'semi' ? 'semis' : 'la final';
+        const laterRounds = round === 'quarter' ? ' y de las rondas siguientes' : round === 'semi' ? ' y de la final' : '';
+        setConfirmDialog({
+            isOpen: true,
+            title: `Sortear ${roundLabel}`,
+            message: `Se sortean parejas y cruces al azar. Si ya había partidos de ${roundLabel}${laterRounds}, se borran.`,
+            type: 'warning',
+            onConfirm: async () => {
+                closeConfirmDialog();
+                try {
+                    setIsGenerating(true);
+                    await supabaseService.drawLigaPaternidadRound(tournament.id, round, playerIds);
+                    showToast(`Sorteo de ${roundLabel} realizado`, 'success');
+                    loadRegistrations(tournament.id);
+                } catch (error: any) {
+                    showToast('Error al sortear: ' + error.message, 'error');
+                } finally {
+                    setIsGenerating(false);
+                }
+            }
+        });
+    };
+
+    const handleAddLigaManualMatch = async (round: LigaPlayoffRound, pair1: [string, string], pair2: [string, string]) => {
+        if (!tournament) return false;
+        try {
+            setIsGenerating(true);
+            await supabaseService.addLigaPaternidadPlayoffMatch(tournament.id, round, pair1, pair2);
+            showToast('Partido agregado', 'success');
+            loadRegistrations(tournament.id);
+            return true;
+        } catch (error: any) {
+            showToast('Error al agregar partido: ' + error.message, 'error');
+            return false;
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const handleDeleteLigaPlayoffMatch = (match: any) => {
+        if (!tournament) return;
+        setConfirmDialog({
+            isOpen: true,
+            title: 'Eliminar Partido',
+            message: '¿Seguro que querés eliminar este partido de la fase final?',
+            type: 'danger',
+            onConfirm: async () => {
+                closeConfirmDialog();
+                try {
+                    await supabaseService.deleteTournamentMatch(match.id);
+                    showToast('Partido eliminado', 'success');
+                    loadRegistrations(tournament.id);
+                } catch (error) {
+                    showToast('Error al eliminar partido', 'error');
+                }
+            }
+        });
+    };
+
     const handleManualRegistration = async () => {
         if (!tournament || !manualPlayer1) return;
         if (tournament.format !== 'liga_paternidad' && !manualPlayer2) return;
@@ -514,15 +577,15 @@ const TournamentDetail = () => {
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-6 border-b border-white/10 mb-8">
+            <div className="flex gap-4 sm:gap-6 border-b border-white/10 mb-4 sm:mb-8 overflow-x-auto">
                 <button
-                    className={`pb-4 px-2 text-lg font-medium transition-colors ${activeTab === 'registrations' ? 'text-primary border-b-2 border-primary' : 'text-gray-400 hover:text-white'}`}
+                    className={`pb-3 sm:pb-4 px-1 sm:px-2 text-sm sm:text-lg font-medium whitespace-nowrap transition-colors ${activeTab === 'registrations' ? 'text-primary border-b-2 border-primary' : 'text-gray-400 hover:text-white'}`}
                     onClick={() => setActiveTab('registrations')}
                 >
                     Inscripciones
                 </button>
                 <button
-                    className={`pb-4 px-2 text-lg font-medium transition-colors ${activeTab === 'groups' ? 'text-primary border-b-2 border-primary' : 'text-gray-400 hover:text-white'}`}
+                    className={`pb-3 sm:pb-4 px-1 sm:px-2 text-sm sm:text-lg font-medium whitespace-nowrap transition-colors ${activeTab === 'groups' ? 'text-primary border-b-2 border-primary' : 'text-gray-400 hover:text-white'}`}
                     onClick={() => {
                         setActiveTab('groups');
                         loadRegistrations(tournament.id);
@@ -530,18 +593,18 @@ const TournamentDetail = () => {
                 >
                     {tournament.format === 'americano' ? 'Posiciones Generales' : tournament.format === 'liga_paternidad' ? 'Posiciones Individuales' : 'Fase de Grupos'}
                 </button>
-                {tournament.format !== 'americano' && tournament.format !== 'liga_paternidad' && (
+                {tournament.format !== 'americano' && (
                     <button
-                        className={`pb-4 px-2 text-lg font-medium transition-colors ${activeTab === 'playoffs' ? 'text-primary border-b-2 border-primary' : 'text-gray-400 hover:text-white'}`}
+                        className={`pb-3 sm:pb-4 px-1 sm:px-2 text-sm sm:text-lg font-medium whitespace-nowrap transition-colors ${activeTab === 'playoffs' ? 'text-primary border-b-2 border-primary' : 'text-gray-400 hover:text-white'}`}
                         onClick={() => setActiveTab('playoffs')}
                     >
-                        Llave Final
+                        {tournament.format === 'liga_paternidad' ? 'Fase Final' : 'Llave Final'}
                     </button>
                 )}
             </div>
 
             {/* Content */}
-            <div className="bg-surface border border-white/10 rounded-2xl p-6 min-h-[600px]">
+            <div className="bg-surface border border-white/10 rounded-2xl p-3 sm:p-6 min-h-[600px]">
                 {activeTab === 'registrations' && (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Manual Registration Form */}
@@ -624,6 +687,7 @@ const TournamentDetail = () => {
                                                     }`}>
                                                     {reg.status === 'approved' ? 'Confirmado' : 'Pendiente'}
                                                 </div>
+                                            </div>
                                             {reg.status === 'approved' && (
                                                 <div className="flex gap-2 items-center">
                                                     {tournament.format === 'liga_paternidad' && (
@@ -1245,7 +1309,75 @@ const TournamentDetail = () => {
                     </div>
                 )}
 
-                {activeTab === 'playoffs' && (
+                {activeTab === 'playoffs' && tournament.format === 'liga_paternidad' && (
+                    <div className="space-y-6">
+                        <div className="flex flex-col md:flex-row justify-between md:items-center gap-2 bg-black/20 p-3 rounded-xl border border-white/5">
+                            <div>
+                                <h3 className="text-base font-bold text-white">Fase Final</h3>
+                                <p className="text-xs text-gray-400">
+                                    1° a 4° van directo a semis, 5° a 12° juegan cuartos y desde el 13° quedan eliminados.
+                                    En cada ronda las parejas se sortean o se arman a mano. Estos partidos no suman puntos: pasa el que gana.
+                                </p>
+                            </div>
+                            <div className="flex flex-wrap gap-2 shrink-0">
+                                {matches.some(m => m.stage === 'playoff') && (
+                                    <>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/10"
+                                            disabled={isGenerating}
+                                            onClick={() => setConfirmDialog({
+                                                isOpen: true,
+                                                title: 'Simular Resultados',
+                                                message: '¿Simular resultados al azar para los partidos armados sin resultado?',
+                                                type: 'info',
+                                                onConfirm: async () => {
+                                                    closeConfirmDialog();
+                                                    try {
+                                                        setIsGenerating(true);
+                                                        await supabaseService.simulatePlayoffResults(tournament.id);
+                                                        showToast('Resultados simulados', 'success');
+                                                        loadRegistrations(tournament.id);
+                                                    } catch (error: any) {
+                                                        showToast('Error: ' + error.message, 'error');
+                                                    } finally {
+                                                        setIsGenerating(false);
+                                                    }
+                                                }
+                                            })}
+                                        >
+                                            <RefreshCw size={16} className="mr-2" /> Simular (Test)
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                                            onClick={handleClearPlayoffs}
+                                        >
+                                            <Trash2 size={16} className="mr-2" /> Limpiar Fase Final
+                                        </Button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
+                        <LigaPaternidadPlayoff
+                            registrations={registrations}
+                            matches={matches}
+                            editable
+                            isBusy={isGenerating}
+                            onDraw={handleDrawLigaRound}
+                            onAddManual={handleAddLigaManualMatch}
+                            onDeleteMatch={handleDeleteLigaPlayoffMatch}
+                            onEditScore={handleEditScore}
+                            onSchedule={handleScheduleMatch}
+                            onFlyer={handleFlyerMatch}
+                        />
+                    </div>
+                )}
+
+                {activeTab === 'playoffs' && tournament.format !== 'liga_paternidad' && (
                     <div className="space-y-8">
                         {/* MANUAL PLAYOFF CONTROLS */}
                         <div className="flex justify-between items-center bg-black/20 p-4 rounded-xl border border-white/5">
@@ -1648,6 +1780,7 @@ const TournamentDetail = () => {
                                     ? (selectedMatchForFlyer.team2_partner?.player1_name || selectedMatchForFlyer.team2_partner?.team_name)
                                     : (selectedMatchForFlyer.team2?.player2?.name || selectedMatchForFlyer.team2?.player2_name)
                             }
+                        }}
                     />
                 )
             }

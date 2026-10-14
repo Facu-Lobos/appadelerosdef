@@ -1,5 +1,6 @@
 import type { User, ClubProfile, PlayerProfile, Court, Booking, Tournament, TournamentRegistration, TournamentMatch } from '../types';
 import { supabase } from './supabaseClient';
+import { LIGA_PLAYOFF_ROUNDS, LIGA_ROUND_PLAYER_COUNT, getLigaPlayoffPools, shuffle, type LigaPlayoffRound } from '../utils/ligaPaternidad';
 
 export const supabaseService = {
     getClient() {
@@ -1220,11 +1221,9 @@ export const supabaseService = {
                 .single();
 
             if (tError) throw tError;
-            const isLigaPaternidad = tournament.format === 'liga_paternidad';
 
-            if (isLigaPaternidad) {
-                await this.advanceLigaPaternidadPlayoff(match);
-            } else {
+            // En la Liga Paternidad la siguiente ronda se sortea o arma a mano desde la llave
+            if (tournament.format !== 'liga_paternidad') {
                 await this.advancePlayoffWinner(match, winnerId);
             }
         }
@@ -1980,100 +1979,93 @@ export const supabaseService = {
         return true;
     },
 
-    async advanceLigaPaternidadPlayoff(match: TournamentMatch) {
-        // 1. Fetch all matches of this round
-        const { data: roundMatches, error: matchesError } = await supabase
+    // Liga Paternidad: sortea parejas y cruces de una ronda entre los jugadores dados.
+    // Borra los partidos de esa ronda y de las siguientes (quedarían inconsistentes).
+    async drawLigaPaternidadRound(tournamentId: string, round: LigaPlayoffRound, playerIds: string[]) {
+        const required = LIGA_ROUND_PLAYER_COUNT[round];
+        const uniqueIds = [...new Set(playerIds.filter(Boolean))];
+        if (uniqueIds.length !== required) {
+            throw new Error(`Se necesitan ${required} jugadores para sortear esta ronda (hay ${uniqueIds.length}).`);
+        }
+
+        const roundsToClear = LIGA_PLAYOFF_ROUNDS.slice(LIGA_PLAYOFF_ROUNDS.indexOf(round));
+        const { error: deleteError } = await supabase
             .from('tournament_matches')
-            .select('*')
-            .eq('tournament_id', match.tournament_id)
+            .delete()
+            .eq('tournament_id', tournamentId)
             .eq('stage', 'playoff')
-            .eq('round', match.round);
+            .in('round', roundsToClear);
+        if (deleteError) throw deleteError;
 
-        if (matchesError || !roundMatches) throw matchesError || new Error("No matches found for round");
-
-        // 2. Check if all matches in this round are finished
-        const allFinished = roundMatches.every(m => m.winner_id !== null);
-        if (!allFinished) return; // Wait for other matches to finish
-
-        // 3. Determine next round name
-        let nextRound = '';
-        if (match.round === 'round_16') nextRound = 'quarter';
-        else if (match.round === 'quarter') nextRound = 'semi';
-        else if (match.round === 'semi') nextRound = 'final';
-        else return; // Final finished, tournament ends
-
-        // Check if next round matches already exist to avoid duplicates
-        const { data: existingNextRoundMatches } = await supabase
-            .from('tournament_matches')
-            .select('id')
-            .eq('tournament_id', match.tournament_id)
-            .eq('stage', 'playoff')
-            .eq('round', nextRound);
-
-        if (existingNextRoundMatches && existingNextRoundMatches.length > 0) {
-            console.log("Next round matches already generated.");
-            return;
-        }
-
-        // 4. Collect all winning players
-        const winningPlayerIds: string[] = [];
-        roundMatches.forEach(m => {
-            if (m.winner_id === m.team1_id) {
-                winningPlayerIds.push(m.team1_id);
-                if (m.team1_partner_id) winningPlayerIds.push(m.team1_partner_id);
-            } else if (m.winner_id === m.team2_id) {
-                winningPlayerIds.push(m.team2_id);
-                if (m.team2_partner_id) winningPlayerIds.push(m.team2_partner_id);
-            }
-        });
-
-        if (winningPlayerIds.length < 4 || winningPlayerIds.length % 4 !== 0) {
-            console.warn("Not enough winning players to form 2v2 matches (must be multiple of 4):", winningPlayerIds.length);
-            return;
-        }
-
-        // 5. Shuffle winning players
-        const shuffledWinners = [...winningPlayerIds].sort(() => Math.random() - 0.5);
-
-        // 6. Form pairs
-        const pairs: string[][] = [];
-        for (let i = 0; i < shuffledWinners.length; i += 2) {
-            if (i + 1 < shuffledWinners.length) {
-                pairs.push([shuffledWinners[i], shuffledWinners[i+1]]);
-            }
-        }
-
-        // Shuffle pairs to randomize matchups
-        const shuffledPairs = [...pairs].sort(() => Math.random() - 0.5);
-
-        // 7. Create next round matches
-        const matchesToInsert = [];
+        const shuffled = shuffle(uniqueIds);
         const timestamp = Date.now();
-        const numMatches = shuffledPairs.length / 2;
-
-        for (let i = 0; i < numMatches; i++) {
-            const pair1 = shuffledPairs[i * 2];
-            const pair2 = shuffledPairs[i * 2 + 1];
-
+        const matchesToInsert = [];
+        for (let i = 0; i < shuffled.length / 4; i++) {
+            const [p1, p2, p3, p4] = shuffled.slice(i * 4, i * 4 + 4);
             matchesToInsert.push({
-                tournament_id: match.tournament_id,
-                round: nextRound,
+                tournament_id: tournamentId,
+                round,
                 stage: 'playoff',
                 start_time: new Date(timestamp + i * 1000).toISOString(),
                 group_name: `M${i + 1}`,
+                team1_id: p1,
+                team1_partner_id: p2,
+                team2_id: p3,
+                team2_partner_id: p4
+            });
+        }
+
+        const { error: insertError } = await supabase
+            .from('tournament_matches')
+            .insert(matchesToInsert);
+        if (insertError) throw insertError;
+        return true;
+    },
+
+    async addLigaPaternidadPlayoffMatch(tournamentId: string, round: LigaPlayoffRound, pair1: [string, string], pair2: [string, string]) {
+        const ids = [...pair1, ...pair2];
+        if (ids.some(id => !id) || new Set(ids).size !== 4) {
+            throw new Error('Elegí 4 jugadores distintos.');
+        }
+
+        const { data: existing, error: fetchError } = await supabase
+            .from('tournament_matches')
+            .select('*')
+            .eq('tournament_id', tournamentId)
+            .eq('stage', 'playoff')
+            .eq('round', round);
+        if (fetchError) throw fetchError;
+
+        const maxMatches = LIGA_ROUND_PLAYER_COUNT[round] / 4;
+        if ((existing?.length || 0) >= maxMatches) {
+            throw new Error('Esta ronda ya tiene todos sus partidos armados.');
+        }
+        const alreadyPlaying = (existing || []).some(m =>
+            [m.team1_id, m.team1_partner_id, m.team2_id, m.team2_partner_id].some(id => ids.includes(id))
+        );
+        if (alreadyPlaying) {
+            throw new Error('Alguno de los jugadores ya tiene partido en esta ronda.');
+        }
+
+        const usedLabels = (existing || []).map(m => m.group_name);
+        let matchNumber = 1;
+        while (usedLabels.includes(`M${matchNumber}`)) matchNumber++;
+
+        const { error } = await supabase
+            .from('tournament_matches')
+            .insert([{
+                tournament_id: tournamentId,
+                round,
+                stage: 'playoff',
+                start_time: new Date().toISOString(),
+                group_name: `M${matchNumber}`,
                 team1_id: pair1[0],
                 team1_partner_id: pair1[1],
                 team2_id: pair2[0],
                 team2_partner_id: pair2[1]
-            });
-        }
-
-        if (matchesToInsert.length > 0) {
-            const { error: insertError } = await supabase
-                .from('tournament_matches')
-                .insert(matchesToInsert);
-            if (insertError) throw insertError;
-        }
+            }]);
+        if (error) throw error;
+        return true;
     },
 
     async generatePlayoffs(tournamentId: string) {
@@ -2095,11 +2087,7 @@ export const supabaseService = {
         }
 
         if (tournament.format === 'liga_paternidad') {
-            // Liga de la Paternidad Playoff Generation
-            // 1. Clear existing playoffs
-            await this.clearPlayoffs(tournamentId);
-
-            // 2. Get all approved registrations in the tournament
+            // Puestos 1-4 directo a semis; se sortean los cuartos entre los puestos 5-12
             const { data: registrations, error: regError } = await supabase
                 .from('tournament_registrations')
                 .select('*')
@@ -2108,79 +2096,8 @@ export const supabaseService = {
 
             if (regError) throw regError;
 
-            // 3. Sort players globally by their stats (Points, sets difference, games difference)
-            const sortedPlayers = [...registrations].sort((a, b) => {
-                const statsA = a.stats || { points: 0, sets_won: 0, sets_lost: 0, games_won: 0, games_lost: 0 };
-                const statsB = b.stats || { points: 0, sets_won: 0, sets_lost: 0, games_won: 0, games_lost: 0 };
-
-                if (statsB.points !== statsA.points) return statsB.points - statsA.points;
-
-                const setDiffA = (statsA.sets_won || 0) - (statsA.sets_lost || 0);
-                const setDiffB = (statsB.sets_won || 0) - (statsB.sets_lost || 0);
-                if (setDiffB !== setDiffA) return setDiffB - setDiffA;
-
-                const gameDiffA = (statsA.games_won || 0) - (statsA.games_lost || 0);
-                const gameDiffB = (statsB.games_won || 0) - (statsB.games_lost || 0);
-                return gameDiffB - gameDiffA;
-            });
-
-            // Determine qualify count: top 16 if total registered > 16, else top 8
-            let qualifyCount = 8;
-            if (sortedPlayers.length > 16) {
-                qualifyCount = 16;
-            } else if (sortedPlayers.length >= 8) {
-                qualifyCount = 8;
-            } else if (sortedPlayers.length >= 4) {
-                qualifyCount = 4;
-            } else {
-                throw new Error('Se necesitan al menos 4 jugadores activos aprobados para armar los playoffs.');
-            }
-
-            const allQualifiers = sortedPlayers.slice(0, qualifyCount);
-
-            // Shuffle the qualifiers (random pairing)
-            const shuffledQualifiers = [...allQualifiers].sort(() => Math.random() - 0.5);
-
-            // Form pairs: [p1, p2], [p3, p4]...
-            const pairs: any[][] = [];
-            for (let i = 0; i < shuffledQualifiers.length; i += 2) {
-                pairs.push([shuffledQualifiers[i], shuffledQualifiers[i+1]]);
-            }
-
-            // Shuffle pairs to randomize matchups
-            const shuffledPairs = [...pairs].sort(() => Math.random() - 0.5);
-
-            const numMatches = shuffledPairs.length / 2;
-            const startingRound = numMatches === 8 ? 'round_16' :
-                                 numMatches === 4 ? 'quarter' :
-                                 numMatches === 2 ? 'semi' : 'final';
-
-            const matchesToInsert = [];
-            const timestamp = Date.now();
-
-            for (let i = 0; i < numMatches; i++) {
-                const pair1 = shuffledPairs[i * 2];
-                const pair2 = shuffledPairs[i * 2 + 1];
-
-                matchesToInsert.push({
-                    tournament_id: tournamentId,
-                    round: startingRound,
-                    stage: 'playoff',
-                    start_time: new Date(timestamp + i * 1000).toISOString(),
-                    group_name: `M${i + 1}`,
-                    team1_id: pair1[0].id,
-                    team1_partner_id: pair1[1].id,
-                    team2_id: pair2[0].id,
-                    team2_partner_id: pair2[1].id
-                });
-            }
-
-            const { error: insertError } = await supabase
-                .from('tournament_matches')
-                .insert(matchesToInsert);
-
-            if (insertError) throw insertError;
-            return true;
+            const { quarterPlayers } = getLigaPlayoffPools(registrations, []);
+            return this.drawLigaPaternidadRound(tournamentId, 'quarter', quarterPlayers.map(p => p.id));
         }
 
 
