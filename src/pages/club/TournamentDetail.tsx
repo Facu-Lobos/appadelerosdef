@@ -395,6 +395,30 @@ const TournamentDetail = () => {
         }
     };
 
+    // Liga: un jugador que se baja sale de la tabla y de la fase final (los de abajo suben un puesto)
+    const handleLigaWithdraw = (reg: any, withdraw: boolean) => {
+        if (!tournament) return;
+        const name = reg.player1?.name || reg.player1_name || reg.team_name || 'Jugador';
+        setConfirmDialog({
+            isOpen: true,
+            title: withdraw ? `Dar de baja a ${name}` : `Reincorporar a ${name}`,
+            message: withdraw
+                ? 'Sale de la tabla y de la fase final; los jugadores de abajo suben un puesto. Si los cruces de la fase final ya estaban armados, volvé a sortearlos.'
+                : 'Vuelve a la tabla y a la fase final según sus puntos.',
+            type: 'warning',
+            onConfirm: async () => {
+                closeConfirmDialog();
+                try {
+                    await supabaseService.updateRegistrationStatus(reg.id, withdraw ? 'rejected' : 'approved');
+                    showToast(withdraw ? `${name} dado de baja` : `${name} reincorporado`, 'success');
+                    loadRegistrations(tournament.id);
+                } catch (error) {
+                    showToast('Error al actualizar estado', 'error');
+                }
+            }
+        });
+    };
+
     const handleStatusUpdate = async (registrationId: string, status: 'approved' | 'rejected') => {
         if (!tournament) return;
         try {
@@ -683,11 +707,22 @@ const TournamentDetail = () => {
                                                         <span>{reg.player2?.name || reg.player2_name || 'Jugador 2'}</span>
                                                     </div>
                                                 )}
-                                                <div className={`text-xs mt-2 uppercase tracking-wider font-bold ${reg.status === 'approved' ? 'text-green-400' : 'text-yellow-400'
+                                                <div className={`text-xs mt-2 uppercase tracking-wider font-bold ${reg.status === 'approved' ? 'text-green-400' : reg.status === 'rejected' ? 'text-red-400' : 'text-yellow-400'
                                                     }`}>
-                                                    {reg.status === 'approved' ? 'Confirmado' : 'Pendiente'}
+                                                    {reg.status === 'approved' ? 'Confirmado' : reg.status === 'rejected' ? (tournament.format === 'liga_paternidad' ? 'Baja' : 'Rechazado') : 'Pendiente'}
                                                 </div>
                                             </div>
+                                            {tournament.format === 'liga_paternidad' && reg.status === 'rejected' && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    className="text-green-400 hover:text-green-300 hover:bg-green-400/10"
+                                                    onClick={() => handleLigaWithdraw(reg, false)}
+                                                    title="Reincorporar jugador"
+                                                >
+                                                    <span className="text-xs font-bold">REINCORPORAR</span>
+                                                </Button>
+                                            )}
                                             {reg.status === 'approved' && (
                                                 <div className="flex gap-2 items-center">
                                                     {tournament.format === 'liga_paternidad' && (
@@ -731,6 +766,15 @@ const TournamentDetail = () => {
                                                             title={reg.is_active === false ? "Activar jugador" : "Congelar jugador"}
                                                         >
                                                             <span className="text-xs font-bold">{reg.is_active === false ? "ACTIVAR" : "CONGELAR"}</span>
+                                                            </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                                                                onClick={() => handleLigaWithdraw(reg, true)}
+                                                                title="Dar de baja de la liga"
+                                                            >
+                                                                <span className="text-xs font-bold">BAJA</span>
                                                             </Button>
                                                         </>
                                                     )}
